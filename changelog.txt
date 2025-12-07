@@ -1,0 +1,98 @@
+Change Log:
+
+v095 - December 7, 2025:
+
+  - Shortened the displayable text input area by one character, as it was
+    causing some terminals to drag it up the screen while typing strings
+    longer than the terminal width.    
+  - Fix for NOTME messages announcing users joining rooms the user is not
+    in.
+
+
+v094 - December 6, 2025:
+
+  Changes:
+  
+  - Fixed some nasty text input issues that happen when % symbols appear
+    in the chat text or input text, or when cycling through colors for 
+    lines longer than the input area.
+  - Basic errors written to a log file named "umrc.log".
+  - Optional verbose logging can be enabled with -V command line switch.
+  - Reset mention counter to 0 when user leaves chat.
+  - Fix for messages not getting line-wrapped while chat is paused in 
+    scrollback mode.
+  
+
+v093 - December 5, 2025:
+
+  Changes:
+        
+  - Added /theme chat command. User types /theme by itself to list the 
+    available themes, or includes the name of theme as a parameter to 
+    set the theme.
+  - A few more themes added, others edited.
+  - Fix for /join, which was passing the new room for both the first
+    and second parameters of the NEWROOM server command.
+  - Further tweaks for line wrapping logic in the client.
+  - Further tweaks for partial packet correction in the bridge.
+  - Fix for sendPacket returning an invalid error code on failure when
+    using SSL in the bridge.
+  - Blinking chat input cursor is now a shaded block, instead of an 
+    underscore. Hopefully more obvious to the user that's where the input 
+    line is.
+  
+
+v092 - November 30, 2025:
+
+  Changes:
+
+  - Basic theme options added. Themes are standard ANSI files 
+    containing 2 lines and can be edited by the sysop.
+  - Added a timestamp and retry counter to umrc-bridge as visual 
+    feedback for the sysop.
+  - Improved receipt of inbound data in umrc-bridge in SSL mode, 
+    greatly reducing partial packets.
+  - Chatter default display name suffix simplified to one character,
+    instead of a string of alphas based on the BBS name.
+  - Fixed an issue where displaying time warnings in the main 
+    menu would crash umrc-client.
+  - Scrollback scrolling optimizations.
+  - Fixed an issue with setup that would cause input to loop
+    endlessly. Also changed the default values for website and
+    SSH to "NONE".
+  - Fixed an issue where topic lines of certain lengths would
+    cause the umrc-client to crash when joining a room.
+  - General code cleanup.
+
+
+ 
+v091 - November 28, 2025:
+
+  Fixes:
+
+  - umrc-bridge will attempt to reconnect to the MRC host if the 
+    connection drops (up to 10 times). Upon successful reconnect,
+    any users logged in will be notified.
+
+
+v090 - November 26, 2025:
+
+  Fixes:
+
+  - Fixed issues with chat message display timing.
+  - Reworked mention handling.
+
+
+v002 - November 25, 2025:
+
+  Fixes:
+
+  - PGUP/PGDN keys now work in remote door mode as well as local mode.
+  - Timeout warning messages are now shown in the chat window
+    instead of overlapping into the status & input area.
+  - Room & topic line now clears entirely whenever the topic changes.
+         
+
+v001 - November 23, 2025:
+
+  Initial working build. 
