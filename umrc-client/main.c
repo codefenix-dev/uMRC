@@ -49,7 +49,7 @@ char gDisplayChatterName[80] = "";
 char gRoom[30] = "";
 char gTopic[55] = "";
 char gLatency[6] = "";
-char gFromSite[30] = "";
+char gFromSite[140] = "";
 char gLastDirectMsgFrom[36] = "";
 
 char** gChattersInRoom;
@@ -1871,8 +1871,9 @@ int main(int argc, char** argv)
     }    
     strncpy_s(user.chatterName, 36, strReplace(user.chatterName, " ", "_"), -1); // spaces are disallowed; replace with underscores
     strncpy_s(user.chatterName, 36, strReplace(user.chatterName, "~", ""), -1);  // tildes are disallowed; strip them out
-    strncpy_s(gFromSite, 30, strReplace(cfg.name, "~", ""), -1);
+    strncpy_s(gFromSite, sizeof(gFromSite), strReplace(cfg.name, "~", ""), -1);
     stripPipeCodes(gFromSite);
+    strncpy_s(gFromSite, sizeof(gFromSite), gFromSite, 30); // copy only the first 30 characters, now that we've cleaned up the name
     _snprintf_s(gUserDataFile, sizeof(gUserDataFile), -1, "%s\\%s.dat", USER_DATA_DIR, user.chatterName);
 
     DWORD attributes = GetFileAttributesA(USER_DATA_DIR);
