@@ -31,6 +31,9 @@ uMRC lets you run Multi-Relay Chat on your BBS without having to install Mystic
 BBS and Python. As long as your BBS is capable of running 32-bit Windows doors, 
 then you and your users can participate in MRC.
 
+<img width="637" height="472" alt="image" src="https://github.com/user-attachments/assets/4cd1acf1-4efc-48b7-87b0-f34185f9a240" />
+
+
 It should be compatible with any DOOR32.SYS capable BBS such as EleBBS, WWIV, 
 Synchronet, Mystic, and possibly others. It has been tested on Windows 7 and 
 later, but Windows versions earlier than 7 have not been confirmed. 
@@ -183,6 +186,7 @@ has been confirmed to run it.
 
 At this point, you should be ready to launch the door and join chat.
     
+<img width="632" height="469" alt="image" src="https://github.com/user-attachments/assets/91b3684a-028f-45a7-b817-4c30a7b86fe4" />
     
 
 ## uMRC Client Usage:   
@@ -421,3 +425,4 @@ and is always happy to try running new things on his board.
 ## Enjoy!
 
 See you in chat!
+
