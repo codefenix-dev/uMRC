@@ -661,6 +661,15 @@ int strLenWithoutPipecodes(char* str) {
     return len;
 }
 
+void resetInputLine() {
+    od_set_cursor(od_control.user_screen_length, 1);
+    od_clr_line();
+    for (int i = 1; i < od_control.user_screenwidth - 1; i++) {
+        od_printf("`bright black`\372");
+    }
+    od_set_cursor(od_control.user_screen_length, 1);
+}
+
 void scrollToScrollbackSection(char** scrollLines, int start, int end, int height) {
     int row = 1;
     for (int i = start; i < end && row < height; i++) {
@@ -830,7 +839,8 @@ void enterScrollBack(int initialScroll, int mode) {
 
     isChatPaused = false;
     drawStatusBar();
-    od_set_cursor(od_control.user_screen_length, 1);
+    //od_set_cursor(od_control.user_screen_length, 1);
+    resetInputLine();
     od_printf(CHAT_CURSOR);
 }
 
@@ -1363,15 +1373,6 @@ DWORD WINAPI handleIncomingMessages(LPVOID lpArg) {
         }
     }
     return 0;
-}
-
-void resetInputLine() {
-    od_set_cursor(od_control.user_screen_length, 1);
-    od_clr_line();
-    for (int i = 1; i < od_control.user_screenwidth-1; i++) {
-        od_printf("`bright black`\372");
-    }
-    od_set_cursor(od_control.user_screen_length, 1);
 }
 
 
