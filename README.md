@@ -377,8 +377,9 @@ Thanks to **StackFault** at **The Bottomless Abyss BBS**, MRC HQ!
 - telnet://bbs.bottomlessabyss.net:2023
 - ssh://bbs.bottomlessabyss.net:2222
 
+### uMRC Test Sites:
 
-**StingRay** of A-**Net Online**: testing and feedback.
+**StingRay** of A-**Net Online**
 
 StingRay offers a wide array of BBSes and BBS-related services that all sysops
 should avail themselves of. The main links here will get you on the path to 
@@ -389,7 +390,7 @@ everything he offers.
 - ssh://a-net-online.lol
 
 
-**X-Bit** of **x-big.org**: testing and feedback.
+**X-Bit** of **x-big.org**
 
 xbit is a veteran sysop and league coordinator of the X-League (777) Inter-BBS 
 network which re-launched in 2025. If you're interested in joining the network, 
@@ -402,7 +403,7 @@ check out these links below:
 xbit also contributed the "l33t" and "stars" themes!
 
 
-**Exodus** of **The Titantic BBS**: testing and feedback.
+**Exodus** of **The Titantic BBS**
 
 Exodus is the network coordinator of MetroNet and maintains Renegade BBS. He was
 instrumental in confirming uMRC could run on DOS-based systems like Renegade.
@@ -411,7 +412,7 @@ instrumental in confirming uMRC could run on DOS-based systems like Renegade.
 - telnet://ttb.rgbbs.info
 
 
-**Shurato** of **Shurato's Heavenly Sphere**: testing and feedback.
+**Shurato** of **Shurato's Heavenly Sphere**
 
 Shurato runs perhaps the most unique and customized instance of EleBBS anywhere,
 and is always happy to try running new things on his board.
@@ -425,4 +426,5 @@ and is always happy to try running new things on his board.
 ## Enjoy!
 
 See you in chat!
+
 
