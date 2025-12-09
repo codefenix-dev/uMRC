@@ -17,7 +17,7 @@
 #include "../common/common.h"
 
 #define NOT_LISTED "Something Else..."
-#define BBS_TYPE_COUNT 9
+#define BBS_TYPE_COUNT 8
 const char* BBS_TYPES[BBS_TYPE_COUNT] = {
 	"EleBBS",
 	"Mystic",
@@ -25,7 +25,6 @@ const char* BBS_TYPES[BBS_TYPE_COUNT] = {
 	"ProBoard",
 	"Renegade",
 	"Synchronet",
-	"Wildcat",
 	"WWIV",
 	NOT_LISTED
 };
@@ -57,7 +56,7 @@ char* textPrompt(char* promptText, int maxLen, int displayableLen, char* default
 		for (int i = 0; i < maxLen; i++) {
 			printf("\b");
 		}
-	fflush(stdin);
+        fflush(stdin);
 		fgets(buffer, /*maxLen + 1*/ sizeof(buffer), stdin);
 		buffer[strcspn(buffer, "\r")] = '\0';
 		buffer[strcspn(buffer, "\n")] = '\0';

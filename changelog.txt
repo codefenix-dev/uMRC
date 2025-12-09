@@ -1,5 +1,28 @@
 Change Log:
 
+v099 - Demcember 9, 2025:
+
+  - Added a dark gray row of dots to the bottom of the screen, to make the 
+    input line slightly more obvious.
+  - Fix for changing colors with left/right while typing past the screen width.
+  - Nonalphanumeric characters are stripped from the sysop name before being 
+    passed over to the host in the BBSMETA packet.
+  - Option T is no longer visible on the main menu, but it's still a valid
+    selection. Changed the verbiage to instruct users to include the info when
+    submitting an issue.
+  - Removed WildCat! from the BBS_TYPES in the setup program.
+  - Added logic so that the "%s has disconnected." string only gets sent to the
+    host if the user has not logged off cleanly. In other words, this string
+    should only get sent by the bridge in the event that the user drops carrier,
+    or something else unexpected happened to terminate their session. It's not 
+    needed if their exit was already announced.
+  - Added an extra gray dash - in front of the default join and exit messages,
+    to keep them consistent with other systems.
+  - Clear both the room and topic strings when leaving chat.
+  - Added /theme in help.txt.
+  - Included two theme contributions from xbit: l33t and stars.
+  
+
 v095 - December 7, 2025:
 
   - Shortened the displayable text input area by one character, as it was
@@ -17,7 +40,8 @@ v094 - December 6, 2025:
     in the chat text or input text, or when cycling through colors for 
     lines longer than the input area.
   - Basic errors written to a log file named "umrc.log".
-  - Optional verbose logging can be enabled with -V command line switch.
+  - Optional verbose logging can be enabled in umrc-bridge with -V command
+    line switch.
   - Reset mention counter to 0 when user leaves chat.
   - Fix for messages not getting line-wrapped while chat is paused in 
     scrollback mode.

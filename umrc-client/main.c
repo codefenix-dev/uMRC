@@ -29,10 +29,10 @@
 
 #define DIVIDER "`bright blue`___________________________________________________________________________\r\n``"
 #define DEFAULT_ROOM "lobby"
-#define DEFAULT_JOIN_MSG "|11%s |03has arrived."
-#define DEFAULT_EXIT_MSG "|12%s |04has left chat|08."
+#define DEFAULT_JOIN_MSG "|07- |11%s |03has arrived."
+#define DEFAULT_EXIT_MSG "|07- |12%s |04has left chat."
 #define CTCP_ROOM "ctcp_echo_channel"
-#define CHAT_CURSOR "`flashing white`\262`` "
+#define CHAT_CURSOR "`flashing white`\262```bright black`\372``"
 
 
 bool gRoomTopicChanged = false;
@@ -63,27 +63,30 @@ char gStatusThemeLine1[400] = "\325\315\315[                                    
 char gStatusThemeLine2[400] = "\324\315\315[ users:     ]\315\315[ latency:      ]\315\315\315[ mentions:     ]\315[ buffer:         ]\315\315\276";
 
 
-struct messageCourier {
+struct messageQueue {
     char* message;
     bool isMention;
 };
-struct messageCourier mc;
+struct messageQueue mc;
 
 
-#define DEFAULT_BRACKETS_COUNT 12
+#define DEFAULT_BRACKETS_COUNT 15
 const char* DEFAULT_BRACKETS[DEFAULT_BRACKETS_COUNT] = {
     "<>",
     "{}",
     "[]",
+    "()",
     "@@",
     "!!",
     ":)",
     "//",
     "==",
     "--",
+    "++",
     "%%",
     "^^",
-    "##"
+    "##",
+    "$$"
 };
 
 const char* ACTIVITY[4] = {
@@ -100,7 +103,7 @@ SOCKET mrcSock = INVALID_SOCKET;
 
 
 /**
- *  Returns a time string )HH:MM) to place in front of all chat messages.
+ *  Returns a time string (HH:MM) to place in front of all chat messages.
  */
 char* getTimestamp() {
     char timeStamp[10] = "";
@@ -1312,23 +1315,13 @@ DWORD WINAPI handleIncomingMessages(LPVOID lpArg) {
                 else if (strcmp(toRoom, CTCP_ROOM) == 0 && strcmp(fromRoom, CTCP_ROOM) == 0) {
                     processCtcpCommand(body, toUser, fromUser);
                 }
-                
-                // Joe_Boo~2o_fOr_beeRS~lobby~NOTME~~lobby~|07- |11Joe_Boo |03has entered the room.~
-                // Joe_Boo~2o_fOr_beeRS~ddial~NOTME~~ddial~|07- |11Joe_Boo |03has entered the room.~
-                
                 else if (strcmp(toUser, "NOTME") == 0 ) {
                     if ((_strcmpi(fromRoom, gRoom) == 0 || strlen(fromRoom) == 0) && 
                         (_strcmpi(toRoom, gRoom) == 0 || strlen(toRoom) == 0)) {
                         queueIncomingMessage( body, false);
                         sendCmdPacket(&mrcSock, "USERLIST", "");
                     }
-                    //else if (_strcmpi(fromUser, user.chatterName) != 0) {
-                    //    queueIncomingMessage( body, false);
-                    //}
                 }
-                //else if (strcmp(toUser, "NOTME") == 0 && _strcmpi(fromUser, user.chatterName) != 0) { // fix for join messages in other rooms
-                //    queueIncomingMessage( body, false);
-                //}
                 else if (
                         // messages addressed to the room or to the chatter
                         ((strcmp(gRoom, toRoom)==0 || strlen(toRoom)==0  ) && (strlen(toUser) == 0 || _strcmpi(toUser, user.chatterName) == 0)) || 
@@ -1372,6 +1365,14 @@ DWORD WINAPI handleIncomingMessages(LPVOID lpArg) {
     return 0;
 }
 
+void resetInputLine() {
+    od_set_cursor(od_control.user_screen_length, 1);
+    od_clr_line();
+    for (int i = 1; i < od_control.user_screenwidth-1; i++) {
+        od_printf("`bright black`\372");
+    }
+    od_set_cursor(od_control.user_screen_length, 1);
+}
 
 
 /**
@@ -1432,8 +1433,8 @@ void doChatRoutines(char* input) {
                 if (user.textColor < 1) {
                     user.textColor = 15;
                 }
-                if ((int)strlen(input) >= (int)od_control.user_screenwidth - 2) {
-                    overfill = strlen(input) - (od_control.user_screenwidth - 3);
+                if ((int)strlen(input) >= (int)od_control.user_screenwidth - 3) {
+                    overfill = strlen(input) - (od_control.user_screenwidth - 4);
                 }
                 _snprintf_s(pcol, 4, -1, "|%02d", user.textColor);
 
@@ -1454,8 +1455,8 @@ void doChatRoutines(char* input) {
                     user.textColor = 1;
                 }
 
-                if ((int)strlen(input) >= (int)od_control.user_screenwidth - 2) {
-                    overfill = strlen(input) - (od_control.user_screenwidth - 3);
+                if ((int)strlen(input) >= (int)od_control.user_screenwidth - 3) {
+                    overfill = strlen(input) - (od_control.user_screenwidth - 4);
                 }
                 _snprintf_s(pcol, 4, -1, "|%02d", user.textColor);
 
@@ -1472,8 +1473,9 @@ void doChatRoutines(char* input) {
 
             case OD_KEY_DELETE:
                 strcpy_s(input, sizeof(input), "");
-                od_set_cursor(od_control.user_screen_length, 1);
-                od_clr_line(); // TODO: replace with gray dots
+                //od_set_cursor(od_control.user_screen_length, 1);
+                //od_clr_line(); // TODO: replace with gray dots
+                resetInputLine();
                 od_printf(CHAT_CURSOR);
                 break;
 
@@ -1510,8 +1512,9 @@ void doChatRoutines(char* input) {
                 continue;
             }
             else if (key == 13 || key == 10) {
-                od_set_cursor(od_control.user_screen_length, 1);
-                od_clr_line(); // TODO: replace with gray dots
+                //od_set_cursor(od_control.user_screen_length, 1);
+                //od_clr_line(); // TODO: replace with gray dots
+                resetInputLine();
                 isEscapeSequence = false;
                 break;
             }
@@ -1578,8 +1581,8 @@ void doChatRoutines(char* input) {
             // Scroll the input string display if it's longer than the terminal width
             if (overfill > 0) {
                 od_set_cursor(od_control.user_screen_length, 1);
-                od_disp_emu(pipeToAnsi(pcol), TRUE);  // .................................
-                od_disp_str(input + overfill - 1); // possible source of screen dragging?
+                od_disp_emu(pipeToAnsi(pcol), TRUE);
+                od_disp_str(input + overfill - 1);
             }
             od_set_cursor(od_control.user_screen_length, endOfInput);
             od_disp_emu(pipeToAnsi(pcol), TRUE);
@@ -1617,6 +1620,17 @@ void doChatRoutines(char* input) {
         }
     }
 }
+ 
+void removeNonAlphanumeric(char *str) {
+    int readPos = 0, writePos = 0;
+    while (str[readPos] != '\0') {
+        if (isalnum(str[readPos]) ) {
+            str[writePos++] = str[readPos];
+        }
+        readPos++;
+    }
+    str[writePos] = '\0';
+} 
 
 bool enterChat() {
         
@@ -1629,9 +1643,10 @@ bool enterChat() {
     od_clr_scr();    
 
     // get the sysop name from config in case the one OpenDoors pulls from the dropfile is "Sysop" or blank.
-    char sysopName[140] = "";
-    strcpy_s(sysopName, sizeof(sysopName), strReplace((_strcmpi(od_control.sysop_name, "sysop")==0 || strlen(od_control.sysop_name)==0) ? cfg.sys : od_control.sysop_name, "~", ""));
+    char sysopName[50] = "";
+    strcpy_s(sysopName, sizeof(sysopName), (_strcmpi(od_control.sysop_name, "sysop")==0 || strlen(od_control.sysop_name)==0) ? cfg.sys : od_control.sysop_name);
     stripPipeCodes(sysopName);
+    removeNonAlphanumeric(sysopName); // make sure the name only contains alphanumeric characters, and no silliness
 
     strcpy_s(gRoom, sizeof(gRoom), user.defaultRoom);
 
@@ -1744,7 +1759,8 @@ bool enterChat() {
         char input[MSG_LEN] = "";
         updateBuffer(0);
 
-        od_set_cursor(od_control.user_screen_length, 1);
+        //od_set_cursor(od_control.user_screen_length, 1);
+        resetInputLine();
         od_printf(CHAT_CURSOR);
 
         doChatRoutines(input); // capture user input and keep chat display updated
@@ -1778,8 +1794,11 @@ bool enterChat() {
     closesocket(mrcSock);
     WSACleanup();
 
-    gMentionCount=0;
     free(gScrollBack);
+    free(gMentions);
+    gMentionCount=0;
+    strcpy_s(gRoom, sizeof(gRoom), "");
+    strcpy_s(gTopic, sizeof(gTopic), "");
 
     od_disp_emu("\x1b[?25h", TRUE); // re-enable the blinking cursor..
 
@@ -1875,9 +1894,7 @@ int main(int argc, char** argv)
 
         od_printf("`bright white`Welcome to %s!``\r\n", TITLE);
         od_printf(DIVIDER);
-
         od_printf("Looks like you're new here, %s.\r\n\r\n\r\n", user.chatterName);
-
         od_printf("``First things first...\r\n\r\nIs \"`bright white`%s``\" the name you want to use in chat? (Y/N) > ", user.chatterName);
         if (od_get_answer("YN") == 'N') {
             bool namevalid = false;
@@ -1992,8 +2009,8 @@ int main(int argc, char** argv)
         od_set_cursor(11, 25);
         od_printf("`bright white`(`bright magenta`I`bright white`) `white`Read `bright white`I`white`nstructions");
         
-        od_set_cursor(12, 25);
-        od_printf("`bright white`(`cyan`T`bright white`) `white`Show `bright white`T`white`ester Information");
+        //od_set_cursor(12, 25);
+        //od_printf("`bright white`(`cyan`T`bright white`) `white`Show `bright white`T`white`ester Information");
         
         od_set_cursor(13, 25);
         od_printf("`bright white`(`bright green`Q`bright white`) `bright white`Q`white`uit to `bright white`%s", strReplace(gFromSite, "_", " "));
@@ -2056,12 +2073,10 @@ int main(int argc, char** argv)
             od_printf("\r\n`` od_maxtime:         `bright white`%d``", od_control.od_maxtime);
             od_printf("\r\n`` od_inactivity:      `bright white`%d``", od_control.od_inactivity);
 
-            //od_printf("\r\n`` od_num_keys:      `bright white`%d``", od_control.od_num_keys);
-            //od_printf("\r\n`` baud:               `bright white`%d``", od_control.baud);
-
             od_printf("\r\n");
             od_printf(DIVIDER);
-            od_printf("\r\n\r\n send a screenshot of this info to `bright blue`codefenix@gmail.com``\r\n");
+            od_printf("\r\n\r\nThis screen is for testing and troubleshooting purposes.\r\n");
+            od_printf("\r\n\r\nInclude this screen when posting a Github issue.\r\n");
 
             pause();
             break;

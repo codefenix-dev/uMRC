@@ -26,7 +26,7 @@
 
 // Link with OpenSSL libraries
 #if defined(__x86_64__) || defined(_M_X64)
-#pragma comment(lib, "../lib/x64/libssl-43.lib") 
+#pragma comment(lib, "../lib/x64/libssl-43.lib")  // TODO: lots of compiler warnings with 64bit
 #pragma comment(lib, "../lib/x64/libcrypto-41.lib")
 #elif defined(i386) || defined(__i386__) || defined(__i386) || defined(_M_IX86)
 #pragma comment(lib, "../lib/x86/libssl-43.lib") 
@@ -315,6 +315,7 @@ void sendToLocalClients(char* packet) {
 
 DWORD WINAPI clientProcess(LPVOID lpArg) {
 
+    bool cleanLogoff = false;
     int iResult = 0;
     char thisUser[30] = "";
     struct pClientProc p;
@@ -342,6 +343,10 @@ DWORD WINAPI clientProcess(LPVOID lpArg) {
                     }
                 }
             }
+                    
+            if (strstr(clientPacket, "~LOGOFF~") != 0) {
+                cleanLogoff = true;
+            }
 
             // TODO: validate the packet before sending it out (?)
             //       i.e.: only send to intended recipients?
@@ -352,9 +357,10 @@ DWORD WINAPI clientProcess(LPVOID lpArg) {
 
     } while (iResult > 0);
 
-    if (strlen(thisUser) > 0) {
+    // inform the server that the user was disconnected.
+    if (strlen(thisUser) > 0 && !cleanLogoff) {
         char disconnMsg[MSG_LEN] = "";
-        _snprintf_s(disconnMsg, MSG_LEN, -1, "|08%s has disconnected.", thisUser);
+        _snprintf_s(disconnMsg, MSG_LEN, -1, "|08- %s has disconnected.", thisUser);
         sendMsgPacket(thisUser, "", "", "NOTME", "", "", disconnMsg);
     }
 

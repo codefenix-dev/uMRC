@@ -38,10 +38,10 @@ HANDLE hCon; // needed for setting console colors and clearing screen
 // numeric and incremented when any significant 
 // modification is made to the code, keeping to 
 // 3 digits (e.g.: "101", "102", "103", etc...).
-#define UMRC_VERSION "095"
+#define UMRC_VERSION "099"
 #define YEAR_AND_AUTHOR "2025 Craig Hendricks (aka Codefenix)"
-#define AUTHOR_INITIALS "cf"
-#define COMPILE_DATE "2025-12-07"
+#define AUTHOR_INITIALS "cf" // alias initials
+#define COMPILE_DATE "2025-12-09"
 
 // These defaults should remain the same, and
 // not be changed without a good reason.

@@ -1,6 +1,6 @@
 ﻿```
  uMRC  ┌──── ▄█▀▀▀▀▀█▄ ───┬───┬───┬─┐
- v095┌──── ▄██ ▄███ ▀▀█▄ ·────────┐ ┤
+ v099┌──── ▄██ ▄███ ▀▀█▄ ·────────┐ ┤
    ┌──── ▄█▀▀ ▐█▀ ▀ █ ██  ▄ ▄ ▄ · │ │
  ┌──── ▄█▀ ▄██▄▀█▄▄██ ██  █████ · │ ┤
 ┌─── ▄█▀ ▐██▀▀█▌ ▀▀▀ ▄█▀  ▐▄█▄▌   │ │
@@ -27,9 +27,9 @@ codefenix@conchaos.synchro.net
 
 ## What is uMRC?
 
-uMRC lets you run Multi-Relay Chat on your BBS without having to install 
-Mystic BBS and Python. As long as your BBS is capable of running Windows 
-32-bit doors, then you and your users can participate in MRC.
+uMRC lets you run Multi-Relay Chat on your BBS without having to install Mystic
+BBS and Python. As long as your BBS is capable of running 32-bit Windows doors, 
+then you and your users can participate in MRC.
 
 It should be compatible with any DOOR32.SYS capable BBS such as EleBBS, WWIV, 
 Synchronet, Mystic, and possibly others. It has been tested on Windows 7 and 
@@ -354,8 +354,8 @@ the same port number as selected in the Setup program.
 
 I chose OpenDoors because it's available, free, works well, and has many great 
 functions built in for handling text movement on the screen, which uMRC uses 
-extensively. Not everyone likes the local pop-up window that OpenDoors show when
-running the door, but it can be hidden by using the `-SILENT` command line 
+extensively. Not everyone likes the local pop-up window that OpenDoors shows 
+when running the door, but it can be hidden by using the `-SILENT` command line
 switch.
 
 You should NOT have ports 5000/5001 open on your firewall/router, since 
@@ -387,13 +387,15 @@ everything he offers.
 
 **X-Bit** of **x-big.org**: testing and feedback.
 
-X-Bit is a veteran sysop and league coordinator of the X-League (777) Inter-BBS 
+xbit is a veteran sysop and league coordinator of the X-League (777) Inter-BBS 
 network which re-launched in 2025. If you're interested in joining the network, 
 check out these links below:
 
 - https://x-bit.org 
 - telnet://x-bit.org  
 - ssh://x-bit.org:22222
+
+xbit also contributed the "l33t" and "stars" themes!
 
 
 **Exodus** of **The Titantic BBS**: testing and feedback.

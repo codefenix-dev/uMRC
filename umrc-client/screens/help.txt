@@ -2,7 +2,7 @@
 |15/|11users         |08:|07 List users
 |15/|11whoon         |08:|07 List users and BBSes
 |15/|11msg |08or |07/|11t     |08:|07 Send a direct message|08:|07        |15/|11t |15user |09message
-|15/|11r             |08:|07 Reply to last direct message|08:|07 |15/|11r[34m message
+|15/|11r             |08:|07 Reply to last direct message|08:|07 |15/|11r |09 message
 |15/|11rooms         |08:|07 List available rooms
 |15/|11join |08or |07/|11j    |08:|07 Join a new room|08:|07              |15/|11j |15room_name
 |15/|11topic         |08:|07 Change room topic|08:|07            |15/|11topic|07 topic
@@ -13,6 +13,7 @@
 |15/|11scroll |08or |11PGUP|08:|07 Scroll the chat window
 |15/|11mentions |08or |11UP|08:|07 Reset mention counter and review mentions
 |15/|11sound         |08:|07 Toggle chat sounds (e.g.: mentions)
+|15/|11theme         |08:|07 Select a theme
 |15/|11ctcp          |08:|07 Send a CTCP command |08..... see|08:|07 |15/|11help |15ctcp
 |11TAB            |08:|07 Auto-complete user's name
 |11LEFT|08/|11RIGHT     |08:|07 Change your text color
