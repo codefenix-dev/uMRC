@@ -686,8 +686,8 @@ void scrollToScrollbackSection(char** scrollLines, int start, int end, int heigh
  *  - how far up to scroll when entering scrollback mode
  * 
  * mode: 
- *  - 0 = Standard scrollback; full scrolling with arrorws, pgup/pgdn, home, and end
- *  - 1 = Mention scrollback; only scroll to mention markers with arrows
+ *  - 0 = Standard scrollback
+ *  - 1 = Mention scrollback
  * 
  */
 void enterScrollBack(int initialScroll, int mode) {
@@ -839,7 +839,6 @@ void enterScrollBack(int initialScroll, int mode) {
 
     isChatPaused = false;
     drawStatusBar();
-    //od_set_cursor(od_control.user_screen_length, 1);
     resetInputLine();
     od_printf(CHAT_CURSOR);
 }
@@ -867,7 +866,7 @@ void addToScrollBack(char* msg, int mode) {
 }
 
 void displayMessage(char* msg, bool mention) {
-    int scrollLen = 1;
+    int scrollLen =  1; 
     char timeStamp[50] = "";
     _snprintf_s(timeStamp, 50, -1, (mention ? "|00|23%s|26\x1b[5m\376\x1b[0m|07" : "|08%s|07 "), getTimestamp());
 
@@ -890,17 +889,27 @@ void displayMessage(char* msg, bool mention) {
         char* context = NULL;
         token = strtok_s(msg, " ", &context);
         while (token != NULL) {
+            bool insertExtraCrLf = false;
             tokenLen = strLenWithoutPipecodes(token);
-            if (tokenLen > od_control.user_screenwidth - 8) { // Insert an additional scrollLen if a single 
+            if (tokenLen > od_control.user_screenwidth - 7) { // Insert an additional scrollLen if a single 
                 scrollLen = scrollLen + 1;                    // word is longer than the terminal width.
+                insertExtraCrLf = true;
             }
             linelen = linelen + tokenLen + 1;
-            if (linelen > (od_control.user_screenwidth  - 8 )) {
+            if (linelen > (od_control.user_screenwidth  - 7 )) {
                 _snprintf_s(wrappedMsg, sizeof(wrappedMsg), -1, "%s%s", wrappedMsg, "\r\n      \300");
                 scrollLen = scrollLen + 1;
-                linelen = 6 + (tokenLen + 1);
+                linelen = 3 + (tokenLen + 1);
             }
-            _snprintf_s(wrappedMsg, sizeof(wrappedMsg), -1, tokencnt==0 ? "%s%s" : "%s %s", wrappedMsg, token);
+            if (insertExtraCrLf) { // an extra CRLF is needed in wrappedMsg for the long token.
+                char tkn1[80] = "", tkn2[80] = "";
+                strncpy_s(tkn1, sizeof(tkn1), token, od_control.user_screenwidth - 7);
+                strncpy_s(tkn2, sizeof(tkn2), token + od_control.user_screenwidth - 7, -1);
+                _snprintf_s(wrappedMsg, sizeof(wrappedMsg), -1, tokencnt == 0 ? "%s%s" : "%s %s\r\n      \300 %s", wrappedMsg, tkn1, tkn2);
+            }
+            else {
+                _snprintf_s(wrappedMsg, sizeof(wrappedMsg), -1, tokencnt == 0 ? "%s%s" : "%s %s", wrappedMsg, token);
+            }
             tokencnt = tokencnt + 1;
             token = strtok_s(NULL, " ", &context);
         }
@@ -934,16 +943,6 @@ void displayMessage(char* msg, bool mention) {
  */
 void queueIncomingMessage(char* msg, bool mention) {
     if (isChatPaused) {
-        /*char timeStamp[50] = "";
-        char msgToStore[512] = "";
-        _snprintf_s(timeStamp, 50, -1, (mention ? "|00|23%s|26\x1b[5m\376\x1b[0m|07" : "|08%s|07 "), getTimestamp());
-        _snprintf_s(msgToStore, 512, -1, "%s%s|07", timeStamp, msg);
-        addToScrollBack(msgToStore, 0);                              // TODO: wrap message before storing it
-        if (mention) {
-            addToScrollBack(msgToStore, 1);
-        }
-        */
-
         // Just send it to the displayMessage function, since it has
         // built-in handling for adding wrapped messages to scrollback
         // and won't try to display it if chat is paused.        
@@ -1047,7 +1046,7 @@ void processUserCommand(char* cmd, char* params) {
             strncpy_s(to, nextspcidx, params, -1);
             _snprintf_s(msg, PACKET_LEN, -1, "|15* |08(|15%s|08/|14DirectMsg|08) |07%s", user.chatterName, params + nextspcidx);
             sendMsgPacket(&mrcSock, to, "", gRoom, msg);
-            _snprintf_s(msg, PACKET_LEN, -1, "|15* |08(|14DirectMsg|08->|15%s |07%s", to, params + nextspcidx);
+            _snprintf_s(msg, PACKET_LEN, -1, "|15* |08(|14DirectMsg|08->|15%s|08) |07%s", to, params + nextspcidx);
             displayMessage(msg, false);
         }
     }
@@ -1474,8 +1473,6 @@ void doChatRoutines(char* input) {
 
             case OD_KEY_DELETE:
                 strcpy_s(input, sizeof(input), "");
-                //od_set_cursor(od_control.user_screen_length, 1);
-                //od_clr_line(); // TODO: replace with gray dots
                 resetInputLine();
                 od_printf(CHAT_CURSOR);
                 break;
@@ -1513,8 +1510,6 @@ void doChatRoutines(char* input) {
                 continue;
             }
             else if (key == 13 || key == 10) {
-                //od_set_cursor(od_control.user_screen_length, 1);
-                //od_clr_line(); // TODO: replace with gray dots
                 resetInputLine();
                 isEscapeSequence = false;
                 break;
@@ -1535,6 +1530,10 @@ void doChatRoutines(char* input) {
             }
             else if (key == 9) {   // TAB - chatter name completion
 
+                if (strlen(input) == 0) {
+                    continue; // do nothing if there's no input
+                }
+
                 int indexOfTabSearch = -1;
                 char tabSearch[140] = "";
                 // capture the typed portion after the last space or the beginning of the string,
@@ -1548,9 +1547,11 @@ void doChatRoutines(char* input) {
 
                 for (int i = 0; i < gChatterCount; i++) {
                     if (_strnicmp(tabSearch, gChattersInRoom[i], strlen(tabSearch)) == 0 && _strcmpi(gChattersInRoom[i], user.chatterName) != 0) {
-                        strcpy_s(tabResult, 30, gChattersInRoom[i] + strlen(tabSearch));
+                        strcpy_s(tabResult, 30, gChattersInRoom[i] /* + strlen(tabSearch) */ );
+                        strncpy_s(input, MSG_LEN, input, strlen(input) - strlen(tabSearch));
                         _snprintf_s(input, MSG_LEN, -1, "%s%s", input, tabResult);
                         endOfInput = endOfInput + 1;
+
                         break;
                     }
                 }
@@ -1604,10 +1605,10 @@ void doChatRoutines(char* input) {
 
                 // mask displayed input if input string matches the following inputs:
                 if ((((_strnicmp(input, "/identify ", 10) == 0 ||
-                    _strnicmp(input, "/roompass ", 10) == 0 ||
-                    _strnicmp(input, "/update password ", 17) == 0 ||
-                    _strnicmp(input, "/roomconfig password ", 21) == 0)) ||
-                    (_strnicmp(input, "/register ", 10) == 0 && countOfChars(input, ' ') < 2)) && key != 32) {
+                       _strnicmp(input, "/roompass ", 10) == 0 ||
+                       _strnicmp(input, "/update password ", 17) == 0 ||
+                       _strnicmp(input, "/roomconfig password ", 21) == 0)) ||
+                      (_strnicmp(input, "/register ", 10) == 0 && countOfChars(input, ' ') < 2)) && key != 32) {
 
                     od_putch('*'); 
                 }
@@ -1742,9 +1743,6 @@ bool enterChat() {
 
     // TODO: User IP (USERIP)? ... maybe make IP an optional custom param passed by the BBS, assuming the BBS software is capable of detecting it...
 
-    //sendCmdPacket(&mrcSock, "USERLIST", ""); // needed? if we're joining a room shortly below?
-    //od_sleep(20);
-
     // Announce user and place user into room after initial packets
     //
     sendMsgPacket(&mrcSock, "NOTME", "", "", user.joinMessage);
@@ -1760,7 +1758,6 @@ bool enterChat() {
         char input[MSG_LEN] = "";
         updateBuffer(0);
 
-        //od_set_cursor(od_control.user_screen_length, 1);
         resetInputLine();
         od_printf(CHAT_CURSOR);
 
@@ -2077,8 +2074,8 @@ int main(int argc, char** argv)
 
             od_printf("\r\n");
             od_printf(DIVIDER);
-            od_printf("\r\n\r\nThis screen is for testing and troubleshooting purposes.\r\n");
-            od_printf("\r\n\r\nInclude this screen when posting a Github issue.\r\n");
+            od_printf("\r\nThis screen is for testing and troubleshooting purposes.\r\n");
+            od_printf("\r\nInclude this screen when posting a Github issue.\r\n");
 
             pause();
             break;
