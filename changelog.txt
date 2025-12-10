@@ -1,6 +1,17 @@
 Change Log:
 
-v099 - Demcember 9, 2025:
+v999b - December 10, 2025:
+
+  - Further line wrapping adjustments.
+  - Fixed a line wrapping issue while displaying long unbroken messages in
+    scrollback.
+  - Added a missing end-parenthesis for /t /msg DirectMsgs.
+  - Fixed casing of auto-completed user names (using the tab key).
+
+
+Change Log:
+
+v099 - December 9, 2025:
 
   - Added a dark gray row of dots to the bottom of the screen, to make the 
     input line slightly more obvious.
