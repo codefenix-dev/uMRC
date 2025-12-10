@@ -125,8 +125,8 @@ char* getDateTimeStamp() {
 }
 
 void printDateTimeStamp() {
-    char dt[41] = "";
-    strcpy_s(dt, 41, getDateTimeStamp());
+    //char dt[41] = "";
+    //strcpy_s(dt, 41, getDateTimeStamp());
     printPipeCodeString( getDateTimeStamp() );
 }
 
@@ -636,7 +636,7 @@ void mrcHostProcess(struct settings cfg) {
             strcpy_s(inboundData, DATA_LEN, partialPacket);
             bytesread = strlen(partialPacket);
             strcpy_s(partialPacket, sizeof(partialPacket), "");
-            printDateTimeStamp();
+            //printDateTimeStamp();
             //printf("partial packet recovered! \r\n");
         }
 
@@ -660,7 +660,7 @@ void mrcHostProcess(struct settings cfg) {
                 // if it's not, then consider it a partial packet that needs to be 
                 // prefixed to the next inboundData read
                 if (pktCount > 1 && i == pktCount - 1 && strcmp("\n", packet) != 0) {
-                    printDateTimeStamp();
+                    //printDateTimeStamp();
                     //printf("partial packet detected: \"%s\"\r\n", packet);
                     strcpy_s(partialPacket, sizeof(partialPacket), strReplace(packet, "\n", "")); // strip out the LF
                     break;
