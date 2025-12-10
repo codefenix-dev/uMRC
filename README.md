@@ -27,9 +27,9 @@ codefenix@conchaos.synchro.net
 
 ## What is uMRC?
 
-uMRC lets you run Multi-Relay Chat on your BBS without having to install Mystic
-BBS and Python. As long as your BBS is capable of running 32-bit Windows doors, 
-then you and your users can participate in MRC.
+uMRC lets you run Multi-Relay Chat on your BBS without having to install and
+maintain a Mystic BBS instance and Python. As long as your BBS is capable of
+running 32-bit Windows doors, then you and your users can participate in MRC.
 
 <img width="637" height="472" alt="image" src="https://github.com/user-attachments/assets/4cd1acf1-4efc-48b7-87b0-f34185f9a240" />
 
@@ -426,5 +426,6 @@ and is always happy to try running new things on his board.
 ## Enjoy!
 
 See you in chat!
+
 
 
