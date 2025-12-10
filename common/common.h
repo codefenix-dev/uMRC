@@ -41,7 +41,7 @@ HANDLE hCon; // needed for setting console colors and clearing screen
 #define UMRC_VERSION "099"
 #define YEAR_AND_AUTHOR "2025 Craig Hendricks (aka Codefenix)"
 #define AUTHOR_INITIALS "cf" // alias initials
-#define COMPILE_DATE "2025-12-09"
+#define COMPILE_DATE "2025-12-10"
 
 // These defaults should remain the same, and
 // not be changed without a good reason.
