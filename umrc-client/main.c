@@ -19,12 +19,22 @@
 #pragma comment (lib, "Ws2_32.lib")
 #pragma comment (lib, "Mswsock.lib")
 #pragma comment (lib, "AdvApi32.lib")
+#include "OpenDoor.h"
+#else
+
+#include <pthread.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+#include <dirent.h>
+#include "./nix-od/OpenDoor.h"
+    
 #endif
 
 #include <sys/stat.h>
 #include <sys/timeb.h>
 
-#include "OpenDoor.h"
 #include "../common/common.h"
 
 #define DIVIDER "`bright blue`___________________________________________________________________________\r\n``"
@@ -108,14 +118,24 @@ SOCKET mrcSock = INVALID_SOCKET;
 char* getTimestamp() {
     char timeStamp[10] = "";
     time_t rawtime;
-    struct tm timeinfo;
 
     time(&rawtime);
+#if defined(WIN32) || defined(_MSC_VER)  
+    struct tm timeinfo;
     localtime_s(&timeinfo, &rawtime);
+#else
+    struct tm *timeinfo; 
+    timeinfo = localtime(&rawtime);
+#endif
 
     _snprintf_s(timeStamp, 10, -1, "%02d:%02d",
+#if defined(WIN32) || defined(_MSC_VER)  
         timeinfo.tm_hour,
         timeinfo.tm_min);
+#else
+        timeinfo->tm_hour,
+        timeinfo->tm_min);
+#endif
 
     return _strdup(timeStamp);
 }
@@ -126,17 +146,30 @@ char* getTimestamp() {
 char* getCtcpDatetime() {
     char dtStr[30] = "";
     time_t rawtime;
-    struct tm timeinfo;
 
     time(&rawtime);
+#if defined(WIN32) || defined(_MSC_VER)  
+    struct tm timeinfo;
     localtime_s(&timeinfo, &rawtime);
+#else
+    struct tm *timeinfo; 
+    timeinfo = localtime(&rawtime);
+#endif
 
     _snprintf_s(dtStr, 30, -1, "%02d/%02d/%02d %02d:%02d",
+#if defined(WIN32) || defined(_MSC_VER)  
         timeinfo.tm_mon + 1,
         timeinfo.tm_mday,
         timeinfo.tm_year - 100, // + 1900,
         timeinfo.tm_hour,
         timeinfo.tm_min);
+#else
+        timeinfo->tm_mon + 1,
+        timeinfo->tm_mday,
+        timeinfo->tm_year - 100, // + 1900,
+        timeinfo->tm_hour,
+        timeinfo->tm_min);
+#endif
 
     return _strdup(dtStr);
 }
@@ -144,7 +177,7 @@ char* getCtcpDatetime() {
 /**
  *  Pauses and waits for any key input from the user.
  */
-void pause() {
+void doPause() {
     od_printf("\r\n `bright white`[`cyan`Press any key to continue`bright white`]`white` ");
     od_get_key(TRUE);
 }
@@ -160,6 +193,14 @@ bool strContainsStrI(char* str, char* contains) {
     lstr(c);
     lstr(s);
     return strstr(s, c) != NULL;
+}
+void getSub(char* s, char* ss, int pos, int l) {
+    int i = 0;
+    s += pos; // Move pointer to starting position
+    while (l--) {
+        *ss++ = *s++;
+    }
+    *ss = '\0'; // Null terminate
 }
 
 /**
@@ -306,7 +347,7 @@ int editDisplayName() {
             od_printf(" `bright black`Current string is: `bright white`%s``\r\n\r\n\r\n", user.chatterNameSuffix);
             od_printf("Enter a suffix to add to your username:\r\n\r\n `bright black`(pipe colors allowed)\r\n\r\n `bright white`> ");
             od_input_str(newSuf, 30, 32, 127);
-            if (_strcmpi(newSuf, user.chatterNameSuffix) != 0 && strlen(newSuf) != 0) {
+            if (_stricmp(newSuf, user.chatterNameSuffix) != 0 && strlen(newSuf) != 0) {
                 _snprintf_s(user.chatterNameSuffix, 33, -1, "|07|16%s|16", newSuf);
                 changeCount = changeCount + 1;
             }
@@ -326,17 +367,17 @@ int editDisplayName() {
 }
 
 void pickTheme(char* pickedTheme) {
-    WIN32_FIND_DATA fdFile;
-    HANDLE hFind = NULL;
-
     bool validEntry = false;
     int pickedOption = -1;
     int count = 0;
     char themeFiles[1000] = "";
+#if defined(WIN32) || defined(_MSC_VER) 
+    WIN32_FIND_DATA fdFile;
+    HANDLE hFind = NULL;
 
     if ((hFind = FindFirstFile("themes\\*.ans", &fdFile)) == INVALID_HANDLE_VALUE) {
         printf("Path not found: [%s]\r\n", "themes");
-        pause();
+        doPause();
         return;
     }
 
@@ -350,6 +391,27 @@ void pickTheme(char* pickedTheme) {
         count = count + 1;
     } while (FindNextFile(hFind, &fdFile));
     FindClose(hFind);
+#else
+    DIR *d;
+    struct dirent *dir;
+    d = opendir("themes");
+    if (d) {
+        while ((dir=readdir(d)) != NULL) {
+            if (strstr(dir->d_name, ".ans")==NULL) {
+                continue;
+            }
+            if (count == 0) {
+                strcpy_s(themeFiles, sizeof(themeFiles), dir->d_name);
+            }
+            else {
+                strcat_s(themeFiles, sizeof(themeFiles), "|");
+                strcat_s(themeFiles, sizeof(themeFiles), dir->d_name);
+            }
+            count = count + 1;
+        }
+    }
+
+#endif
 
     char** themeList;
     count = split(themeFiles, '|', &themeList);
@@ -370,9 +432,17 @@ void pickTheme(char* pickedTheme) {
 
 void loadTheme() {
     char themePath[30] = "";
+#if defined(WIN32) || defined(_MSC_VER)
     _snprintf_s(themePath, 30, -1, "themes\\%s", user.theme);
+#else
+    _snprintf_s(themePath, 30, -1, "themes/%s", user.theme);
+#endif
     FILE* extFile;
+#if defined(WIN32) || defined(_MSC_VER)
     fopen_s(&extFile, themePath, "r");
+#else
+    extFile = fopen(themePath, "r");
+#endif
     int lineCount = 0;
     if (extFile != NULL) {
         char line[400] = "";
@@ -524,7 +594,7 @@ void enterChatterSettings(char* userFile) {
             od_printf("`bright white`Default Room``\r\n\r\n");
             od_printf("Enter a new default room (suggestions: `bright green`lobby, `bright magenta` ddial``)\r\n\r\n`bright white`> ");
             od_input_str(newRoom, 30, 32, 127);
-            if (_strcmpi(newRoom, user.defaultRoom) != 0) {
+            if (_stricmp(newRoom, user.defaultRoom) != 0) {
                 if (strlen(newRoom) == 0) {
                     strncpy_s(newRoom, 30, DEFAULT_ROOM, -1);
                 }
@@ -545,7 +615,7 @@ void enterChatterSettings(char* userFile) {
             user.chatSounds = !user.chatSounds;
             changesMade = true;
             od_printf("\r\n\r\n`bright white`Chat sounds are now `bright yellow`%s``", user.chatSounds ? "ON" : "OFF");
-            pause();
+            doPause();
             break;
 
         case '5':
@@ -554,7 +624,7 @@ void enterChatterSettings(char* userFile) {
             od_printf(" `bright black`Current string is: `bright white`%s``\r\n\r\n\r\n", user.joinMessage);
             od_printf("Enter a message you'd like to announce you when you JOIN chat:\r\n\r\n `bright black`(pipe colors allowed)\r\n\r\n `bright white`> ");
             od_input_str(newJoin, 50, 32, 127);
-            if (_strcmpi(newJoin, user.joinMessage) != 0) {
+            if (_stricmp(newJoin, user.joinMessage) != 0) {
                 if (strlen(newJoin) == 0) {
                     _snprintf_s(newJoin, 50, -1, DEFAULT_JOIN_MSG, user.chatterName);
                 }
@@ -569,7 +639,7 @@ void enterChatterSettings(char* userFile) {
             od_printf(" `bright black`Current string is: `bright white`%s``\r\n\r\n\r\n", user.exitMessage);
             od_printf("Enter a message you'd like to announce you when you EXIT chat:\r\n\r\n `bright black`(pipe colors allowed)\r\n\r\n `bright white`> ");
             od_input_str(newExit, 50, 32, 127);
-            if (_strcmpi(newExit, user.exitMessage) != 0) {
+            if (_stricmp(newExit, user.exitMessage) != 0) {
                 if (strlen(newExit) == 0) {
                     _snprintf_s(newExit, 50, -1, DEFAULT_EXIT_MSG, user.chatterName);
                 }
@@ -594,7 +664,7 @@ void enterChatterSettings(char* userFile) {
     if (changesMade) {
         saveUser(&user, userFile);
         od_printf("\r\n`bright white`Changes saved!``");
-        pause();
+        doPause();
     }
 }
 
@@ -691,7 +761,6 @@ void scrollToScrollbackSection(char** scrollLines, int start, int end, int heigh
  * 
  */
 void enterScrollBack(int initialScroll, int mode) {
-
     isChatPaused = true; // pause the chat before doing anything else
 
     bool exitScrollback = false;
@@ -866,7 +935,6 @@ void addToScrollBack(char* msg, int mode) {
 }
 
 void displayMessage(char* msg, bool mention) {
-    int scrollLen =  1; 
     char timeStamp[50] = "";
     _snprintf_s(timeStamp, 50, -1, (mention ? "|00|23%s|26\x1b[5m\376\x1b[0m|07" : "|08%s|07 "), getTimestamp());
 
@@ -892,23 +960,27 @@ void displayMessage(char* msg, bool mention) {
             bool insertExtraCrLf = false;
             tokenLen = strLenWithoutPipecodes(token);
             if (tokenLen > od_control.user_screenwidth - 7) { // Insert an additional scrollLen if a single 
-                scrollLen = scrollLen + 1;                    // word is longer than the terminal width.
-                insertExtraCrLf = true;
+                insertExtraCrLf = true;                       // word is longer than the terminal width.
             }
             linelen = linelen + tokenLen + 1;
             if (linelen > (od_control.user_screenwidth  - 7 )) {
-                _snprintf_s(wrappedMsg, sizeof(wrappedMsg), -1, "%s%s", wrappedMsg, "\r\n      \300");
-                scrollLen = scrollLen + 1;
+                strcat_s(wrappedMsg, sizeof(wrappedMsg), "\r\n      \300");
                 linelen = 3 + (tokenLen + 1);
             }
             if (insertExtraCrLf) { // an extra CRLF is needed in wrappedMsg for the long token.
                 char tkn1[80] = "", tkn2[80] = "";
                 strncpy_s(tkn1, sizeof(tkn1), token, od_control.user_screenwidth - 7);
                 strncpy_s(tkn2, sizeof(tkn2), token + od_control.user_screenwidth - 7, -1);
-                _snprintf_s(wrappedMsg, sizeof(wrappedMsg), -1, tokencnt == 0 ? "%s%s" : "%s %s\r\n      \300 %s", wrappedMsg, tkn1, tkn2);
+                strcat_s(wrappedMsg, sizeof(wrappedMsg), tkn1);
+                strcat_s(wrappedMsg, sizeof(wrappedMsg), "\r\n");
+                strcat_s(wrappedMsg, sizeof(wrappedMsg), tkn2);
+                strcat_s(wrappedMsg, sizeof(wrappedMsg), "\r\n");
             }
             else {
-                _snprintf_s(wrappedMsg, sizeof(wrappedMsg), -1, tokencnt == 0 ? "%s%s" : "%s %s", wrappedMsg, token);
+                if (tokencnt>0) {
+                    strcat_s(wrappedMsg, sizeof(wrappedMsg), " ");
+                }
+                strcat_s(wrappedMsg, sizeof(wrappedMsg), token);
             }
             tokencnt = tokencnt + 1;
             token = strtok_s(NULL, " ", &context);
@@ -925,8 +997,8 @@ void displayMessage(char* msg, bool mention) {
         addToScrollBack(dispMsg, 1);
     }
     if (!isChatPaused) {
-        od_scroll(1, 1, od_control.user_screenwidth, od_control.user_screen_length - 3, scrollLen, 0);
-        od_set_cursor(od_control.user_screen_length - (2 + scrollLen), 1);
+        od_scroll(1, 1, od_control.user_screenwidth, od_control.user_screen_length - 3, countOfChars(dispMsg, '\n') +1  , 0);
+        od_set_cursor(od_control.user_screen_length - (2 + countOfChars(dispMsg, '\n') +1  ), 1);
         od_disp_emu(pipeToAnsi(dispMsg), TRUE);
     }
 }
@@ -958,6 +1030,7 @@ void queueIncomingMessage(char* msg, bool mention) {
 }
 
 void listThemesInChat() {
+#if defined(WIN32) || defined(_MSC_VER) 
     WIN32_FIND_DATA fdFile;
     HANDLE hFind = NULL;
 
@@ -973,12 +1046,33 @@ void listThemesInChat() {
         displayMessage(strReplace(line, ".ans", ""), false);
     } while (FindNextFile(hFind, &fdFile));
     FindClose(hFind);
+#else
+
+    DIR *d;
+    struct dirent *dir;
+    d = opendir("themes");
+    if (d) {
+        while ((dir=readdir(d)) != NULL) {
+            if (strstr(dir->d_name, ".ans")==NULL) {
+                continue;
+            }
+            char line[200] = "";
+            _snprintf_s(line, sizeof(line), -1, "|08* - |07%s", dir->d_name);
+            lstr(line);
+            displayMessage(strReplace(line, ".ans", ""), false);
+        }
+    }
+#endif
     displayMessage("|08__", false);
 }
 
 void displayPipeFileInChat(char* filename) {
     FILE* extFile;
+#if defined(WIN32) || defined(_MSC_VER)  
     fopen_s(&extFile, filename, "r");
+#else
+    extFile = fopen(filename, "r");
+#endif
     if (extFile != NULL) {
         char line[200] = "";
         while (fgets(line, sizeof(line), extFile)) {            
@@ -991,7 +1085,12 @@ void displayPipeFileInChat(char* filename) {
 
 void displayPipeFile(char* filename) {
     FILE* extFile;
+#if defined(WIN32) || defined(_MSC_VER)  
     fopen_s(&extFile, filename, "r");
+#else
+    extFile=fopen(filename, "r");
+#endif            
+
     if (extFile != NULL) {
         char line[200] = "";
         while (fgets(line, sizeof(line), extFile)) {
@@ -1003,13 +1102,17 @@ void displayPipeFile(char* filename) {
 }
 
 void processUserCommand(char* cmd, char* params) {
-    if (_strcmpi(cmd, "quit") == 0 || _strcmpi(cmd, "q") == 0) {
+    if (_stricmp(cmd, "quit") == 0 || _stricmp(cmd, "q") == 0) {
         sendMsgPacket(&mrcSock, "NOTME", "", "", user.exitMessage);
         sendMsgPacket(&mrcSock, "SERVER", "", "", "LOGOFF");
         gIsInChat = false;
+#if defined(WIN32) || defined(_MSC_VER)  
         shutdown(mrcSock, SD_SEND);
+#else
+        shutdown(mrcSock, SHUT_WR);
+#endif
     }
-    else if (_strcmpi(cmd, "join") == 0 || _strcmpi(cmd, "j") == 0) {
+    else if (_stricmp(cmd, "join") == 0 || _stricmp(cmd, "j") == 0) {
         char newRoom[20] = "";
         strncpy_s(newRoom, 20, strReplace(params, "#", ""), -1);  // no #
         strncpy_s(newRoom, 20, strReplace(newRoom, " ", "_"), -1); // Single word
@@ -1021,7 +1124,7 @@ void processUserCommand(char* cmd, char* params) {
         strncpy_s(gRoom, 30, newRoom, -1); 
         sendCmdPacket(&mrcSock, "USERLIST", ""); // Need a new user list after joining a different room
     }
-    else if (_strcmpi(cmd, "topic") == 0) {              
+    else if (_stricmp(cmd, "topic") == 0) {              
         stripPipeCodes(params);  // No pipe codes
         char newTopicCmd[30] = "";
         _snprintf_s(newTopicCmd, 30, -1, "NEWTOPIC:%s:", gRoom);
@@ -1030,82 +1133,89 @@ void processUserCommand(char* cmd, char* params) {
     else if (strcmp(cmd, "?") == 0) {
         sendCmdPacket(&mrcSock, "help", "");
     }
-    else if (_strcmpi(cmd, "rooms") == 0) {
+    else if (_stricmp(cmd, "rooms") == 0) {
         sendCmdPacket(&mrcSock, "list", "");
     }
-    else if (_strcmpi(cmd, "me") == 0) {
+    else if (_stricmp(cmd, "me") == 0) {
         char action[MSG_LEN] = "";
         _snprintf_s(action, MSG_LEN, -1, "|15* |13%s %s", user.chatterName, params);
         sendMsgPacket(&mrcSock, "", "", gRoom, action);
     }
-    else if (_strcmpi(cmd, "t") == 0 || _strcmpi(cmd, "msg") == 0) {
+    else if (_stricmp(cmd, "t") == 0 || _stricmp(cmd, "msg") == 0) {
         char to[36] = "";
         char msg[PACKET_LEN] = "";
-        int nextspcidx = indexOfChar(params, ' ') + 1;
+        int nextspcidx = indexOfChar(params, ' ') +1;
         if (nextspcidx > 0) {
-            strncpy_s(to, nextspcidx, params, -1);
+            getSub(params, to, 0, nextspcidx-1);
             _snprintf_s(msg, PACKET_LEN, -1, "|15* |08(|15%s|08/|14DirectMsg|08) |07%s", user.chatterName, params + nextspcidx);
             sendMsgPacket(&mrcSock, to, "", gRoom, msg);
             _snprintf_s(msg, PACKET_LEN, -1, "|15* |08(|14DirectMsg|08->|15%s|08) |07%s", to, params + nextspcidx);
             displayMessage(msg, false);
         }
     }
-    else if (_strcmpi(cmd, "r") == 0) {
+    else if (_stricmp(cmd, "r") == 0) {
         char rep[PACKET_LEN] = "";
         _snprintf_s(rep, PACKET_LEN, -1, "|15* |08(|15%s|08/|14DirectMsg|08) |07%s", user.chatterName, params);
         sendMsgPacket(&mrcSock, gLastDirectMsgFrom, "", gRoom, rep);
         _snprintf_s(rep, PACKET_LEN, -1, "|15* |08(|14DirectMsg|08->|15%s|08) |07%s", gLastDirectMsgFrom, params);
         displayMessage(rep, false);
     }
-    else if (_strcmpi(cmd, "b") == 0) {
+    else if (_stricmp(cmd, "b") == 0) {
         char bcast[PACKET_LEN] = "";
         _snprintf_s(bcast, PACKET_LEN, -1, "|15* |08(|15%s|08/|14Broadcast|08) |07%s", gDisplayChatterName, params);
         sendMsgPacket(&mrcSock, "", "", "", bcast);
     }
-    else if (_strcmpi(cmd, "sound") == 0) {
+    else if (_stricmp(cmd, "sound") == 0) {
         user.chatSounds = !user.chatSounds;
         char sndstat[50] = "";
         _snprintf_s(sndstat, sizeof(sndstat), -1, "|15* |14Chat sounds |15%s|14.", (user.chatSounds ? "ON" : "OFF"));
         displayMessage(sndstat, false);
     }
-    else if (_strcmpi(cmd, "ctcp") == 0) {
+    else if (_stricmp(cmd, "ctcp") == 0) {
         char target[36] = "";
         char ctcp_data[50] = "";
-        int nextspcidx = indexOfChar(params, ' ') + 1;
+        int nextspcidx = indexOfChar(params, ' ');
         if (nextspcidx > 0) {
-            strncpy_s(target, nextspcidx, params, -1);
+            getSub(params, target, 0, nextspcidx);
             ustr(params);
             _snprintf_s(ctcp_data, 50, -1, "%s %s", target, params + nextspcidx);
             sendCtcpPacket(&mrcSock, (strcmp(target, "*") == 0 || target[0] == '#') ? "" : target, "[CTCP]", ctcp_data);
         }
     }
-    //else if (_strcmpi(cmd, "twit") == 0) { // For later
+    //else if (_stricmp(cmd, "twit") == 0) { // For later
     //}
     else if (_stricmp(cmd, "help") == 0) {
 
         if (_stricmp(params, "ctcp") == 0) {
+#if defined(WIN32) || defined(_MSC_VER)  
             displayPipeFileInChat("screens\\helpctcp.txt");
         }
         else {
             displayPipeFileInChat("screens\\help.txt");
+#else
+            displayPipeFileInChat("screens/helpctcp.txt");
+        }
+        else {
+            displayPipeFileInChat("screens/help.txt");
+#endif
         }
     }
-    else if (_strcmpi(cmd, "quote") == 0) {
+    else if (_stricmp(cmd, "quote") == 0) {
         sendCmdPacket(&mrcSock, params, "");
     }
-    else if (_strcmpi(cmd, "redraw") == 0) {
+    else if (_stricmp(cmd, "redraw") == 0) {
         drawStatusBar();
         displayMessage("|15* |14Status bar redrawn", false);
     }
-    else if (_strcmpi(cmd, "scroll") == 0) {
+    else if (_stricmp(cmd, "scroll") == 0) {
         enterScrollBack(0, 0);
     }
-    else if (_strcmpi(cmd, "mentions") == 0) {
+    else if (_stricmp(cmd, "mentions") == 0) {
         gMentionCount = 0;
         enterScrollBack(0, 1);
         updateMentions();
     }
-    else if (_strcmpi(cmd, "theme") == 0) {
+    else if (_stricmp(cmd, "theme") == 0) {
         if (strlen(params) == 0) {
             listThemesInChat();
         }
@@ -1122,9 +1232,9 @@ void processUserCommand(char* cmd, char* params) {
         sendCmdPacket(&mrcSock, cmd, params);
         
         // request a new USERLIST when checking the current users
-        if (_strcmpi(cmd, "users") == 0 ||
-            _strcmpi(cmd, "whoon") == 0 ||
-            _strcmpi(cmd, "chatters") == 0) {
+        if (_stricmp(cmd, "users") == 0 ||
+            _stricmp(cmd, "whoon") == 0 ||
+            _stricmp(cmd, "chatters") == 0) {
             sendCmdPacket(&mrcSock, "USERLIST", "");
         }
     }
@@ -1138,15 +1248,16 @@ bool processServerMessage(char* body, char* toUser) {
     char cmd[141] = "";
     char params[512] = "";
     int cmdsep = indexOfChar(body, ':');
+
     if (cmdsep > 0) {
-        strncpy_s(cmd, cmdsep + 1, body, -1);
-        strncpy_s(params, sizeof(params), body + cmdsep + 1, -1);
+        getSub(body, cmd, 0, cmdsep);
+        getSub(body, params, cmdsep+1, strlen(body));
     }
     else {
         strncpy_s(cmd, sizeof(cmd), body, -1);
     }
 
-    // Implemented SERVER commands:
+    // Implemented SERVER commands - notes provided from the MRC developer wiki on how each is handled:
     //
     if (strcmp(cmd, "BANNER") == 0 || strcmp(cmd, "NOTIFY") == 0) {
         // BANNERS are seldom sent from the host, so this client doesn't
@@ -1191,7 +1302,7 @@ bool processServerMessage(char* body, char* toUser) {
         // This is to allow for the chat interface to gracefully terminate the connection.
         gIsInChat = false;
         displayMessage(params, true); // should be displayed immediately
-        pause();
+        doPause();
         shouldTerminateSession = true;
     }
     else if (strcmp(cmd, "USERLIST") == 0) {
@@ -1210,7 +1321,7 @@ bool processServerMessage(char* body, char* toUser) {
     }
     // Just display the whole incoming server message if it's not a recognized command string,
     // since it's most likely an informational message from the SERVER.
-    else if (strlen(toUser) == 0 || _strcmpi(toUser, user.chatterName) == 0) {
+    else if (strlen(toUser) == 0 || _stricmp(toUser, user.chatterName) == 0) {
         queueIncomingMessage(body, false);
         od_sleep(10);
     }
@@ -1221,12 +1332,12 @@ void processCtcpCommand(char* body, char* toUser, char* fromUser) {
 
     // TODO: - This works, but could be written better.. 
 
-    if (strncmp(body, "[CTCP] ", 7) == 0 && (_strcmpi(toUser, user.chatterName) == 0 || strlen(toUser)==0 /* || strcmp(toUser, "*") == 0) || (toUser[0] == '#' && _strcmpi(toUser + 1, gRoom) == 0*/))
+    if (strncmp(body, "[CTCP] ", 7) == 0 && (_stricmp(toUser, user.chatterName) == 0 || strlen(toUser)==0 /* || strcmp(toUser, "*") == 0) || (toUser[0] == '#' && _stricmp(toUser + 1, gRoom) == 0*/))
     {
         char cmdStr[80] = "";
         char repStr[80] = "";
 
-        strncpy_s(cmdStr, sizeof(cmdStr), body + 7 + strlen(fromUser) + 1 + (strlen(toUser) == 0 ? 1 : strlen(toUser))  + 1, -1);
+        strncpy_s(cmdStr, sizeof(cmdStr), body + 7 + strlen(fromUser) + 1 + (strlen(toUser) == 0 ? 1 : strlen(toUser))  + 2, -1);
 
         if (_strnicmp(cmdStr, "VERSION", 7) == 0) {
             _snprintf_s(repStr, sizeof(repStr), -1, "VERSION %s v%s.%s %s [%s]", TITLE, PROTOCOL_VERSION, UMRC_VERSION, COMPILE_DATE, AUTHOR_INITIALS);
@@ -1240,9 +1351,12 @@ void processCtcpCommand(char* body, char* toUser, char* fromUser) {
         else if (_strnicmp(cmdStr, "CLIENTINFO", 10) == 0) {
             _snprintf_s(repStr, sizeof(repStr), -1, "CLIENTINFO VERSION TIME PING CLIENTINFO");
         }
+        else {
+            _snprintf_s(repStr, sizeof(repStr), -1, "Unsupported CTCP command: '%s'", cmdStr);
+        }
         sendCtcpPacket(&mrcSock, fromUser, "[CTCP-REPLY]", repStr);
     }
-    else if (strncmp(body, "[CTCP-REPLY] ", 13) == 0 && _strcmpi(toUser, user.chatterName) == 0) {
+    else if (strncmp(body, "[CTCP-REPLY] ", 13) == 0 && _stricmp(toUser, user.chatterName) == 0) {
         char repStr[80] = "";
         char resp[MSG_LEN] = "";
         strncpy_s(repStr, 80, body + 13 + strlen(fromUser) + 1, -1);
@@ -1252,7 +1366,11 @@ void processCtcpCommand(char* body, char* toUser, char* fromUser) {
     }
 }
 
+#if defined(WIN32) || defined(_MSC_VER)    
 DWORD WINAPI handleIncomingMessages(LPVOID lpArg) {
+#else
+void* handleIncomingMessages(void* lpArg) {
+#endif
     int iResult = 0;
     time_t lastIamHere;
     time(&lastIamHere);
@@ -1270,7 +1388,11 @@ DWORD WINAPI handleIncomingMessages(LPVOID lpArg) {
 
         while ((iResult = recv(mrcSock, inboundData, DATA_LEN, 0)) != 0 && gIsInChat) { // continue till disconnected       
             if (iResult == -1) {
-                if (WSAGetLastError() == WSAEMSGSIZE) { // server has more data to send than the buffer can get in one call
+#if defined(WIN32) || defined(_MSC_VER)  
+                if (WSAGetLastError() == WSAEMSGSIZE) { // server has more data to send than the buffer can get in one call                   
+#else
+                if (errno == EMSGSIZE) {
+#endif
                     continue; // iterate again to get more data
                 }
             }
@@ -1306,7 +1428,11 @@ DWORD WINAPI handleIncomingMessages(LPVOID lpArg) {
                         // Returns TRUE if the incoming server command should
                         // terminate the session, breaking the loop.
                         gIsInChat = false;
+#if defined(WIN32) || defined(_MSC_VER)  
                         shutdown(mrcSock, SD_SEND);
+#else
+                        shutdown(mrcSock, SHUT_WR);
+#endif
                         break;
                     }
                                         
@@ -1325,15 +1451,15 @@ DWORD WINAPI handleIncomingMessages(LPVOID lpArg) {
                     processCtcpCommand(body, toUser, fromUser);
                 }
                 else if (strcmp(toUser, "NOTME") == 0 ) {
-                    if ((_strcmpi(fromRoom, gRoom) == 0 || strlen(fromRoom) == 0) && 
-                        (_strcmpi(toRoom, gRoom) == 0 || strlen(toRoom) == 0)) {
+                    if ((_stricmp(fromRoom, gRoom) == 0 || strlen(fromRoom) == 0) && 
+                        (_stricmp(toRoom, gRoom) == 0 || strlen(toRoom) == 0)) {
                         queueIncomingMessage( body, false);
                         sendCmdPacket(&mrcSock, "USERLIST", "");
                     }
                 }
                 else if (
                         // messages addressed to the room or to the chatter
-                        ((strcmp(gRoom, toRoom)==0 || strlen(toRoom)==0  ) && (strlen(toUser) == 0 || _strcmpi(toUser, user.chatterName) == 0)) || 
+                        ((strcmp(gRoom, toRoom)==0 || strlen(toRoom)==0  ) && (strlen(toUser) == 0 || _stricmp(toUser, user.chatterName) == 0)) || 
                         // broadcast: messages addressed to everyone; no room and no user specified
                         (strlen(toRoom) == 0 && strlen(toUser) == 0)) {
                     // Direct message (DirectMsg) ...? 
@@ -1346,7 +1472,7 @@ DWORD WINAPI handleIncomingMessages(LPVOID lpArg) {
                     else {
                         bool mentioned = false;
 
-                        if (_strcmpi(fromUser, user.chatterName) != 0 && strContainsStrI(body, user.chatterName)) {
+                        if (_stricmp(fromUser, user.chatterName) != 0 && strContainsStrI(body, user.chatterName)) {
                             gMentionCount = gMentionCount + 1;
                             mentioned = true;
                             gMentionCountChanged = true;
@@ -1363,12 +1489,16 @@ DWORD WINAPI handleIncomingMessages(LPVOID lpArg) {
         else if (iResult == 0) {
             od_printf("%s Connection closed\r\n", getTimestamp());
             gIsInChat = false;
-            pause();
+            doPause();
         }
         else {
+#if defined(WIN32) || defined(_MSC_VER) 
             od_printf("%s recv failed with error: %d\r\n", getTimestamp(), WSAGetLastError());
+#else
+            od_printf("%s recv failed with error: %d\r\n", getTimestamp(), errno);
+#endif           
             gIsInChat = false;
-            pause();
+            doPause();
         }
     }
     return 0;
@@ -1519,17 +1649,18 @@ void doChatRoutines(char* input) {
             }
             else if (key >= 32 && key <= 125) { // allowed characters
                 if (strlen(input) <= MSG_LEN) {
-                    _snprintf_s(input, MSG_LEN, -1, "%s%c", input, key);
+                    char tmpipt[MSG_LEN] = "";
+                    _snprintf_s(tmpipt, MSG_LEN, -1, "%s%c", input, key);
+                    strcpy_s(input, MSG_LEN, tmpipt);
                 }
             }
             else if (key == 8) { // backspace
                 if (strlen(input) > 0) {
-                    _snprintf_s(input, MSG_LEN, strlen(input) - 1, "%s", input);
+                    input[strlen(input)-1]='\0';
                     endOfInput = endOfInput + 1;
                 }
             }
             else if (key == 9) {   // TAB - chatter name completion
-
                 if (strlen(input) == 0) {
                     continue; // do nothing if there's no input
                 }
@@ -1546,12 +1677,18 @@ void doChatRoutines(char* input) {
                 strcpy_s(tabSearch, sizeof(tabSearch), input + indexOfTabSearch);
 
                 for (int i = 0; i < gChatterCount; i++) {
-                    if (_strnicmp(tabSearch, gChattersInRoom[i], strlen(tabSearch)) == 0 && _strcmpi(gChattersInRoom[i], user.chatterName) != 0) {
+                    if (_strnicmp(tabSearch, gChattersInRoom[i], strlen(tabSearch)) == 0 && _stricmp(gChattersInRoom[i], user.chatterName) != 0) {
                         strcpy_s(tabResult, 30, gChattersInRoom[i] /* + strlen(tabSearch) */ );
                         strncpy_s(input, MSG_LEN, input, strlen(input) - strlen(tabSearch));
+#if defined(WIN32) || defined(_MSC_VER) 
                         _snprintf_s(input, MSG_LEN, -1, "%s%s", input, tabResult);
+#else
+                        for (int ii = 0; ii < strlen(tabSearch); ii++) {                            
+                            input[strlen(input)-1]='\0';
+                        }
+                        strcat_s(input, MSG_LEN, tabResult);
+#endif
                         endOfInput = endOfInput + 1;
-
                         break;
                     }
                 }
@@ -1646,7 +1783,7 @@ bool enterChat() {
 
     // get the sysop name from config in case the one OpenDoors pulls from the dropfile is "Sysop" or blank.
     char sysopName[50] = "";
-    strcpy_s(sysopName, sizeof(sysopName), (_strcmpi(od_control.sysop_name, "sysop")==0 || strlen(od_control.sysop_name)==0) ? cfg.sys : od_control.sysop_name);
+    strcpy_s(sysopName, sizeof(sysopName), (_stricmp(od_control.sysop_name, "sysop")==0 || strlen(od_control.sysop_name)==0) ? cfg.sys : od_control.sysop_name);
     stripPipeCodes(sysopName);
     removeNonAlphanumeric(sysopName); // make sure the name only contains alphanumeric characters, and no silliness
 
@@ -1659,42 +1796,54 @@ bool enterChat() {
     strcpy_s(gMentions, 50, ""); // |15 * * * TOP OF MENTIONS * * * |07\n
 
     int iResult;
-    WSADATA wsaData;
     struct addrinfo* mhResult = NULL, * ptrMh = NULL, mrcHost;
 
     drawStatusBar();
     displayMessage("Starting up...", false);
-
+#if defined(WIN32) || defined(_MSC_VER)    
+    WSADATA wsaData;
     iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
     if (iResult != 0) {
         displayMessage("WSAStartup failed", false);
-        pause();
+        doPause();
         return false;
     }
+#endif
 
+#if defined(WIN32) || defined(_MSC_VER)    
     ZeroMemory(&mrcHost, sizeof(mrcHost));
+#else
+    memset(&mrcHost, 0, sizeof mrcHost);
+#endif
     mrcHost.ai_family = AF_UNSPEC;
     mrcHost.ai_socktype = SOCK_STREAM;
     mrcHost.ai_protocol = IPPROTO_TCP;
-
     iResult = getaddrinfo("localhost", cfg.port, &mrcHost, &mhResult);
     if (iResult != 0) {
         displayMessage("getaddrinfo failed", false);
+#if defined(WIN32) || defined(_MSC_VER)  
         WSACleanup();
-        pause();
+#endif
+        doPause();
         return false;
     }
 
     for (ptrMh = mhResult; ptrMh != NULL; ptrMh = ptrMh->ai_next) {
         mrcSock = socket(ptrMh->ai_family, ptrMh->ai_socktype, ptrMh->ai_protocol);
         if (mrcSock == INVALID_SOCKET) {
+#if defined(WIN32) || defined(_MSC_VER)  
             WSACleanup();
-            pause();
+#endif
+            doPause();
             return false;
         }
         iResult = connect(mrcSock, ptrMh->ai_addr, (int)ptrMh->ai_addrlen);
         if (iResult == SOCKET_ERROR) {
+#if defined(WIN32) || defined(_MSC_VER)  
             closesocket(mrcSock);
+#else
+            close(mrcSock);
+#endif
             mrcSock = INVALID_SOCKET;
             continue;
         }
@@ -1705,14 +1854,15 @@ bool enterChat() {
 
     if (mrcSock == INVALID_SOCKET) {
         displayMessage("Unable to connect to bridge!", false);
+#if defined(WIN32) || defined(_MSC_VER)  
         WSACleanup();
-        pause();
+#endif
+        doPause();
         return false;
     }
 
     if (sendCmdPacket(&mrcSock, "IAMHERE", "")) {
         gIsInChat = true;
-        displayMessage("Connected!", false);
         od_sleep(20);
     }
 
@@ -1722,7 +1872,11 @@ bool enterChat() {
     //
     //  - Incoming one to listen to messages from the Bridge, and place them in the chat window.
     DWORD incomingThreadID;
+#if defined(WIN32) || defined(_MSC_VER)   
     HANDLE hIncoming = CreateThread(NULL, 0, handleIncomingMessages, NULL, 0, &incomingThreadID);
+#else
+    pthread_create(&incomingThreadID, NULL, handleIncomingMessages, NULL);
+#endif   
 
     // Send some initial packets to the server...
     //
@@ -1757,7 +1911,6 @@ bool enterChat() {
 
         char input[MSG_LEN] = "";
         updateBuffer(0);
-
         resetInputLine();
         od_printf(CHAT_CURSOR);
 
@@ -1771,9 +1924,10 @@ bool enterChat() {
             char cmd[15] = "";
             char params[130] = "";
             int spcidx = indexOfChar(input, ' ');
+
             if (spcidx > 0) {
-                strncpy_s(cmd, spcidx, input + 1, -1);
-                strncpy_s(params, 130, input + spcidx + 1, -1);
+                getSub(input, cmd, 1, spcidx - 1);
+                getSub(input, params, spcidx+1, strlen(input));
             }
             else {
                 strncpy_s(cmd, 15, input + 1, -1);
@@ -1789,8 +1943,12 @@ bool enterChat() {
     displayMessage("Exiting...", false);
 
     // cleanup
+#if defined(WIN32) || defined(_MSC_VER)  
     closesocket(mrcSock);
     WSACleanup();
+#else 
+    close(mrcSock);
+#endif
 
     free(gScrollBack);
     free(gMentions);
@@ -1838,17 +1996,19 @@ int main(int argc, char** argv)
     _snprintf_s(od_control.od_prog_version, 40, -1, "v%s", UMRC_VERSION);
     strncpy_s(od_control.od_prog_copyright, 40, YEAR_AND_AUTHOR, -1);
 
+#if defined(WIN32) || defined(_MSC_VER)
     HICON hIcon = (HICON)LoadImage(NULL, "icon.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED);
     if (hIcon != NULL) {
         od_control.od_app_icon = hIcon;
     }
+#endif
+
+    od_init();
 
     if (loadData(&cfg, CONFIG_FILE) != 0) {
         od_printf("Invalid config. Run Config.exe.\r\n");
         od_exit(-1, FALSE);
     }
-
-    od_init();
 
     // TODO: Make these configurable in mrc.cfg? 
     od_control.od_inactivity = 0;     
@@ -1871,12 +2031,23 @@ int main(int argc, char** argv)
     strncpy_s(gFromSite, sizeof(gFromSite), strReplace(cfg.name, "~", ""), -1);
     stripPipeCodes(gFromSite);
     strncpy_s(gFromSite, sizeof(gFromSite), gFromSite, 30); // copy only the first 30 characters, now that we've cleaned up the name
+#if defined(WIN32) || defined(_MSC_VER)  
     _snprintf_s(gUserDataFile, sizeof(gUserDataFile), -1, "%s\\%s.dat", USER_DATA_DIR, user.chatterName);
+#else
+    _snprintf_s(gUserDataFile, sizeof(gUserDataFile), -1, "%s/%s.dat", USER_DATA_DIR, user.chatterName);
+#endif
 
+#if defined(WIN32) || defined(_MSC_VER)  
     DWORD attributes = GetFileAttributesA(USER_DATA_DIR);
     if (!( attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_DIRECTORY))) {
         CreateDirectory(USER_DATA_DIR,NULL);
     }
+#else
+    struct stat st ={0};
+    if (stat(USER_DATA_DIR, &st)==-1) {
+        mkdir(USER_DATA_DIR, 0700);
+    }
+#endif
 
     if (loadUser(&user, gUserDataFile) != 0) {
 
@@ -1940,7 +2111,7 @@ int main(int argc, char** argv)
 
             od_printf("We've gone ahead set some default options for you. You can go ahead and\r\ncustomize them now.\r\n\r\n");
             od_printf(DIVIDER);
-            pause();
+            doPause();
 
             _snprintf_s(gDisplayChatterName, 80, -1, "|%02d|%02d%c|%02d|%02d%s%s", user.chatterNamePrefixFgColor, user.chatterNamePrefixBgColor, user.chatterNamePrefix, user.chatterNameFgColor, user.chatterNameBgColor, user.chatterName, user.chatterNameSuffix);
             enterChatterSettings(gUserDataFile);
@@ -1961,13 +2132,20 @@ int main(int argc, char** argv)
     while (!exit) {
 
         od_clr_scr();
+#if defined(WIN32) || defined(_MSC_VER)  
         od_send_file("screens\\intro.ans");
-
+#else
+        od_send_file("screens/intro.ans");
+#endif
         int act = 0;
         char* bbses="", * rooms = "", * users = "", * activity = "";
         char mrcStTm[30]="";
         FILE* mrcstats;
+#if defined(WIN32) || defined(_MSC_VER)  
         fopen_s(&mrcstats, MRC_STATS_FILE, "r");
+#else
+        mrcstats = fopen(MRC_STATS_FILE, "r");
+#endif
         if (mrcstats != NULL) {
             char stats[30] = "";
             fgets(stats, 30, mrcstats);
@@ -1987,8 +2165,12 @@ int main(int argc, char** argv)
 
         struct stat file_stat;
         if (stat(MRC_STATS_FILE, &file_stat) == 0) {
+#if defined(WIN32) || defined(_MSC_VER)  
             ctime_s(mrcStTm, 30, &file_stat.st_mtime);
             strncpy_s(mrcStTm, 30, strReplace(mrcStTm, "\n", ""), -1);
+#else
+            strncpy_s(mrcStTm, 30, strReplace(ctime(&file_stat.st_mtime), "\n", ""), -1);
+#endif
         }
 
         od_set_cursor(3, 25);
@@ -2012,7 +2194,8 @@ int main(int argc, char** argv)
         //od_printf("`bright white`(`cyan`T`bright white`) `white`Show `bright white`T`white`ester Information");
         
         od_set_cursor(13, 25);
-        od_printf("`bright white`(`bright green`Q`bright white`) `bright white`Q`white`uit to `bright white`%s", strReplace(gFromSite, "_", " "));
+        od_printf("`bright white`(`bright green`Q`bright white`) `bright white`Q`white`uit to `bright white`");// , strReplace(gFromSite, "_", " "));
+        od_disp_emu(pipeToAnsi(cfg.name), TRUE); // display the bbs name it all its pipe code colorful glory :P
 
         time_t curtime;
         time(&curtime);
@@ -2038,8 +2221,6 @@ int main(int argc, char** argv)
         switch (od_get_answer("CSITQ")) {
         case 'C':
             enterChat(gUserDataFile);
-
-            // save any changed user setting, e.g.: text color and chat sounds
             saveUser(&user, gUserDataFile);
             break;
 
@@ -2050,14 +2231,18 @@ int main(int argc, char** argv)
         case 'I':
 
             od_clr_scr();
+#if defined(WIN32) || defined(_MSC_VER)  
             displayPipeFile("screens\\help.txt");
-            pause();
+#else
+            displayPipeFile("screens/help.txt");
+#endif
+            doPause();
             break;
 
         case 'T':
             od_clr_scr();
             od_printf(DIVIDER);
-            od_printf("\r\n`` ChatterName:        `bright white`%s``", user.chatterName);
+            od_printf("`` ChatterName:        `bright white`%s``", user.chatterName);
             od_printf("\r\n`` DisplayChatterName: "); od_disp_emu(pipeToAnsi(gDisplayChatterName), true);
             od_printf("\r\n`` FromSite:           `bright white`%s``", gFromSite);
             od_printf("\r\n`` user_num:           `bright white`%d``", od_control.user_num);
@@ -2067,6 +2252,7 @@ int main(int argc, char** argv)
             od_printf("\r\n`` user_timelimit:     `bright white`%d``", od_control.user_timelimit);
             od_printf("\r\n`` user_ansi:          `bright white`%d``", od_control.user_ansi);
             od_printf("\r\n`` user_screen_length: `bright white`%d``", od_control.user_screen_length);
+            od_printf("\r\n`` user_screenwidth:   `bright white`%d``", od_control.user_screenwidth);
             od_printf("\r\n`` sysop_name:         `bright white`%s``", od_control.sysop_name);
             od_printf("\r\n`` system_name:        `bright white`%s``", od_control.system_name);
             od_printf("\r\n`` od_maxtime:         `bright white`%d``", od_control.od_maxtime);
@@ -2074,10 +2260,10 @@ int main(int argc, char** argv)
 
             od_printf("\r\n");
             od_printf(DIVIDER);
-            od_printf("\r\nThis screen is for testing and troubleshooting purposes.\r\n");
-            od_printf("\r\nInclude this screen when posting a Github issue.\r\n");
+            od_printf("This screen is for testing and troubleshooting purposes.\r\n");
+            od_printf("Include this screen when posting a Github issue.\r\n");
 
-            pause();
+            doPause();
             break;
 
         case 'Q':
