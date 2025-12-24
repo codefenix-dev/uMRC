@@ -241,15 +241,12 @@ int main()
 		}
 		
 		printPipeCodeString(fullSetup == true ? "|15 1|08) |07Setup\r\n" : "|15 1|08) |07Redo setup\r\n");
-
 		printPipeCodeString("|15 Q|08) |07Quit \r\n\r\n");
-
 		printf("Make a selection: ");
-
 		selection = toupper(_getch());
-
 		if (selection == '1') {
 			enterInfo(info, fullSetup);
 		}
 	}
+    printf("\r\n");
 }
