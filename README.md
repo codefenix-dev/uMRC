@@ -1,6 +1,6 @@
 ﻿```
- uMRC  ┌──── ▄█▀▀▀▀▀█▄ ───┬───┬───┬─┐
- v099┌──── ▄██ ▄███ ▀▀█▄ ·────────┐ ┤
+       ┌──── ▄█▀▀▀▀▀█▄ ───┬───┬───┬─┐
+     ┌──── ▄██ ▄███ ▀▀█▄ ·────────┐ ┤
    ┌──── ▄█▀▀ ▐█▀ ▀ █ ██  ▄ ▄ ▄ · │ │
  ┌──── ▄█▀ ▄██▄▀█▄▄██ ██  █████ · │ ┤
 ┌─── ▄█▀ ▐██▀▀█▌ ▀▀▀ ▄█▀  ▐▄█▄▌   │ │
@@ -10,18 +10,11 @@
 ▄▀  ██▄▀██ ▀ ▄█▀   Multi-Relay Chat  
 ▀ ▐█▄▀██ ▀ ▄█▀       Client Door     
 ▐█▄▀██▄▀ ▄█▀ .│┌────────────────────┐
- ▀███▀ ▄█▀ .││|│ ■ Win32            │
+ ▀███▀ ▄█▀ .││|│ ■ Win32 & Linux    │
 █▄ ▀ ▄█▀ .││|│││ ■ DOOR32.SYS       │
  ▀█▄█▀ .││|│││││ ■ SSL capable      │
  └ ▀ ──┴─┴─┴─┴─┴──────────────────── 
 ```
-
-# uMRC
-
-by Craig Hendricks  
-codefenix@conchaos.synchro.net  
- telnet://conchaos.synchro.net  
-  https://conchaos.synchro.net  
 
 
 
@@ -29,14 +22,15 @@ codefenix@conchaos.synchro.net
 
 uMRC lets you run Multi-Relay Chat on your BBS without having to install and
 maintain a Mystic BBS instance and Python. As long as your BBS is capable of
-running 32-bit Windows doors, then you and your users can participate in MRC.
+running 32-bit doors, then you and your users can participate in MRC.
 
 <img width="637" height="472" alt="image" src="https://github.com/user-attachments/assets/4cd1acf1-4efc-48b7-87b0-f34185f9a240" />
 
 
 It should be compatible with any DOOR32.SYS capable BBS such as EleBBS, WWIV, 
 Synchronet, Mystic, and possibly others. It has been tested on Windows 7 and 
-later, but Windows versions earlier than 7 have not been confirmed. 
+later, but Windows versions earlier than 7 have not been confirmed. The Linux
+build has been tested on Ubuntu 22.04 and should run on similar.
 
 If you use NetFoss to start up your DOS-based BBS, then the NFU utility 
 bundled with NetFoss should run the uMRC Client. As of this writing, Renegade 
@@ -58,14 +52,11 @@ has been confirmed to run it.
 
 
 
-## Files Included:
+## Common Files Included:
 
-- **setup.exe**:        Setup utility
-- **umrc-bridge.exe**:  MRC host connection program (multiplexer)
-- **umrc-client.exe**:  MRC Client door
-- **ODoors62.dll**:     OpenDoors door kit library    
-- **libssl-43.dll**:    LibreSSL (OpenSSL) SSL library 
-- **libcrypto-41.dll**: LibreSSL (OpenSSL) Cryptographic library 
+- **setup**:            Setup utility
+- **umrc-bridge**:      MRC host connection program (multiplexer)
+- **umrc-client**:      MRC Client door
 - **\[screens\]**:      Subdirectory containing ANSI & text files
   + **intro.ans**:      Intro/main menu & status screen
   + **help.txt**:       Help file showing basic chat commands
@@ -73,6 +64,8 @@ has been confirmed to run it.
 - **\[themes\]**:       Subdirectory containing ANSI files
   + **\*.ans**:         ANSI theme files
 
+Refer to the readme.txt file inside the archive for files specific to 
+your platform.
 
 
 ## Install Instructions:
@@ -84,10 +77,15 @@ has been confirmed to run it.
 1. Extract all files to their own directory, keeping the structure 
    the same as shown above in the list of files included.
    
-   Example:  c:\doors\umrc   
-   
+   On Linux, you can run the build.sh script to compile from source.
+   First run `sudo apt install libssl-dev` since the door makes use
+   of LibreSSL, then `./build.sh` should complete successfully (with 
+   warnings). It should create a subdirectory named "bin" and place the 
+   compiled binaries there. Copy these binaries to your preferred directory 
+   for the door.
+      
 
-2. Run **setup.exe**, and press `1` to begin.
+2. Run **setup**, and press `1` to begin.
 
    For the first 3 prompts, you can simply press enter to accept the 
    default values:
@@ -154,7 +152,7 @@ has been confirmed to run it.
    be saved to a file called mrc.cfg.
    
    
-3. Run **umrc-bridge.exe**. This program is responsible for maintaining a 
+3. Run **umrc-bridge**. This program is responsible for maintaining a 
    connection to the MRC host and passing chat traffic back and forth 
    between the host and your BBS. It must run continuously in order for 
    umrc-client.exe to work, so it's recommended to have this program 
@@ -171,10 +169,15 @@ has been confirmed to run it.
 
    The command line syntax is:
 
-     `umrc-client -D c:\path\to\DOOR32.SYS`
+     Windows: `umrc-client -D c:\path\to\DOOR32.SYS`
+	 
+	 Linux: `./umrc-client -D /path/to/DOOR32.SYS`
+	 
+   Refer to your BBS software documentation on whether the `./` prefix
+   needs to be included.
 
-   Optionally, include the `-SILENT` option to prevent the local Windows 
-   GUI from popping up while the door is running.
+   Optionally (on Windows only) include the `-SILENT` option to prevent the 
+   local Windows GUI from popping up while the door is running.
 
      `umrc-client -D c:\path\to\DOOR32.SYS -SILENT`
 
@@ -311,16 +314,24 @@ Type `/meetups` in chat for a current list of meetups.
     
 ## Known Issues & Limitations:
 
+- An issue with user input in the Linux build has been reported. So far it
+  appears to be limited to Mystic. Mystic users may prefer to keep using the 
+  MPL version anyway, so fixing this is not high on my TODO list. I would still
+  like to understand the reason and fix it if possible.
+  
+- The Linux build swaps the functions of the `DEL` and `Backspace` keys for
+  some users. I'd like help understanding why this is.
+
+- Masked input becomes unmasked when changing text colors with left and 
+  right arrows. 
+
 - Height and width are limited to 80 columns by 24 rows. OpenDoors has
   a default maximum row limit of 23, but umrc-client is hard-coded with
   this setting adjusted to 24. As far as I know, OpenDoors cannot 
   automatically detect the terminal's height and width.
 
-- The font size of the local window cannot be adjusted. This seems to be
-  an internal limitation of the OpenDoors kit.
-
-- Masked input becomes unmasked when changing text colors with left and 
-  right arrows. 
+- The font size of the local window in Windows cannot be adjusted. This 
+  seems to be an internal limitation of the OpenDoors kit.
 
 - umrc-bridge occasionally reports "partial packets" in verbose mode, 
   especially when using the `!ddial` command. Most partial packets are 
@@ -335,16 +346,13 @@ As of this writing, I don't plan on making many changes or adding a lot of
 extra features. Bugs will be fixed, and changes will be made to support 
 future changes to the MRC protocol, but that's about it.
 
-Long-term, it may be worth re-writing the umrc-client door using another door
-kit and/or other language which could be more easily ported to other platforms 
-and used by other BBSes.
-
 
 
 ## Technical Notes:
 
-uMRC is written in C, and was developed and compiled using Microsoft Visual 
-Studio Community 2022.
+uMRC is written in C, and was developed and compiled on Windows using 
+Microsoft Visual Studio Community 2022. The Linux build was compiled on 
+Ubuntu 22.04 using gcc.
 
 uMRC makes extensive use of threading, both in umrc-bridge and umrc-client.
 Separate threads are used for establishing connections to the MRC host,
@@ -359,8 +367,8 @@ the same port number as selected in the Setup program.
 I chose OpenDoors because it's available, free, works well, and has many great 
 functions built in for handling text movement on the screen, which uMRC uses 
 extensively. Not everyone likes the local pop-up window that OpenDoors shows 
-when running the door, but it can be hidden by using the `-SILENT` command line
-switch.
+when running the door on Windows systems, but it can be hidden by using the 
+`-SILENT` command line switch.
 
 You should NOT have ports 5000/5001 open on your firewall/router, since 
 umrc-client makes OUTBOUND requests to the MRC host on ports 5000/5001. 

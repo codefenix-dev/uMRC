@@ -1,6 +1,14 @@
 Change Log:
 
-v999b - December 10, 2025:
+v100 - TBA
+
+  - Initial support for Linux added.
+  - Display the "Quit to" BBS name it all its pipe code colorful glory.
+  - displayMessage function now scrolls up the number of carriage returns
+    that was added while wrapping the message
+  
+
+v099b - December 10, 2025:
 
   - Further line wrapping adjustments.
   - Fixed a line wrapping issue while displaying long unbroken messages in

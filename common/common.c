@@ -8,16 +8,14 @@
 #include "common.h"
 
 
-
 char* strReplace(char* orig, char* rep, char* with) {
 	// set the length of this the largest string length that will be converted
 	char newstr[512] = ""; // not ideal, but meh...
 
 	for (int i = 0; i < (int)strlen(orig); i++) {
 		if (strncmp(orig + i, rep, strlen(rep)) == 0) {
-			if (strcat_s(newstr, sizeof(newstr), with) == 0) {
-				i = i + strlen(rep) - 1;
-			}
+			strcat_s(newstr, sizeof(newstr), with);
+			i = i + strlen(rep) - 1;
 		}
 		else {
 			char append[] = { orig[i],'\0' };
@@ -239,7 +237,11 @@ int countOfChars(char* str, char c) {
 
 int loadData(struct settings* data, char* filename) {
     FILE* infile;
+#if defined(WIN32) || defined(_MSC_VER)
     fopen_s(&infile, filename, "rb");
+#else
+    infile = fopen(filename, "rb");
+#endif
     if (infile == NULL) {
         return 1;
     }
@@ -250,7 +252,12 @@ int loadData(struct settings* data, char* filename) {
 
 int saveData(struct settings* data, char* filename) {
     FILE* outfile;
+#if defined(WIN32) || defined(_MSC_VER)
     fopen_s(&outfile, filename, "wb");
+#else
+    outfile = fopen(filename, "wb");
+#endif
+
     if (outfile == NULL) {
         return 1;
     }
@@ -262,7 +269,11 @@ int saveData(struct settings* data, char* filename) {
 
 int loadUser(struct userdata* data, char* filename) {
     FILE* infile;
+#if defined(WIN32) || defined(_MSC_VER)
     fopen_s(&infile, filename, "rb");
+#else
+    infile=fopen(filename, "rb");
+#endif
     if (infile == NULL) {
         return 1;
     }
@@ -273,7 +284,12 @@ int loadUser(struct userdata* data, char* filename) {
 
 int saveUser(struct userdata* data, char* filename) {
     FILE* outfile;
+#if defined(WIN32) || defined(_MSC_VER)
     fopen_s(&outfile, filename, "wb");
+#else
+    outfile=fopen(filename, "wb");
+#endif
+
     if (outfile == NULL) {
         return 1;
     }
@@ -283,6 +299,8 @@ int saveUser(struct userdata* data, char* filename) {
     return flag;
 }
 
+
+#if defined(WIN32) || defined(_MSC_VER)
 /**
  *
  * This function displays a string containing pipe color codes on the console.
@@ -290,10 +308,6 @@ int saveUser(struct userdata* data, char* filename) {
  * On Windows 10 and earlier, we have to iterate through the string, find any
  * pipe character followed by 2 digits, and use those digits to set the
  * background and foreground colors with the SetConsoleTextAttribute function.
- *
- * On Linux, we could simply replace the pipe color codes with the equivalent
- * ANSI color codes. ANSI works fine on Windows 11 as well, but not Windows 10
- * or earlier.
  *
  */
 void printPipeCodeString(char* str) {
@@ -333,12 +347,29 @@ void printPipeCodeString(char* str) {
         }
     }
 }
+#else
+
+/**
+ *
+ * On Linux, we simply replace the pipe color codes with the equivalent
+ * ANSI color codes. ANSI works fine on Windows 11 as well, but not 
+ * Windows 10 or earlier.
+ *
+ */
+void printPipeCodeString(char* str) {
+
+    printf(pipeToAnsi(str));    
+}
+
+#endif
+
+
+#if defined(WIN32) || defined(_MSC_VER)
 
 void clearScreen()
 {
     printPipeCodeString("|07|16");
 
-    //HANDLE                     hStdOut;
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     DWORD                      count;
     DWORD                      cellCount;
@@ -369,3 +400,36 @@ void clearScreen()
     /* Move the cursor home */
     SetConsoleCursorPosition(hCon, homeCoords);
 }
+
+#else
+
+void clearScreen()
+{
+    printf(CL);
+}
+
+void initTermios(int echo) {
+    tcgetattr(0, &old);
+    current=old;
+    current.c_lflag &= ~ICANON;
+    if (echo) {
+        current.c_lflag |= ECHO;
+    } else {
+        current.c_lflag &= ~ECHO;
+    }
+    tcsetattr(0, TCSANOW,&current);
+}
+
+void resetTermios(void) {
+    tcsetattr(0,TCSANOW, &old);
+}
+
+char _getch() {
+    char ch;
+    initTermios(0);
+    ch=getchar();
+    resetTermios();
+    return ch;
+}
+
+#endif

@@ -6,23 +6,52 @@
 
 
 #if defined(WIN32) || defined(_MSC_VER)
-#include <windows.h>
+
 #define PLATFORM "Windows"
+#include <windows.h>
+#include <conio.h>
 HANDLE hCon; // needed for setting console colors and clearing screen
+
+#else
+
+#define PLATFORM "Linux"
+#include <unistd.h>
+#include <termios.h>
+#include <sys/types.h>
+#include <errno.h>
+
+#define strcpy_s(dest, count, source)                         strncpy( (dest), (source), (count) )
+#define strncpy_s(dest, max, source, count)                   strncpy( (dest), (source), (max) )
+#define strcat_s(dest, max, source)                           strcat( (dest), (source))
+#define _snprintf_s(buffer, sizeofBuffer, count, format, ...) snprintf((buffer), (sizeofBuffer), (format), ##__VA_ARGS__)
+#define _strdup(s)                                            strdup((s))
+#define _stricmp(s1, s2)                                      strcasecmp((s1), (s2))
+#define _strnicmp(s1, s2, n)                                  strncasecmp((s1), (s2), (n))             
+#define Sleep(ms)                                             usleep((ms))
+#define strtok_s(s, d, context)                               strtok_r((s), (d), (context))
+
+#define INVALID_SOCKET   ~0
+#define SOCKET_ERROR     -1
+
+typedef int       SOCKET;    
+typedef void*     HANDLE;      
+
+static struct termios old,current;
+void initTermios(int echo);
+void resetTermios(void);
+char _getch();
+
 #endif
 
 #ifndef COMMON_H_   /* Include guard */
 #define COMMON_H_
 
-
 #include <stdlib.h>
 #include <string.h>
-#include <conio.h>
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <time.h>
-
 
 
 #define TITLE "uMRC"
@@ -38,10 +67,10 @@ HANDLE hCon; // needed for setting console colors and clearing screen
 // numeric and incremented when any significant 
 // modification is made to the code, keeping to 
 // 3 digits (e.g.: "101", "102", "103", etc...).
-#define UMRC_VERSION "099"
+#define UMRC_VERSION "100"
 #define YEAR_AND_AUTHOR "2025 Craig Hendricks (aka Codefenix)"
 #define AUTHOR_INITIALS "cf" // alias initials
-#define COMPILE_DATE "2025-12-10"
+#define COMPILE_DATE "2025-12-23"
 
 // These defaults should remain the same, and
 // not be changed without a good reason.
