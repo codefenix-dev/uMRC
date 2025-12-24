@@ -78,11 +78,12 @@ your platform.
    the same as shown above in the list of files included.
    
    On Linux, you can run the build.sh script to compile from source.
-   First run `sudo apt install libssl-dev` since the door makes use
+   First run `sudo apt install libssl-dev` since the bridge makes use
    of LibreSSL, then `./build.sh` should complete successfully (with 
    warnings). It should create a subdirectory named "bin" and place the 
    compiled binaries there. Copy these binaries to your preferred directory 
-   for the door.
+   for the door. Finally, copy the contents of `assets/nix` to the to the
+   door directory.
       
 
 2. Run **setup**, and press `1` to begin.
@@ -434,6 +435,7 @@ and is always happy to try running new things on his board.
 ## Enjoy!
 
 See you in chat!
+
 
 
 
