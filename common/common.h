@@ -70,7 +70,7 @@ char _getch();
 #define UMRC_VERSION "100"
 #define YEAR_AND_AUTHOR "2025 Craig Hendricks (aka Codefenix)"
 #define AUTHOR_INITIALS "cf" // alias initials
-#define COMPILE_DATE "2025-12-23"
+#define COMPILE_DATE "2025-12-28"
 
 // These defaults should remain the same, and
 // not be changed without a good reason.
@@ -136,14 +136,14 @@ char _getch();
 
 #pragma region ANSI_CODES
 #define CL "\x1b[2J\x1b[H\x1b[0m"
-#define BK "\x1b[0;30m"
-#define RE "\x1b[0;31m"
-#define GR "\x1b[0;32m"
-#define BR "\x1b[0;33m"
-#define BL "\x1b[0;34m"
-#define MA "\x1b[0;35m"
-#define CY "\x1b[0;36m"
-#define GY "\x1b[0;37m"
+#define BK "\x1b[2;30m"
+#define RE "\x1b[2;31m"
+#define GR "\x1b[2;32m"
+#define BR "\x1b[2;33m"
+#define BL "\x1b[2;34m"
+#define MA "\x1b[2;35m"
+#define CY "\x1b[2;36m"
+#define GY "\x1b[2;37m"
 #define DG "\x1b[30;1m"
 #define LR "\x1b[31;1m"
 #define LG "\x1b[32;1m"
