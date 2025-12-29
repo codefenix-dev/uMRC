@@ -77,8 +77,9 @@ your platform.
 1. Extract all files to their own directory, keeping the structure 
    the same as shown above in the list of files included.
    
-   On Linux, you can run the build.sh script to compile from source.
-   First run `sudo apt install libssl-dev` since the bridge makes use
+   On Debian-based systems like Ubuntu, you can run the build.sh script to compile from source.
+   First run `sudo apt install gcc` if you don't already have gcc installed,
+   then run `sudo apt install libssl-dev` since the bridge makes use
    of LibreSSL, then `./build.sh` should complete successfully (with 
    warnings). It should create a subdirectory named "bin" and place the 
    compiled binaries there. Copy these binaries to your preferred directory 
@@ -435,6 +436,7 @@ and is always happy to try running new things on his board.
 ## Enjoy!
 
 See you in chat!
+
 
 
 
