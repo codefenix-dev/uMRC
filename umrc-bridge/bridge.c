@@ -428,10 +428,6 @@ void* clientProcess(void* lpArg) {
                 cleanLogoff = true;
             }
 
-            // TODO: validate the packet before sending it out (?)
-            //       i.e.: only send to intended recipients?
-            //             the client handles that, so why bother?
-
             sendHostPacket(clientPacket);
         }
 
@@ -489,9 +485,7 @@ void* waitProcess(void* lpArg) {
         printf("WSAStartup failed with error: %d\r\n", iResult);
         return 1;
     }
-#endif
-
-#if defined(WIN32) || defined(_MSC_VER)    
+	
     ZeroMemory(&listener, sizeof(listener));
 #else
     memset(&listener, 0, sizeof listener);
@@ -642,10 +636,7 @@ void mrcHostProcess(struct settings cfg) {
         printf(logstring);
         writeToLog(logstring);
         return;
-    }
-#endif    
-
-#if defined(WIN32) || defined(_MSC_VER)  
+    }	
     ZeroMemory(&mrcHost, sizeof(mrcHost));
 #else
     memset(&mrcHost, 0, sizeof mrcHost);
@@ -769,9 +760,8 @@ void mrcHostProcess(struct settings cfg) {
     char partialPacket[PACKET_LEN] = "";
     // Main loop...
     //
-    do {   
-             
-        Sleep(0);
+    do {             
+        Sleep(1);
 
         iResult = 0;
         char inboundData[DATA_LEN] = "";
@@ -865,11 +855,8 @@ void mrcHostProcess(struct settings cfg) {
                     }
                     // Server is checking whether we're still up, so let it know.
                     else if (_stricmp(body, "ping") == 0) { 
-
-                        sendCmdPacket("IMALIVE:%s", cfg.name);
-
-                        // As long as we're letting the server know IMALIVE, might as well request stats.
-                        sendCmdPacket("STATS", "");                        
+                        sendCmdPacket("IMALIVE:%s", cfg.name);                        
+                        sendCmdPacket("STATS", ""); // As long as we're letting the server know IMALIVE, might as well request stats.             
                     }
                     else if (strncmp(body, "STATS:", 6) == 0) {
                         int act = 0;
@@ -913,6 +900,14 @@ void mrcHostProcess(struct settings cfg) {
             _snprintf_s(logstring, sizeof(logstring), -1, "Connection closed with error: %d\r\n", errcode);
             printf(logstring);
             writeToLog(logstring);
+			if (usingSSL) {
+				unsigned long err_code = ERR_get_error();
+				char err_msg[256];
+                ERR_error_string_n(err_code, err_msg, sizeof(err_msg));
+				printDateTimeStamp();
+				printf(err_msg);				
+				ERR_clear_error();
+			}
         }
         else {
 #if defined(WIN32) || defined(_MSC_VER)  
@@ -925,6 +920,14 @@ void mrcHostProcess(struct settings cfg) {
             _snprintf_s(logstring, sizeof(logstring), -1, "recv failed with error: %d\r\n", errcode);
             printf(logstring);
             writeToLog(logstring);
+			if (usingSSL) {
+				unsigned long err_code = ERR_get_error();
+				char err_msg[256];
+                ERR_error_string_n(err_code, err_msg, sizeof(err_msg));
+				printDateTimeStamp();
+				printf(err_msg);				
+				ERR_clear_error();
+			}
         }
     } while (iResult > 0 && !gConnectionIsDown);
 
@@ -940,6 +943,7 @@ void mrcHostProcess(struct settings cfg) {
     closesocket(mrcHostSock);
     WSACleanup();
 #else
+    shutdown(mrcHostSock, SHUT_WR);
     close(mrcHostSock);
 #endif    
     if (usingSSL) {
