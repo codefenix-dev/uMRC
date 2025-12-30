@@ -409,7 +409,11 @@ void pickTheme(char* pickedTheme) {
             }
             count = count + 1;
         }
-    }
+    } else {
+        printf("Path not found: [%s]\r\n", "themes");
+        doPause();
+        return;
+	}
 
 #endif
 
@@ -989,7 +993,7 @@ void displayMessage(char* msg, bool mention) {
     }
 
     char dispMsg[512]="";
-    _snprintf_s(dispMsg, 512, -1, "%s%s|07", timeStamp, msg);        
+    _snprintf_s(dispMsg, 512, -1, "%s%s\x1b[0m", timeStamp, msg);        
 
     // Save this message to the chat scrollback buffer
     addToScrollBack(dispMsg, 0);
@@ -1033,7 +1037,6 @@ void listThemesInChat() {
 #if defined(WIN32) || defined(_MSC_VER) 
     WIN32_FIND_DATA fdFile;
     HANDLE hFind = NULL;
-
     if ((hFind = FindFirstFile("themes\\*.ans", &fdFile)) == INVALID_HANDLE_VALUE) {
         displayMessage("|07 Theme path not found", false);
         return;
@@ -1047,7 +1050,6 @@ void listThemesInChat() {
     } while (FindNextFile(hFind, &fdFile));
     FindClose(hFind);
 #else
-
     DIR *d;
     struct dirent *dir;
     d = opendir("themes");
@@ -1807,10 +1809,7 @@ bool enterChat() {
         displayMessage("WSAStartup failed", false);
         doPause();
         return false;
-    }
-#endif
-
-#if defined(WIN32) || defined(_MSC_VER)    
+    } 
     ZeroMemory(&mrcHost, sizeof(mrcHost));
 #else
     memset(&mrcHost, 0, sizeof mrcHost);
