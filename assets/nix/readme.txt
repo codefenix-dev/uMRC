@@ -153,7 +153,7 @@ connections from the same BBS.
      ./umrc-client -D /path/to/DOOR32.SYS
 
    It has been observed that using DOOR32.SYS with this door can lead 
-   to user-input issues on Mystic under Linus. If DOOR32.SYS does not work 
+   to user-input issues on Mystic under Linux. If DOOR32.SYS does not work 
    properly with your BBS type, then use DOOR.SYS instead.
 	 
    Refer to your BBS software documentation on whether the ./ prefix
