@@ -190,7 +190,7 @@ your platform.
    a batch file or bash script to launch the door. Something like the below ought
    to do the trick:
 
-   ```bat
+   ```
    :: call this file "launch.bat" and pass the node number (%N) to it
    C:
    cd \path_to\umrc
@@ -335,14 +335,6 @@ Type `/meetups` in chat for a current list of meetups.
     
 ## Known Issues & Limitations:
 
-- An issue with user input in the Linux build has been reported. So far it
-  appears to be limited to Mystic. Mystic users may prefer to keep using the 
-  MPL version anyway, so fixing this is not high on my TODO list. I would still
-  like to understand the reason and fix it if possible.
-  
-- The Linux build swaps the functions of the `DEL` and `Backspace` keys for
-  some users. I'd like help understanding why this is.
-
 - Masked input becomes unmasked when changing text colors with left and 
   right arrows. 
 
@@ -455,6 +447,7 @@ and is always happy to try running new things on his board.
 ## Enjoy!
 
 See you in chat!
+
 
 
 
