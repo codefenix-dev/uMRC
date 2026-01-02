@@ -762,6 +762,7 @@ void resetInputLine() {
         od_printf("`bright black`\372");
     }
     od_set_cursor(od_control.user_screen_length, 1);
+    updateBuffer(0);
 }
 
 void scrollToScrollbackSection(char** scrollLines, int start, int end, int height) {
