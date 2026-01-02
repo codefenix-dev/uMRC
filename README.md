@@ -174,20 +174,27 @@ your platform.
      Windows: `umrc-client -D c:\path\to\DOOR32.SYS`
 	 
 	 Linux: `./umrc-client -D /path/to/DOOR32.SYS`
-	 
-   (Linux users: refer to your BBS software documentation on whether the `./` prefix
-   needs to be included)
+
+> **NOTE to Linux Users:**
+>
+> It has been observed that using the DOOR32.SYS drop file type  with this door can
+> lead to user-input issues on Mystic under Linus. **If DOOR32.SYS does not work 
+> properly with your BBS type, then use DOOR.SYS instead.**
+>	 
+> Also refer to your BBS software documentation on whether the `./` prefix
+> needs to be included.
 
    If you get an error saying, "Invalid config. Run config", it means you either
    did not run Setup, or you're not launching umrc-client from the directory
    it's located in. On some BBSes (like Mystic) it will be necessary to use
-   a batch file to launch the door. Something like the below ought to do the trick:
+   a batch file or bash script to launch the door. Something like the below ought
+   to do the trick:
 
    ```bat
    :: call this file "launch.bat" and pass the node number (%N) to it
    C:
    cd \path_to\umrc
-   umrc-client -D c:\path_to\node%1\door32.sys -SILENT
+   umrc-client -D c:\path_to\node%1\door32.sys
    ```
 
    Optionally (on Windows only) include the `-SILENT` option to prevent the 
@@ -448,6 +455,7 @@ and is always happy to try running new things on his board.
 ## Enjoy!
 
 See you in chat!
+
 
 
 
