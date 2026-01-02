@@ -178,7 +178,7 @@ your platform.
 > **NOTE to Linux Users:**
 >
 > It has been observed that using the DOOR32.SYS drop file type  with this door can
-> lead to user-input issues on Mystic under Linus. **If DOOR32.SYS does not work 
+> lead to user-input issues on Mystic under Linux. **If DOOR32.SYS does not work 
 > properly with your BBS type, then use DOOR.SYS instead.**
 >	 
 > Also refer to your BBS software documentation on whether the `./` prefix
@@ -455,6 +455,7 @@ and is always happy to try running new things on his board.
 ## Enjoy!
 
 See you in chat!
+
 
 
 
