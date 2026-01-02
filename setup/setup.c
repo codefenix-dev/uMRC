@@ -17,7 +17,7 @@
 #include "../common/common.h"
 
 #define NOT_LISTED "Something Else..."
-#define BBS_TYPE_COUNT 8
+#define BBS_TYPE_COUNT 9
 const char* BBS_TYPES[BBS_TYPE_COUNT] = {
 	"EleBBS",
 	"Mystic",
@@ -25,6 +25,7 @@ const char* BBS_TYPES[BBS_TYPE_COUNT] = {
 	"ProBoard",
 	"Renegade",
 	"Synchronet",
+	"Talisman",
 	"WWIV",
 	NOT_LISTED
 };

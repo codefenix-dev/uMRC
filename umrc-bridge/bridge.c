@@ -465,13 +465,14 @@ void* waitProcess(void* lpArg) {
     char outboundPacket[PACKET_LEN] = "";
     int iResult; 
     char* port;
-#if defined(WIN32) || defined(_MSC_VER)    
+#if defined(WIN32) || defined(_MSC_VER)  
+    HANDLE hClient[MAX_CLIENTS];  
     port = *(char**)lpArg;
 #else
+    pthread_t hClient[MAX_CLIENTS];  
     port = (char*)lpArg;
 #endif
 
-    HANDLE hClient[MAX_CLIENTS];
     DWORD clientThreadId[MAX_CLIENTS];
 
     while (gConnectionIsDown) { // Waits for a successful connection before proceeding.    
@@ -501,8 +502,10 @@ void* waitProcess(void* lpArg) {
         printf("getaddrinfo (clients) failed with error: %d\n", iResult);
 #if defined(WIN32) || defined(_MSC_VER)  
         WSACleanup();
-#endif
         return 1;
+#else
+		return (void*)1;
+#endif
     }
 
     listenSock = socket(liResult->ai_family, liResult->ai_socktype, liResult->ai_protocol);
@@ -515,8 +518,10 @@ void* waitProcess(void* lpArg) {
         freeaddrinfo(liResult);
 #if defined(WIN32) || defined(_MSC_VER)  
         WSACleanup();
-#endif
         return 1;
+#else
+		return (void*)1;
+#endif
     }
 
     iResult = bind(listenSock, liResult->ai_addr, (int)liResult->ai_addrlen);
@@ -535,10 +540,11 @@ void* waitProcess(void* lpArg) {
 #if defined(WIN32) || defined(_MSC_VER)    
         closesocket(listenSock);
         WSACleanup();
+        return 1;
 #else
         close(listenSock);
+		return (void*)1;
 #endif        
-        return 1;
     }
 
     freeaddrinfo(liResult);
@@ -576,7 +582,11 @@ void* waitProcess(void* lpArg) {
             }
         }
     }
+#if defined(WIN32) || defined(_MSC_VER)  
     return 0;
+#else
+	return (void*)0;
+#endif   
 }
 
 SSL* performSslHandshake(SOCKET* sock) {
@@ -978,7 +988,7 @@ int main(int argc, char** argv)
 
     // logo time...
 
-    printf("\r\n\r\n|~| \\                          /|\\                           /|~|\r\n");
+    printf("\r\n\r\n|~|\\                           /|\\                           /|~|\r\n");
     printf("| |  |\\                     /|  |  |\\                     /|  | |\r\n");
     printf("| |  |  |\\               /|  |  |  |  |\\               /|  |  | |\r\n");
     printf("| |  |  |  |\\         /|  |  |  |  |  |  |\\         /|  |  |  | |\r\n");
@@ -1011,7 +1021,7 @@ int main(int argc, char** argv)
     *clientport = cfg.port; // TODO: "Dereferencing NULL pointer" warning
     hClient = CreateThread(NULL, 0, waitProcess, clientport, 0, &clientThreadId);
 #else
-    clientport = &cfg.port;
+    clientport = cfg.port;
     pthread_create(&hClient, NULL, waitProcess, (void*)clientport);
 #endif
     

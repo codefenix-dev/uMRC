@@ -248,7 +248,8 @@ void defaultDisplayName() {
  *  Removes pipe color code sequences (0-24) from a string.
  */
 void stripPipeCodes(char* str) {
-    char tmpSite[MSG_LEN] = "";
+    /*
+	char tmpSite[MSG_LEN] = "";
     strncpy_s(tmpSite, MSG_LEN, str, -1);
     for (int i = 0; i < 24; i++) {
         char fndstr[4] = "";
@@ -259,6 +260,25 @@ void stripPipeCodes(char* str) {
         }
     }
     strncpy_s(str, 140, tmpSite, -1);
+	*/
+	// The above code was causing segmentation faults in some linux distros (e.g.: openSUSE)
+    int len = 0;
+    for (int i = 0; i < (int)strlen(str); i++) {
+        if (str[i] == '|' && i < ((int)strlen(str) - 2)) { // check the next 2 characters for digits
+            if (isdigit(str[i + 1]) && isdigit(str[i + 2])) {
+                i = i + 2; // skip and don't don't if it's a pipe code
+            }
+            else {
+				str[len] = str[i];
+                len = len + 1;
+            }
+        }
+        else {
+			str[len] = str[i];
+            len = len + 1;
+        }
+    }	
+	str[len] = '\0';
 }
 
 /**
@@ -1180,7 +1200,7 @@ void processUserCommand(char* cmd, char* params) {
         if (nextspcidx > 0) {
             getSub(params, target, 0, nextspcidx);
             ustr(params);
-            _snprintf_s(ctcp_data, 50, -1, "%s %s", target, params + nextspcidx);
+            _snprintf_s(ctcp_data, 50, -1, "%s %s", target, params + nextspcidx+1);
             sendCtcpPacket(&mrcSock, (strcmp(target, "*") == 0 || target[0] == '#') ? "" : target, "[CTCP]", ctcp_data);
         }
     }
@@ -1339,7 +1359,7 @@ void processCtcpCommand(char* body, char* toUser, char* fromUser) {
         char cmdStr[80] = "";
         char repStr[80] = "";
 
-        strncpy_s(cmdStr, sizeof(cmdStr), body + 7 + strlen(fromUser) + 1 + (strlen(toUser) == 0 ? 1 : strlen(toUser))  + 2, -1);
+        strncpy_s(cmdStr, sizeof(cmdStr), body + 7 + strlen(fromUser) + /*1 +*/ (strlen(toUser) == 0 ? 1 : strlen(toUser))  + 2, -1);
 
         if (_strnicmp(cmdStr, "VERSION", 7) == 0) {
             _snprintf_s(repStr, sizeof(repStr), -1, "VERSION %s v%s.%s %s [%s]", TITLE, PROTOCOL_VERSION, UMRC_VERSION, COMPILE_DATE, AUTHOR_INITIALS);
@@ -1870,10 +1890,11 @@ bool enterChat() {
     // 2 threads:
     //
     //  - Incoming one to listen to messages from the Bridge, and place them in the chat window.
-    DWORD incomingThreadID;
 #if defined(WIN32) || defined(_MSC_VER)   
+    DWORD incomingThreadID;
     HANDLE hIncoming = CreateThread(NULL, 0, handleIncomingMessages, NULL, 0, &incomingThreadID);
 #else
+	pthread_t incomingThreadID;
     pthread_create(&incomingThreadID, NULL, handleIncomingMessages, NULL);
 #endif   
 
@@ -2005,7 +2026,7 @@ int main(int argc, char** argv)
     od_init();
 
     if (loadData(&cfg, CONFIG_FILE) != 0) {
-        od_printf("Invalid config. Run Config.exe.\r\n");
+        od_printf("Invalid config. Run config.\r\n");
         od_exit(-1, FALSE);
     }
 
@@ -2219,7 +2240,7 @@ int main(int argc, char** argv)
 
         switch (od_get_answer("CSITQ")) {
         case 'C':
-            enterChat(gUserDataFile);
+            enterChat();
             saveUser(&user, gUserDataFile);
             break;
 

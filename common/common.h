@@ -70,7 +70,7 @@ char _getch();
 #define UMRC_VERSION "100"
 #define YEAR_AND_AUTHOR "2025 Craig Hendricks (aka Codefenix)"
 #define AUTHOR_INITIALS "cf" // alias initials
-#define COMPILE_DATE "2025-12-30"
+#define COMPILE_DATE "2026-01-02"
 
 // These defaults should remain the same, and
 // not be changed without a good reason.
