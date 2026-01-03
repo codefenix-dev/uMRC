@@ -756,13 +756,13 @@ int strLenWithoutPipecodes(char* str) {
 }
 
 void resetInputLine() {
+    updateBuffer(0);
     od_set_cursor(od_control.user_screen_length, 1);
     od_clr_line();
     for (int i = 1; i < od_control.user_screenwidth - 1; i++) {
         od_printf("`bright black`\372");
     }
     od_set_cursor(od_control.user_screen_length, 1);
-    updateBuffer(0);
 }
 
 void scrollToScrollbackSection(char** scrollLines, int start, int end, int height) {
@@ -2027,7 +2027,7 @@ int main(int argc, char** argv)
     od_init();
 
     if (loadData(&cfg, CONFIG_FILE) != 0) {
-        od_printf("Invalid config. Run config.\r\n");
+        od_printf("Invalid config. Run setup.\r\n");
         od_exit(-1, FALSE);
     }
 
@@ -2123,7 +2123,7 @@ int main(int argc, char** argv)
             od_printf("`bright white`\r\n\r\nOK, we'll leave it as-is!``\r\n\r\n");
         }
 
-        od_printf("``If you ever change your mind, your sysop will need\r\nto `bright white`reset`` your uMRC settings.`` \r\n\r\n");
+        od_printf("``If you ever change your mind, your sysop will need to `bright white`reset`` \r\nyour uMRC settings.`` \r\n\r\n");
         defaultDisplayName();
         _snprintf_s(user.joinMessage, 50, -1, DEFAULT_JOIN_MSG, user.chatterName);
         _snprintf_s(user.exitMessage, 50, -1, DEFAULT_EXIT_MSG, user.chatterName);

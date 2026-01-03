@@ -432,4 +432,8 @@ char _getch() {
     return ch;
 }
 
+void Sleep(int ms) {
+    usleep(ms * 1000);
+}
+
 #endif

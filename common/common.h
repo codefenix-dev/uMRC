@@ -27,7 +27,6 @@ HANDLE hCon; // needed for setting console colors and clearing screen
 #define _strdup(s)                                            strdup((s))
 #define _stricmp(s1, s2)                                      strcasecmp((s1), (s2))
 #define _strnicmp(s1, s2, n)                                  strncasecmp((s1), (s2), (n))             
-#define Sleep(ms)                                             usleep((ms))
 #define strtok_s(s, d, context)                               strtok_r((s), (d), (context))
 
 #define INVALID_SOCKET   ~0
@@ -40,6 +39,7 @@ static struct termios old,current;
 void initTermios(int echo);
 void resetTermios(void);
 char _getch();
+void Sleep(int ms);
 
 #endif
 
@@ -70,7 +70,7 @@ char _getch();
 #define UMRC_VERSION "100"
 #define YEAR_AND_AUTHOR "2025 Craig Hendricks (aka Codefenix)"
 #define AUTHOR_INITIALS "cf" // alias initials
-#define COMPILE_DATE "2026-01-02"
+#define COMPILE_DATE "2026-01-03"
 
 // These defaults should remain the same, and
 // not be changed without a good reason.
