@@ -14,7 +14,12 @@ HANDLE hCon; // needed for setting console colors and clearing screen
 
 #else
 
+#if defined(__APPLE__)
+#define PLATFORM "macOS"
+#else
 #define PLATFORM "Linux"
+#endif
+
 #include <unistd.h>
 #include <termios.h>
 #include <sys/types.h>
@@ -70,7 +75,7 @@ void Sleep(int ms);
 #define UMRC_VERSION "100"
 #define YEAR_AND_AUTHOR "2025 Craig Hendricks (aka Codefenix)"
 #define AUTHOR_INITIALS "cf" // alias initials
-#define COMPILE_DATE "2026-01-03"
+#define COMPILE_DATE "2026-01-07"
 
 // These defaults should remain the same, and
 // not be changed without a good reason.
@@ -92,8 +97,8 @@ void Sleep(int ms);
 #if defined(__x86_64__) || defined(_M_X64)
 #define ARC "x86_64"
 #elif defined(i386) || defined(__i386__) || defined(__i386) || defined(_M_IX86)
-#define ARC "i386"
-/*#elif defined(__ARM_ARCH_2__)
+#define ARC "x86"
+#elif defined(__ARM_ARCH_2__)
 #define ARC "ARM2"
 #elif defined(__ARM_ARCH_3__) || defined(__ARM_ARCH_3M__)
 #define ARC "ARM3"
@@ -128,7 +133,7 @@ void Sleep(int ms);
 #elif defined(__sparc__) || defined(__sparc)
 #define ARC  "SPARC"
 #elif defined(__m68k__)
-#define ARC  "M68K"*/
+#define ARC  "M68K"
 #else
 #define ARC  "UNKNOWN"
 #endif

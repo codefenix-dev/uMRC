@@ -13,6 +13,7 @@
 
 
 #if defined(WIN32) || defined(_MSC_VER)
+
 #define WIN32_LEAN_AND_MEAN
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -20,6 +21,7 @@
 #pragma comment (lib, "Mswsock.lib")
 #pragma comment (lib, "AdvApi32.lib")
 #include "OpenDoor.h"
+
 #else
 
 #include <pthread.h>
@@ -42,7 +44,7 @@
 #define DEFAULT_JOIN_MSG "|07- |11%s |03has arrived."
 #define DEFAULT_EXIT_MSG "|07- |12%s |04has left chat."
 #define CTCP_ROOM "ctcp_echo_channel"
-#define CHAT_CURSOR "`flashing white`\262```bright black`\372``"
+#define CHAT_CURSOR "`flashing white`\262`bright black`\372``"
 
 
 bool gRoomTopicChanged = false;
@@ -2051,7 +2053,8 @@ int main(int argc, char** argv)
     strncpy_s(user.chatterName, 36, strReplace(user.chatterName, "~", ""), -1);  // tildes are disallowed; strip them out
     strncpy_s(gFromSite, sizeof(gFromSite), strReplace(cfg.name, "~", ""), -1);
     stripPipeCodes(gFromSite);
-    strncpy_s(gFromSite, sizeof(gFromSite), gFromSite, 30); // copy only the first 30 characters, now that we've cleaned up the name
+    //strncpy_s(gFromSite, sizeof(gFromSite), gFromSite, 30); // copy only the first 30 characters, now that we've cleaned up the name
+    if (strlen(gFromSite) > 30) gFromSite[30] = '\0';
 #if defined(WIN32) || defined(_MSC_VER)  
     _snprintf_s(gUserDataFile, sizeof(gUserDataFile), -1, "%s\\%s.dat", USER_DATA_DIR, user.chatterName);
 #else
