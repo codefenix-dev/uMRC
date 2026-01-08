@@ -23,7 +23,6 @@
 #pragma comment (lib, "Mswsock.lib")
 #pragma comment (lib, "AdvApi32.lib")
 
-// Link with OpenSSL libraries
 #if defined(__x86_64__) || defined(_M_X64)
 #pragma comment(lib, "../lib/x64/libssl-43.lib")  // TODO: lots of compiler warnings with 64bit
 #pragma comment(lib, "../lib/x64/libcrypto-41.lib")
@@ -343,7 +342,7 @@ bool sendClientPacket(SOCKET* sock, char* packet) {
     int iResult;
     if (gVerboseLogging) {
         char logstring[1024] = "";
-        _snprintf_s(logstring, sizeof(logstring), -1, "sendClientPacket \"%s\" to socket %d\r\n", packet, *sock);
+        _snprintf_s(logstring, sizeof(logstring), -1, "sendClientPacket \"%s\" to socket %d\r\n", packet, (int)*sock);
         printDateTimeStamp();
         printf(logstring);
         writeToLog(logstring);
@@ -354,7 +353,7 @@ bool sendClientPacket(SOCKET* sock, char* packet) {
     if (iResult == SOCKET_ERROR) {
         char logstring[1024] = "";
 #if defined(WIN32) || defined(_MSC_VER) 
-        _snprintf_s(logstring, sizeof(logstring), -1, "sendClientPacket to client #%d failed with error: %d\r\n", *sock, WSAGetLastError());
+        _snprintf_s(logstring, sizeof(logstring), -1, "sendClientPacket to client #%d failed with error: %d\r\n", (int)*sock, WSAGetLastError());
 #else        
         _snprintf_s(logstring, sizeof(logstring), -1, "sendClientPacket to client #%d failed with error: %d\r\n", *sock, errno);
 #endif
@@ -386,7 +385,7 @@ void* clientProcess(void* lpArg) {
 #endif
     
     bool cleanLogoff = false;
-    int pSock;
+    SOCKET pSock;
     int pSlot;
     int iResult = 0;
     char thisUser[30] = "";
@@ -775,7 +774,7 @@ void mrcHostProcess(struct settings cfg) {
 
         iResult = 0;
         char inboundData[DATA_LEN] = "";
-        int bytesread = 0;
+        size_t bytesread = 0;
 
         // If a partial packet was captured in the last loop, place it in 
         // front of the next inbound data we read from the host.
@@ -914,8 +913,9 @@ void mrcHostProcess(struct settings cfg) {
 				unsigned long err_code = ERR_get_error();
 				char err_msg[256];
                 ERR_error_string_n(err_code, err_msg, sizeof(err_msg));
-				printDateTimeStamp();
-				printf(err_msg);				
+                printDateTimeStamp();
+                printf(err_msg);
+                printf("\r\n");
 				ERR_clear_error();
 			}
         }

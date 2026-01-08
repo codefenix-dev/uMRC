@@ -1382,10 +1382,10 @@ void processCtcpCommand(char* body, char* toUser, char* fromUser) {
         sendCtcpPacket(&mrcSock, fromUser, "[CTCP-REPLY]", repStr);
     }
     else if (strncmp(body, "[CTCP-REPLY] ", 13) == 0 && _stricmp(toUser, user.chatterName) == 0) {
-        char repStr[80] = "";
+        //char repStr[80] = "";
+        //strncpy_s(repStr, 80, body + 13 + strlen(fromUser) + 1, -1);
         char resp[MSG_LEN] = "";
-        strncpy_s(repStr, 80, body + 13 + strlen(fromUser) + 1, -1);
-        _snprintf_s(resp, MSG_LEN, -1, "* |14[CTCP-REPLY] |10%s |15%s", fromUser, repStr);
+        _snprintf_s(resp, MSG_LEN, -1, "* |14[CTCP-REPLY] |10%s |15%s", fromUser, /*repStr*/ body + 13 + strlen(fromUser) + 1);
         queueIncomingMessage( resp, false);
         od_sleep(20);
     }
@@ -1575,7 +1575,11 @@ void doChatRoutines(char* input) {
         }
 
         key = ' ';
+        bool updateInput = false;
         char pcol[4] = "";
+        int endOfInput = 0;
+        char tabResult[30] = "";
+
 
         if (InputEvent.EventType == EVENT_EXTENDED_KEY)
         {
@@ -1627,6 +1631,20 @@ void doChatRoutines(char* input) {
                 break;
 
             case OD_KEY_DELETE:
+                //strcpy_s(input, sizeof(input), "");
+                //resetInputLine();
+                //od_printf(CHAT_CURSOR);
+                updateInput = true;
+
+                if (strlen(input) > 0) {
+                    input[strlen(input) - 1] = '\0';
+                    endOfInput = endOfInput + 1;
+                }
+                key = 8; // Treat the same as Backspace
+
+                break;
+
+            case OD_KEY_END:
                 strcpy_s(input, sizeof(input), "");
                 resetInputLine();
                 od_printf(CHAT_CURSOR);
@@ -1647,9 +1665,9 @@ void doChatRoutines(char* input) {
 
         else if (InputEvent.EventType == EVENT_CHARACTER)
         {
-            int endOfInput = 0;
-            char tabResult[30] = "";
+            //int endOfInput = 0;
             key = InputEvent.chKeyPress;
+            updateInput = true;
 
             // Add the keystroke to the input string...            
             if (key == 27 && !isEscapeSequence) { // User pressed a key that triggers an escape sequence
@@ -1681,7 +1699,7 @@ void doChatRoutines(char* input) {
             }
             else if (key == 8) { // backspace
                 if (strlen(input) > 0) {
-                    input[strlen(input)-1]='\0';
+                    input[strlen(input) - 1] = '\0';
                     endOfInput = endOfInput + 1;
                 }
             }
@@ -1703,13 +1721,13 @@ void doChatRoutines(char* input) {
 
                 for (int i = 0; i < gChatterCount; i++) {
                     if (_strnicmp(tabSearch, gChattersInRoom[i], strlen(tabSearch)) == 0 && _stricmp(gChattersInRoom[i], user.chatterName) != 0) {
-                        strcpy_s(tabResult, 30, gChattersInRoom[i] /* + strlen(tabSearch) */ );
+                        strcpy_s(tabResult, 30, gChattersInRoom[i] /* + strlen(tabSearch) */);
                         strncpy_s(input, MSG_LEN, input, strlen(input) - strlen(tabSearch));
 #if defined(WIN32) || defined(_MSC_VER) 
                         _snprintf_s(input, MSG_LEN, -1, "%s%s", input, tabResult);
 #else
-                        for (int ii = 0; ii < strlen(tabSearch); ii++) {                            
-                            input[strlen(input)-1]='\0';
+                        for (int ii = 0; ii < strlen(tabSearch); ii++) {
+                            input[strlen(input) - 1] = '\0';
                         }
                         strcat_s(input, MSG_LEN, tabResult);
 #endif
@@ -1720,10 +1738,13 @@ void doChatRoutines(char* input) {
                 if (strlen(tabResult) == 0) { // if no match, just skip
                     continue;
                 }
-            }                   
+            }
             else {
                 continue;
             }
+        }
+
+        if (updateInput) {
 
             //
             // Done capturing input...

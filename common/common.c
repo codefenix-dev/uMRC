@@ -15,7 +15,7 @@ char* strReplace(char* orig, char* rep, char* with) {
 	for (int i = 0; i < (int)strlen(orig); i++) {
 		if (strncmp(orig + i, rep, strlen(rep)) == 0) {
 			strcat_s(newstr, sizeof(newstr), with);
-			i = i + strlen(rep) - 1;
+			i = i + (int)strlen(rep) - 1;
 		}
 		else {
 			char append[] = { orig[i],'\0' };
@@ -250,7 +250,7 @@ int loadData(struct settings* data, char* filename) {
     return 0;
 }
 
-int saveData(struct settings* data, char* filename) {
+size_t saveData(struct settings* data, char* filename) {
     FILE* outfile;
 #if defined(WIN32) || defined(_MSC_VER)
     fopen_s(&outfile, filename, "wb");
@@ -261,7 +261,7 @@ int saveData(struct settings* data, char* filename) {
     if (outfile == NULL) {
         return 1;
     }
-    int flag = 0;
+    size_t flag = 0;
     flag = fwrite(data, sizeof(struct settings), 1, outfile);
     fclose(outfile);
     return flag;
@@ -282,7 +282,7 @@ int loadUser(struct userdata* data, char* filename) {
     return 0;
 }
 
-int saveUser(struct userdata* data, char* filename) {
+size_t saveUser(struct userdata* data, char* filename) {
     FILE* outfile;
 #if defined(WIN32) || defined(_MSC_VER)
     fopen_s(&outfile, filename, "wb");
@@ -293,7 +293,7 @@ int saveUser(struct userdata* data, char* filename) {
     if (outfile == NULL) {
         return 1;
     }
-    int flag = 0;
+    size_t flag = 0;
     flag = fwrite(data, sizeof(struct userdata), 1, outfile);
     fclose(outfile);
     return flag;

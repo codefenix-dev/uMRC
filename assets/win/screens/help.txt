@@ -17,6 +17,6 @@
 |15/|11ctcp          |08:|07 Send a CTCP command |08..... see|08:|07 |15/|11help |15ctcp
 |11TAB            |08:|07 Auto-complete user's name
 |11LEFT|08/|11RIGHT     |08:|07 Change your text color
-|11DEL            |08:|07 Clear the input line
+|11END            |08:|07 Clear the input line
 |15/|11?             |08:|07 Show list of |15SERVER commands
 |15/|11quit |08or |07/|11q|07    : Exit chat to main menu

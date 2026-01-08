@@ -72,7 +72,7 @@ char* textPrompt(char* promptText, int maxLen, int displayableLen, char* default
 				strncpy_s(buffer, sizeof(buffer), strReplace(buffer, f, ""), -1);
 			}
 		}
-		enteredLen = strlen(buffer);
+		enteredLen = (int)strlen(buffer);
 	}
 
 	return _strdup(buffer);

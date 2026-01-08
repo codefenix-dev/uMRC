@@ -75,7 +75,7 @@ void Sleep(int ms);
 #define UMRC_VERSION "100"
 #define YEAR_AND_AUTHOR "2025 Craig Hendricks (aka Codefenix)"
 #define AUTHOR_INITIALS "cf" // alias initials
-#define COMPILE_DATE "2026-01-07"
+#define COMPILE_DATE "2026-01-08"
 
 // These defaults should remain the same, and
 // not be changed without a good reason.
@@ -209,9 +209,9 @@ char* createPacket(char* fromUser, char* fromSite, char* fromRoom, char* toUser,
 char* pipeToAnsi(char* str);
 int countOfChars(char* str, char c);
 int loadData(struct settings* data, char* filename);
-int saveData(struct settings* data, char* filename);
+size_t saveData(struct settings* data, char* filename);
 int loadUser(struct userdata* data, char* filename);
-int saveUser(struct userdata* data, char* filename);
+size_t saveUser(struct userdata* data, char* filename);
 void printPipeCodeString(char* str);
 void clearScreen();
 
