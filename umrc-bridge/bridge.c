@@ -24,7 +24,7 @@
 #pragma comment (lib, "AdvApi32.lib")
 
 #if defined(__x86_64__) || defined(_M_X64)
-#pragma comment(lib, "../lib/x64/libssl-43.lib")  // TODO: lots of compiler warnings with 64bit
+#pragma comment(lib, "../lib/x64/libssl-43.lib")
 #pragma comment(lib, "../lib/x64/libcrypto-41.lib")
 #elif defined(i386) || defined(__i386__) || defined(__i386) || defined(_M_IX86)
 #pragma comment(lib, "../lib/x86/libssl-43.lib") 
@@ -326,7 +326,7 @@ bool sendHostPacket(const char* packet) {
         for (int i = 0; i < MAX_LATENCIES; i++) {
             if (lt[i].packetSum == -1) {
                 lt[i].packetSum = packetSum(packet);
-                lt[i].timeSent = currentTimeMillis(); // clock();
+                lt[i].timeSent = currentTimeMillis();
                 lt[i].isServerCmd = strstr(packet, "~SERVER~") != NULL && strstr(packet, "~IAMHERE~") == NULL;
                 break;
             }
@@ -348,7 +348,7 @@ bool sendClientPacket(SOCKET* sock, char* packet) {
         writeToLog(logstring);
     }
     iResult = send(*sock, packet, (int)strlen(packet), 0);
-    Sleep(10);
+    Sleep(5);
 
     if (iResult == SOCKET_ERROR) {
         char logstring[1024] = "";
@@ -763,6 +763,9 @@ void mrcHostProcess(struct settings cfg) {
     else {
         printPipeCodeString(OK);
         gConnectionIsDown = false;
+        if (gRetry > 0) {
+            writeToLog("Reconnection successful");
+        }
         gRetry = 0;
     }   
 
@@ -783,9 +786,13 @@ void mrcHostProcess(struct settings cfg) {
         {
             strcpy_s(inboundData, DATA_LEN, partialPacket);
             bytesread = strlen(partialPacket);
+            if (gVerboseLogging) {
+                printDateTimeStamp();
+                printf("partial packet recovered: %s\r\n", partialPacket);
+                writeToLog("partial packet recovered:");
+                writeToLog(partialPacket);
+            }
             strcpy_s(partialPacket, sizeof(partialPacket), "");
-            printDateTimeStamp();
-            printf("partial packet recovered! \r\n");
         }
 
         iResult = usingSSL ? SSL_read(mrcHostSsl, inboundData + bytesread, DATA_LEN) : recv(mrcHostSock, inboundData + bytesread, DATA_LEN, 0);
@@ -808,8 +815,12 @@ void mrcHostProcess(struct settings cfg) {
                 // if it's not, then consider it a partial packet that needs to be 
                 // prefixed to the next inboundData read
                 if (pktCount > 1 && i == pktCount - 1 && strcmp("\n", packet) != 0) {
-                    printDateTimeStamp();
-                    printf("partial packet detected: \"%s\"\r\n", packet);
+                    if (gVerboseLogging) {
+                        printDateTimeStamp();
+                        printf("partial packet detected: \"%s\"\r\n", packet);
+                        writeToLog("partial packet detected:");
+                        writeToLog(packet);
+                    }
                     strcpy_s(partialPacket, sizeof(partialPacket), strReplace(packet, "\n", "")); // strip out the LF
                     break;
                 }
@@ -832,9 +843,13 @@ void mrcHostProcess(struct settings cfg) {
                     }
                 } 
 
-                if (countOfChars(packet, '~') < 6) { // needed?
-                    printDateTimeStamp();
-                    printf("partial packet detected: \"%s\"\r\n", packet);
+                if (countOfChars(packet, '~') < 6) { // invalid packets have fewer than 6 tildes
+                    if (gVerboseLogging) {
+                        printDateTimeStamp();
+                        printf("WARNING: invalid packet: \"%s\"\r\n", packet);
+                    }
+                    writeToLog("WARNING: invalid packet:");
+                    writeToLog(packet);
                     continue;
                 }  
 
@@ -1009,9 +1024,9 @@ int main(int argc, char** argv)
 
     if (loadData(&cfg, CONFIG_FILE) != 0) {
         printDateTimeStamp();
-        printf("Invalid config. Run config.\r\n");
+        printf("Invalid config. Run setup.\r\n");
         if (gVerboseLogging) {
-            writeToLog("Invalid config. Run config.");
+            writeToLog("Invalid config. Run setup.");
         }
         return -1;
     }

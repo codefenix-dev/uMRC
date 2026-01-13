@@ -2,10 +2,18 @@ Change Log:
 
 v100 - TBA
 
-  - Initial support for Linux added.
+  - Added a /nick chat command, which lets users edit their display name 
+    (aka nick) without leaving chat.
+  - Initial support for Linux added. Many sections of code have been 
+    refactored to allow cross-compiling for both Windows and Linux.
+  - Backspace and DEL keys now both act like a backspace, in order to 
+    ensure compatibility across platforms.
   - Display the "Quit to" BBS name it all its pipe code colorful glory.
   - displayMessage function now scrolls up the number of carriage returns
-    that was added while wrapping the message
+    that was added while wrapping the message.
+  - Fixed pipe-code color to ANSI translation for strings containing dim 
+    colors immediately after background colors.
+  - Fix for incoming and outgoing /ctcp commands.
   
 
 v099b - December 10, 2025:

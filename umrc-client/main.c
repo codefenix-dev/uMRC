@@ -20,7 +20,6 @@
 #pragma comment (lib, "Ws2_32.lib")
 #pragma comment (lib, "Mswsock.lib")
 #pragma comment (lib, "AdvApi32.lib")
-#include "OpenDoor.h"
 
 #else
 
@@ -30,13 +29,13 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <dirent.h>
-#include "./nix-od/OpenDoor.h"
     
 #endif
 
 #include <sys/stat.h>
 #include <sys/timeb.h>
 
+#include "OpenDoor.h"
 #include "../common/common.h"
 
 #define DIVIDER "`bright blue`___________________________________________________________________________\r\n``"
@@ -63,6 +62,7 @@ char gTopic[55] = "";
 char gLatency[6] = "";
 char gFromSite[140] = "";
 char gLastDirectMsgFrom[36] = "";
+char gUserDataFile[260] = "";
 
 char** gChattersInRoom;
 char** sTwits;
@@ -196,10 +196,14 @@ bool strContainsStrI(char* str, char* contains) {
     lstr(s);
     return strstr(s, c) != NULL;
 }
-void getSub(char* s, char* ss, int pos, int l) {
+
+/**
+ * Gets a substring from a string. Result stored in: ss
+ */
+void getSub(char* s, char* ss, int pos, int len) {
     int i = 0;
     s += pos; // Move pointer to starting position
-    while (l--) {
+    while (len--) {
         *ss++ = *s++;
     }
     *ss = '\0'; // Null terminate
@@ -250,20 +254,6 @@ void defaultDisplayName() {
  *  Removes pipe color code sequences (0-24) from a string.
  */
 void stripPipeCodes(char* str) {
-    /*
-	char tmpSite[MSG_LEN] = "";
-    strncpy_s(tmpSite, MSG_LEN, str, -1);
-    for (int i = 0; i < 24; i++) {
-        char fndstr[4] = "";
-        _snprintf_s(fndstr, 4, -1, "|%02d", i);
-        strncpy_s(tmpSite, MSG_LEN, strReplace(tmpSite, fndstr, ""), -1);
-        if (strstr(tmpSite, "|") == NULL) {
-            break;
-        }
-    }
-    strncpy_s(str, 140, tmpSite, -1);
-	*/
-	// The above code was causing segmentation faults in some linux distros (e.g.: openSUSE)
     int len = 0;
     for (int i = 0; i < (int)strlen(str); i++) {
         if (str[i] == '|' && i < ((int)strlen(str) - 2)) { // check the next 2 characters for digits
@@ -308,7 +298,7 @@ int colorPrompt(int lo, int hi) {
 /**
  *  Lets a user customize their chatter display name.
  */
-int editDisplayName() {
+int editDisplayName(char* quitToWhere) {
 
     bool doneEditing = false;
     int changeCount = 0;
@@ -323,7 +313,7 @@ int editDisplayName() {
 
         od_clr_scr();
 
-        od_printf("`bright white`Display Name Settings for `bright cyan`%s``\r\n", user.chatterName);
+        od_printf("`bright white`Display Name (aka Nick) Settings for `bright cyan`%s``\r\n", user.chatterName);
         od_printf(DIVIDER);
         od_printf("``\r\n");
 
@@ -341,7 +331,7 @@ int editDisplayName() {
         od_printf("``\r\n\r\n");
         od_printf(" `cyan`R`bright white`) `white`Randomize!");
         od_printf("``\r\n\r\n");
-        od_printf(" `bright green`Q`bright white`) `white`Quit to Settings Menu");
+        od_printf(" `bright green`Q`bright white`) `white`Quit to %s", quitToWhere);
         od_printf("``\r\n\r\n> ");
 
         switch (od_get_answer("PCSRQ")) {
@@ -554,7 +544,7 @@ void drawStatusBar() {
 /**
  *  Lets the user modify settings
  */
-void enterChatterSettings(char* userFile) {
+void enterChatterSettings() {
     bool changesMade = false;
     bool exit = false;
     char newRoom[30] = "";
@@ -610,7 +600,7 @@ void enterChatterSettings(char* userFile) {
 
         switch (od_get_answer("1234567Q")) {
         case '1':
-            if (editDisplayName() > 0) {
+            if (editDisplayName("settings menu") > 0) {
                 changesMade = true;
             }
             break;
@@ -688,7 +678,7 @@ void enterChatterSettings(char* userFile) {
         }
     }
     if (changesMade) {
-        saveUser(&user, userFile);
+        saveUser(&user, gUserDataFile);
         od_printf("\r\n`bright white`Changes saved!``");
         doPause();
     }
@@ -1207,6 +1197,30 @@ void processUserCommand(char* cmd, char* params) {
             sendCtcpPacket(&mrcSock, (strcmp(target, "*") == 0 || target[0] == '#') ? "" : target, "[CTCP]", ctcp_data);
         }
     }
+    //else if (_stricmp(cmd, "settings") == 0) {
+    //    isChatPaused = true;
+    //    enterChatterSettings();
+    //    isChatPaused = false;
+    //}
+    else if (_stricmp(cmd, "nick") == 0) {
+        isChatPaused = true;
+        editDisplayName("chat");
+        // refresh the scrollLines and re-display the latest lines when exiting scrollback, in 
+        // case any were received while editing.
+        char** scrollLines;
+        int height = od_control.user_screen_length - 2;
+        int scrollLineCount = split(gScrollBack, '\n', &scrollLines);
+        int scrollPos = scrollLineCount - height;
+        if (scrollPos < 0) {
+            scrollPos = 0;
+        }
+        scrollToScrollbackSection(scrollLines, scrollPos, scrollLineCount, height);
+        free(scrollLines); // needed?
+        isChatPaused = false;
+        drawStatusBar();
+        resetInputLine();
+        od_printf(CHAT_CURSOR);
+    }
     //else if (_stricmp(cmd, "twit") == 0) { // For later
     //}
     else if (_stricmp(cmd, "help") == 0) {
@@ -1348,7 +1362,7 @@ bool processServerMessage(char* body, char* toUser) {
     // since it's most likely an informational message from the SERVER.
     else if (strlen(toUser) == 0 || _stricmp(toUser, user.chatterName) == 0) {
         queueIncomingMessage(body, false);
-        od_sleep(10);
+        od_sleep(5);
     }
     return shouldTerminateSession;
 }
@@ -1357,12 +1371,12 @@ void processCtcpCommand(char* body, char* toUser, char* fromUser) {
 
     // TODO: - This works, but could be written better.. 
 
-    if (strncmp(body, "[CTCP] ", 7) == 0 && (_stricmp(toUser, user.chatterName) == 0 || strlen(toUser)==0 /* || strcmp(toUser, "*") == 0) || (toUser[0] == '#' && _stricmp(toUser + 1, gRoom) == 0*/))
+    if (strncmp(body, "[CTCP] ", 7) == 0 && (_stricmp(toUser, user.chatterName) == 0 || strlen(toUser) == 0 /* || strcmp(toUser, "*") == 0) || (toUser[0] == '#' && _stricmp(toUser + 1, gRoom) == 0*/))
     {
         char cmdStr[80] = "";
         char repStr[80] = "";
 
-        strncpy_s(cmdStr, sizeof(cmdStr), body + 7 + strlen(fromUser) + /*1 +*/ (strlen(toUser) == 0 ? 1 : strlen(toUser))  + 2, -1);
+        strncpy_s(cmdStr, sizeof(cmdStr), body + 7 + strlen(fromUser) + /*1 +*/ (strlen(toUser) == 0 ? 1 : strlen(toUser)) + 2, -1);
 
         if (_strnicmp(cmdStr, "VERSION", 7) == 0) {
             _snprintf_s(repStr, sizeof(repStr), -1, "VERSION %s v%s.%s %s [%s]", TITLE, PROTOCOL_VERSION, UMRC_VERSION, COMPILE_DATE, AUTHOR_INITIALS);
@@ -1386,7 +1400,7 @@ void processCtcpCommand(char* body, char* toUser, char* fromUser) {
         //strncpy_s(repStr, 80, body + 13 + strlen(fromUser) + 1, -1);
         char resp[MSG_LEN] = "";
         _snprintf_s(resp, MSG_LEN, -1, "* |14[CTCP-REPLY] |10%s |15%s", fromUser, /*repStr*/ body + 13 + strlen(fromUser) + 1);
-        queueIncomingMessage( resp, false);
+        queueIncomingMessage(resp, false);
         od_sleep(20);
     }
 }
@@ -1631,9 +1645,6 @@ void doChatRoutines(char* input) {
                 break;
 
             case OD_KEY_DELETE:
-                //strcpy_s(input, sizeof(input), "");
-                //resetInputLine();
-                //od_printf(CHAT_CURSOR);
                 updateInput = true;
 
                 if (strlen(input) > 0) {
@@ -1665,7 +1676,6 @@ void doChatRoutines(char* input) {
 
         else if (InputEvent.EventType == EVENT_CHARACTER)
         {
-            //int endOfInput = 0;
             key = InputEvent.chKeyPress;
             updateInput = true;
 
@@ -2025,7 +2035,6 @@ int main(int argc, char** argv)
 
     bool exit = false;
     int userNumber = -1;
-    char gUserDataFile[260] = "";
 
 #if defined WIN32
     od_parse_cmd_line(lpszCmdLine);
@@ -2159,7 +2168,7 @@ int main(int argc, char** argv)
             doPause();
 
             _snprintf_s(gDisplayChatterName, 80, -1, "|%02d|%02d%c|%02d|%02d%s%s", user.chatterNamePrefixFgColor, user.chatterNamePrefixBgColor, user.chatterNamePrefix, user.chatterNameFgColor, user.chatterNameBgColor, user.chatterName, user.chatterNameSuffix);
-            enterChatterSettings(gUserDataFile);
+            enterChatterSettings();
         }
     }
     else {
@@ -2270,7 +2279,7 @@ int main(int argc, char** argv)
             break;
 
         case 'S':
-            enterChatterSettings(gUserDataFile);
+            enterChatterSettings();
             break;
 
         case 'I':

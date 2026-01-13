@@ -14,6 +14,7 @@
 |15/|11mentions |08or |11UP|08:|07 Reset mention counter and review mentions
 |15/|11sound         |08:|07 Toggle chat sounds (e.g.: mentions)
 |15/|11theme         |08:|07 Select a theme
+|15/|11nick          |08:|07 Edit nickname
 |15/|11ctcp          |08:|07 Send a CTCP command |08..... see|08:|07 |15/|11help |15ctcp
 |11TAB            |08:|07 Auto-complete user's name
 |11LEFT|08/|11RIGHT     |08:|07 Change your text color
