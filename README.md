@@ -165,6 +165,12 @@ your platform.
    
    umrc-bridge takes an optional `-V` command line switch, which enables
    verbose logging. This can be used for troubleshooting purposes.
+
+   umrc-bridge makes automatic reconnect attempts in the event the
+   connection to the MRC host is lost, up to 10 times by default. This
+   can be changed by starting umrc-bridge with the `-Rx` option, where
+   `x` is the number of retries (e.g.: `-R30` for 30 retries). To make
+   infinite reconnection attempts, specify `-R0`.   
    
    
 4. Set up a menu item to launch a 32-bit door on your BBS.
@@ -184,7 +190,7 @@ your platform.
 > Also refer to your BBS software documentation on whether the `./` prefix
 > needs to be included.
 
-   If you get an error saying, "Invalid config. Run config", it means you either
+   If you get an error saying, "Invalid config. Run setup", it means you either
    did not run Setup, or you're not launching umrc-client from the directory
    it's located in. On some BBSes (like Mystic) it will be necessary to use
    a batch file or bash script to launch the door. Something like the below ought
@@ -198,13 +204,20 @@ your platform.
    ```
 
    Optionally (on Windows only) include the `-SILENT` option to prevent the 
-   local Windows GUI from popping up while the door is running.
+   local Windows GUI from popping up while the door is running. This is highly
+   recommended, since umrc-client takes a noticeable performance hit when outputting
+   to both the BBS and the local Window, especially while paging through the chat
+   scrollback.
 
-     `umrc-client -D c:\path\to\DOOR32.SYS -SILENT`
+   ```
+   umrc-client -D c:\path\to\DOOR32.SYS -SILENT
+   ```
 
    You can test it locally from the command line as well:
 
-     `umrc-client -L`
+   ```
+   umrc-client -L
+   ```
 
    NOTE: It will only run as user number 1 (Sysop) in local mode.
 
@@ -346,10 +359,14 @@ Type `/meetups` in chat for a current list of meetups.
 - The font size of the local window in Windows cannot be adjusted. This 
   seems to be an internal limitation of the OpenDoors kit.
 
-- umrc-bridge occasionally reports "partial packets" in verbose mode, 
-  especially when using the `!ddial` command. Most partial packets are 
-  either ignored or handled gracefully by the bridge when they occur (the 
-  Syncrhonet mrc-connector service logs similar warnings for `!ddial`).
+- umrc-bridge occasionally reports "partial packets" in verbose mode.
+  Most partial packets are either ignored or handled gracefully by the
+  bridge when they occur.
+
+- At the time of this writing, when using the `!ddial` command, the MRC
+  host returns extraneous packets missing the BODY field. uMRC treats
+  these as invalid, since they contain fewer than 6 tildes (~). 
+  Syncrhonet mrc-connector service logs similar warnings for `!ddial`.
 
 
 
@@ -447,6 +464,7 @@ and is always happy to try running new things on his board.
 ## Enjoy!
 
 See you in chat!
+
 
 
 
