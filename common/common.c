@@ -357,12 +357,10 @@ void printPipeCodeString(char* str) {
  *
  */
 void printPipeCodeString(char* str) {
-
     printf(pipeToAnsi(str));    
 }
 
 #endif
-
 
 #if defined(WIN32) || defined(_MSC_VER)
 

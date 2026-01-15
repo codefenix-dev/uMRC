@@ -25,9 +25,9 @@ HANDLE hCon; // needed for setting console colors and clearing screen
 #include <sys/types.h>
 #include <errno.h>
 
-#define strcpy_s(dest, count, source)                         strncpy( (dest), (source), (count) )
-#define strncpy_s(dest, max, source, count)                   strncpy( (dest), (source), (max) )
-#define strcat_s(dest, max, source)                           strcat( (dest), (source))
+#define strcpy_s(dest, count, source)                         strncpy((dest), (source), (count))
+#define strncpy_s(dest, max, source, count)                   strncpy((dest), (source), (max))
+#define strcat_s(dest, max, source)                           strcat((dest), (source))
 #define _snprintf_s(buffer, sizeofBuffer, count, format, ...) snprintf((buffer), (sizeofBuffer), (format), ##__VA_ARGS__)
 #define _strdup(s)                                            strdup((s))
 #define _stricmp(s1, s2)                                      strcasecmp((s1), (s2))
@@ -75,7 +75,7 @@ void Sleep(int ms);
 #define UMRC_VERSION "100"
 #define YEAR_AND_AUTHOR "2025 Craig Hendricks (aka Codefenix)"
 #define AUTHOR_INITIALS "cf" // alias initials
-#define COMPILE_DATE "2026-01-13"
+#define COMPILE_DATE "2026-01-15"
 
 // These defaults should remain the same, and
 // not be changed without a good reason.

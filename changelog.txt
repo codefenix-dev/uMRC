@@ -2,6 +2,10 @@ Change Log:
 
 v100 - TBA
 
+  - Added a new command line option to umrc-bridge to set the maximum
+    number of reconnection attempts: -r[x] where x is the maximum number
+    of failed attempts allowed. If not set, the default is 10. Specify
+    a 0 for infinite attempts.
   - Added a /nick chat command, which lets users edit their display name 
     (aka nick) without leaving chat.
   - Initial support for Linux added. Many sections of code have been 
@@ -14,6 +18,7 @@ v100 - TBA
   - Fixed pipe-code color to ANSI translation for strings containing dim 
     colors immediately after background colors.
   - Fix for incoming and outgoing /ctcp commands.
+  - New "anet" themes contibuted by StingRay!
   
 
 v099b - December 10, 2025:

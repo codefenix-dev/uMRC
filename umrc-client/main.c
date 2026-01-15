@@ -289,7 +289,7 @@ int colorPrompt(int lo, int hi) {
         od_printf("``\r\n\r\nPick a color (%d-%d): ", lo, hi);        
         char ci[3];
         od_input_str(ci, 2, '0', '9');
-        pickedColor = atoi( ci );
+        pickedColor = atoi(ci);
         validEntry = (pickedColor >= lo && pickedColor <= hi);
     }
     return pickedColor;
@@ -592,7 +592,7 @@ void enterChatterSettings() {
         od_disp_emu(pipeToAnsi(user.exitMessage), TRUE);
         od_printf("``\r\n");
 
-        od_printf(" `bright magenta`7`bright white`) `white`Theme:         `bright white`%s\r\n", user.theme );
+        od_printf(" `bright magenta`7`bright white`) `white`Theme:         `bright white`%s\r\n", user.theme);
 
         od_printf("``\r\n");
         od_printf(" `bright green`Q`bright white`) `white`Quit to main menu");
@@ -935,7 +935,7 @@ void enterScrollBack(int initialScroll, int mode) {
  *   mode=1: mention history
  */
 void addToScrollBack(char* msg, int mode) {
-    const size_t a = strlen(mode==0 ? gScrollBack : gMentions );
+    const size_t a = strlen(mode==0 ? gScrollBack : gMentions);
     const size_t b = strlen(msg);
     const size_t size_ab = a + b + 1 +1 ;
     char* tmp = realloc(mode == 0 ? gScrollBack : gMentions, size_ab);
@@ -980,7 +980,7 @@ void displayMessage(char* msg, bool mention) {
                 insertExtraCrLf = true;                       // word is longer than the terminal width.
             }
             linelen = linelen + tokenLen + 1;
-            if (linelen > (od_control.user_screenwidth  - 7 )) {
+            if (linelen > (od_control.user_screenwidth  - 7)) {
                 strcat_s(wrappedMsg, sizeof(wrappedMsg), "\r\n      \300");
                 linelen = 3 + (tokenLen + 1);
             }
@@ -1015,7 +1015,7 @@ void displayMessage(char* msg, bool mention) {
     }
     if (!isChatPaused) {
         od_scroll(1, 1, od_control.user_screenwidth, od_control.user_screen_length - 3, countOfChars(dispMsg, '\n') +1  , 0);
-        od_set_cursor(od_control.user_screen_length - (2 + countOfChars(dispMsg, '\n') +1  ), 1);
+        od_set_cursor(od_control.user_screen_length - (2 + countOfChars(dispMsg, '\n') +1), 1);
         od_disp_emu(pipeToAnsi(dispMsg), TRUE);
     }
 }
@@ -1091,7 +1091,7 @@ void displayPipeFileInChat(char* filename) {
     if (extFile != NULL) {
         char line[200] = "";
         while (fgets(line, sizeof(line), extFile)) {            
-           displayMessage( strReplace( line, "\n", ""), false);
+           displayMessage(strReplace(line, "\n", ""), false);
         }
         displayMessage("|08__", false);
         fclose(extFile);
@@ -1481,7 +1481,7 @@ void* handleIncomingMessages(void* lpArg) {
                         strstr(body, "Timeout") != NULL ||
                         strstr(body, "Rename") != NULL || 
                         strstr(body, "Linked") != NULL ||
-                        strstr(body, "Unlink") != NULL ) {
+                        strstr(body, "Unlink") != NULL) {
 
                         sendCmdPacket(&mrcSock, "USERLIST", "");
                     }
@@ -1489,16 +1489,16 @@ void* handleIncomingMessages(void* lpArg) {
                 else if (strcmp(toRoom, CTCP_ROOM) == 0 && strcmp(fromRoom, CTCP_ROOM) == 0) {
                     processCtcpCommand(body, toUser, fromUser);
                 }
-                else if (strcmp(toUser, "NOTME") == 0 ) {
+                else if (strcmp(toUser, "NOTME") == 0) {
                     if ((_stricmp(fromRoom, gRoom) == 0 || strlen(fromRoom) == 0) && 
                         (_stricmp(toRoom, gRoom) == 0 || strlen(toRoom) == 0)) {
-                        queueIncomingMessage( body, false);
+                        queueIncomingMessage(body, false);
                         sendCmdPacket(&mrcSock, "USERLIST", "");
                     }
                 }
                 else if (
                         // messages addressed to the room or to the chatter
-                        ((strcmp(gRoom, toRoom)==0 || strlen(toRoom)==0  ) && (strlen(toUser) == 0 || _stricmp(toUser, user.chatterName) == 0)) || 
+                        ((strcmp(gRoom, toRoom)==0 || strlen(toRoom)==0) && (strlen(toUser) == 0 || _stricmp(toUser, user.chatterName) == 0)) || 
                         // broadcast: messages addressed to everyone; no room and no user specified
                         (strlen(toRoom) == 0 && strlen(toUser) == 0)) {
                     // Direct message (DirectMsg) ...? 
@@ -1519,7 +1519,7 @@ void* handleIncomingMessages(void* lpArg) {
                                 od_putch(7);
                             }
                         }
-                        queueIncomingMessage( body, mentioned);
+                        queueIncomingMessage(body, mentioned);
                     }
                 }
                 od_sleep(1);
@@ -1583,7 +1583,7 @@ void doChatRoutines(char* input) {
             updateMentions();
             gMentionCountChanged = false;
         }
-        if (od_get_input(&InputEvent, 1, GETIN_NORMAL ) == FALSE) {    
+        if (od_get_input(&InputEvent, 1, GETIN_NORMAL) == FALSE) {    
             od_sleep(0);
             continue;
         }
@@ -1819,7 +1819,7 @@ void doChatRoutines(char* input) {
 void removeNonAlphanumeric(char *str) {
     int readPos = 0, writePos = 0;
     while (str[readPos] != '\0') {
-        if (isalnum(str[readPos]) ) {
+        if (isalnum(str[readPos])) {
             str[writePos++] = str[readPos];
         }
         readPos++;
@@ -2093,7 +2093,7 @@ int main(int argc, char** argv)
 
 #if defined(WIN32) || defined(_MSC_VER)  
     DWORD attributes = GetFileAttributesA(USER_DATA_DIR);
-    if (!( attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_DIRECTORY))) {
+    if (!(attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_DIRECTORY))) {
         CreateDirectory(USER_DATA_DIR,NULL);
     }
 #else

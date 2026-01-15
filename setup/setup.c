@@ -151,7 +151,7 @@ void enterInfo(struct settings info, bool enter_new) {
 	strncpy_s(info.host, 80, textPrompt("|07Enter the |15MRC host address|08:|07", 70, 0, enter_new ? DEFAULT_HOST : info.host, false), -1);
 	lstr(info.host);
 	printf("\r\n");
-	info.ssl = charPrompt("|07Use |15SSL|08 (|15Y|07/|15N|08)|07:", "YN", (enter_new ? 'Y' : ( info.ssl ? 'Y' : 'N' )) ) == 'Y';
+	info.ssl = charPrompt("|07Use |15SSL|08 (|15Y|07/|15N|08)|07:", "YN", (enter_new ? 'Y' : (info.ssl ? 'Y' : 'N'))) == 'Y';
 
 	printf("\r\n"); 
 	strncpy_s(info.port, 6, textPrompt("|07Enter the |15MRC host port number|08:|07", 6, 0, enter_new ? (info.ssl ? DEFAULT_SSL_PORT : DEFAULT_PORT) : info.port, false), -1);

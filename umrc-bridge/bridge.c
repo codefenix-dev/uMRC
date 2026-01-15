@@ -64,7 +64,7 @@ bool gVerboseLogging = false;
 bool gConnectionIsDown = true;
 bool gReconnect = false;
 int gRetry = 0;
-#define MAX_RETRIES 10
+#define DEFAULT_MAX_RETRIES 10
 
 SOCKET mrcHostSock = INVALID_SOCKET;
 SOCKET clientSocks[MAX_CLIENTS];
@@ -177,7 +177,7 @@ char* getDateTimeStamp() {
 }
 
 void printDateTimeStamp() {
-    printPipeCodeString( getDateTimeStamp() );
+    printPipeCodeString(getDateTimeStamp());
 }
 
 /**
@@ -552,7 +552,7 @@ void* waitProcess(void* lpArg) {
     printf("Ready for clients.\r\n");
     printDateTimeStamp();
     printf("To exit any time, press CTRL+C.\r\n");
-    while ( listen(listenSock, SOMAXCONN) != SOCKET_ERROR /* && !gConnectionIsDown*/) {
+    while (listen(listenSock, SOMAXCONN) != SOCKET_ERROR /* && !gConnectionIsDown*/) {
 
         // Accept a client socket, and run it in its own thread
         SOCKET newSock = INVALID_SOCKET;
@@ -981,6 +981,7 @@ void mrcHostProcess(struct settings cfg) {
 
 int main(int argc, char** argv)
 {
+    int maxRetries = DEFAULT_MAX_RETRIES;
     struct settings cfg;
 
 #if defined(WIN32) || defined(_MSC_VER)
@@ -1014,14 +1015,33 @@ int main(int argc, char** argv)
     printf("+-+------------===================================------------+-+\r\n\r\n");
 
     for (int i = 0; i < argc; i++) {
-        if (_stricmp(argv[i], "-V") == 0) {
+
+        if (_strnicmp(argv[i], "-?", 2) == 0) {
+            printf("\r\nuMRC-Bridge options:\r\n\r\n");
+            printf("-V     Enable verbose logging. Display and log all packet strings.\r\n");
+            printf("-R[n]  Maximum connection retry attempts. Default=10. 0=Infinite.\r\n");
+            return 0;
+        }
+
+        else if (_stricmp(argv[i], "-V") == 0) {
             gVerboseLogging = true;
             printDateTimeStamp();
             printf("Verbose logging ");
             printPipeCodeString(OK);
         }
-    }
 
+        else if(_strnicmp(argv[i], "-R", 2) == 0) {
+            maxRetries = atoi(argv[i] + 2);
+            printDateTimeStamp();
+            if (maxRetries == 0) {
+                printf("Max connection retries: Infinite\r\n");
+            }
+            else {
+                printf("Max connection retries: %d\r\n", maxRetries);
+            }
+        } 
+    }
+    
     if (loadData(&cfg, CONFIG_FILE) != 0) {
         printDateTimeStamp();
         printf("Invalid config. Run setup.\r\n");
@@ -1040,13 +1060,13 @@ int main(int argc, char** argv)
     pthread_create(&hClient, NULL, waitProcess, (void*)clientport);
 #endif
     
-    while (gRetry < MAX_RETRIES) {
+    while (maxRetries > 0 ? gRetry < maxRetries : true) {
         mrcHostProcess(cfg);    
         Sleep(5000);
         gRetry = gRetry + 1;
         printDateTimeStamp();
         char logstring[50] = "";
-        _snprintf_s(logstring, sizeof(logstring), -1, "Retry %d of %d...\r\n", gRetry, MAX_RETRIES);
+        _snprintf_s(logstring, sizeof(logstring), -1, "Retry %d of %d...\r\n", gRetry, DEFAULT_MAX_RETRIES);
         printf(logstring);
         writeToLog(logstring);
     }
