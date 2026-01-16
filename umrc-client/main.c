@@ -2,10 +2,10 @@
 
  uMRC Client
 
- This is a Windows door that interfaces with the uMRC Bridge and lets users
+ This is an OpenDoors door that interfaces with the uMRC Bridge and lets users
  chat with other users in MRC.
 
-
+ 
 
 
 
@@ -734,7 +734,7 @@ int strLenWithoutPipecodes(char* str) {
     for (int i = 0; i < (int)strlen(str); i++) {
         if (str[i] == '|' && i < ((int)strlen(str) - 2)) { // check the next 2 characters for digits
             if (isdigit(str[i + 1]) && isdigit(str[i + 2])) {
-                i = i + 2; // skip and don't don't if it's a pipe code
+                i = i + 2; // skip if it's a pipe code
             }
             else {
                 len = len + 1;
@@ -815,8 +815,6 @@ void enterScrollBack(int initialScroll, int mode) {
     od_set_cursor(od_control.user_screen_length - 1, 1);
     od_disp_emu(gStatusThemeLine2, TRUE);
 
-    bool isEscapeSequence = false;
-    int escapeLoop = false;
     tODInputEvent InputEvent;
 
     while (!exitScrollback) {
@@ -846,7 +844,7 @@ void enterScrollBack(int initialScroll, int mode) {
                 break;
 
             case '\x10':
-            case OD_KEY_PGUP:  // Only local keyboard PGUP
+            case OD_KEY_PGUP:
                 scrollPos = scrollPos - height;
                 if (scrollPos < 0) {
                     scrollPos = 0;
@@ -855,7 +853,7 @@ void enterScrollBack(int initialScroll, int mode) {
                 break;
 
             case '\x0e':
-            case OD_KEY_PGDN:  // Only local keyboard PGDN
+            case OD_KEY_PGDN:
                 scrollPos = scrollPos + height;
                 if (scrollPos > scrollMax) {
                     scrollPos = scrollMax;
@@ -875,40 +873,9 @@ void enterScrollBack(int initialScroll, int mode) {
             }
         }
         else if (InputEvent.EventType == EVENT_CHARACTER) {
-
-            if (InputEvent.chKeyPress == 27 && !isEscapeSequence) { // User pressed a key that triggers an escape sequence
-                isEscapeSequence = true;
-                continue;
-            }
-            else if (isEscapeSequence && (toupper(InputEvent.chKeyPress) >= 65 && toupper(InputEvent.chKeyPress) <= 90)) { // Get the remaining escape code; up to the next alpha
-                isEscapeSequence = false;
-                if (InputEvent.chKeyPress == 86) { // User pressed PGUP
-                    scrollPos = scrollPos - height;
-                    if (scrollPos < 0) {
-                        scrollPos = 0;
-                    }
-                    scrollToScrollbackSection(scrollLines, scrollPos, scrollLineCount, height);
-                }
-                else if (InputEvent.chKeyPress == 85) { // User pressed PGDN
-                    scrollPos = scrollPos + height;
-                    if (scrollPos > scrollMax) {
-                        scrollPos = scrollMax;
-                    }
-                    scrollToScrollbackSection(scrollLines, scrollPos, scrollLineCount, height);
-                }
-                else {
-                    escapeLoop = 0;
-                }
-                continue;
-            }
-            else if (InputEvent.chKeyPress == 13 || InputEvent.chKeyPress == 10) {
+            if (InputEvent.chKeyPress == 13 || InputEvent.chKeyPress == 10 || InputEvent.chKeyPress == 27) {
                 exitScrollback = true;
-                isEscapeSequence = false;
                 break;
-            }
-            else if (isEscapeSequence) {
-                escapeLoop = escapeLoop + 1;
-                continue;
             }
         }
     }
@@ -1197,11 +1164,6 @@ void processUserCommand(char* cmd, char* params) {
             sendCtcpPacket(&mrcSock, (strcmp(target, "*") == 0 || target[0] == '#') ? "" : target, "[CTCP]", ctcp_data);
         }
     }
-    //else if (_stricmp(cmd, "settings") == 0) {
-    //    isChatPaused = true;
-    //    enterChatterSettings();
-    //    isChatPaused = false;
-    //}
     else if (_stricmp(cmd, "nick") == 0) {
         isChatPaused = true;
         editDisplayName("chat");
@@ -1396,8 +1358,6 @@ void processCtcpCommand(char* body, char* toUser, char* fromUser) {
         sendCtcpPacket(&mrcSock, fromUser, "[CTCP-REPLY]", repStr);
     }
     else if (strncmp(body, "[CTCP-REPLY] ", 13) == 0 && _stricmp(toUser, user.chatterName) == 0) {
-        //char repStr[80] = "";
-        //strncpy_s(repStr, 80, body + 13 + strlen(fromUser) + 1, -1);
         char resp[MSG_LEN] = "";
         _snprintf_s(resp, MSG_LEN, -1, "* |14[CTCP-REPLY] |10%s |15%s", fromUser, /*repStr*/ body + 13 + strlen(fromUser) + 1);
         queueIncomingMessage(resp, false);
@@ -1550,7 +1510,7 @@ void* handleIncomingMessages(void* lpArg) {
  */
 void doChatRoutines(char* input) {
 
-    bool isEscapeSequence = false;
+    //bool isEscapeSequence = false;
     char key = ' ';
     tODInputEvent InputEvent;
 
@@ -1593,7 +1553,6 @@ void doChatRoutines(char* input) {
         char pcol[4] = "";
         int endOfInput = 0;
         char tabResult[30] = "";
-
 
         if (InputEvent.EventType == EVENT_EXTENDED_KEY)
         {
@@ -1644,15 +1603,14 @@ void doChatRoutines(char* input) {
                 }
                 break;
 
-            case OD_KEY_DELETE:
+            case OD_KEY_DELETE: 
+                // Treat the same as Backspace
                 updateInput = true;
-
                 if (strlen(input) > 0) {
                     input[strlen(input) - 1] = '\0';
                     endOfInput = endOfInput + 1;
                 }
-                key = 8; // Treat the same as Backspace
-
+                key = 8;
                 break;
 
             case OD_KEY_END:
@@ -1661,8 +1619,8 @@ void doChatRoutines(char* input) {
                 od_printf(CHAT_CURSOR);
                 break;
 
-            case '\x0e':       // This seems to only recognize PGUP if
-            case OD_KEY_PGUP:  // pressed on the local keyboard, but not from remote.
+            case '\x0e':
+            case OD_KEY_PGUP:
                 enterScrollBack(od_control.user_screen_length - 3, 0);
                 break;
 
@@ -1680,25 +1638,9 @@ void doChatRoutines(char* input) {
             updateInput = true;
 
             // Add the keystroke to the input string...            
-            if (key == 27 && !isEscapeSequence) { // User pressed a key that triggers an escape sequence
-                isEscapeSequence = true;
-                continue;
-            }
-            else if (isEscapeSequence && (toupper(key) >= 65 && toupper(key) <= 90)) { // Get the remaining escape code; up to the next alpha
-                isEscapeSequence = false;
-
-                if (key == 86) { // User pressed PGUP
-                    enterScrollBack(od_control.user_screen_length - 3, 0);
-                }
-                continue;
-            }
-            else if (key == 13 || key == 10) {
+            if (key == 13 || key == 10) {
                 resetInputLine();
-                isEscapeSequence = false;
                 break;
-            }
-            else if (isEscapeSequence) { // skip and get the next part of the escape sequence
-                continue;
             }
             else if (key >= 32 && key <= 125) { // allowed characters
                 if (strlen(input) <= MSG_LEN) {
@@ -2083,7 +2025,6 @@ int main(int argc, char** argv)
     strncpy_s(user.chatterName, 36, strReplace(user.chatterName, "~", ""), -1);  // tildes are disallowed; strip them out
     strncpy_s(gFromSite, sizeof(gFromSite), strReplace(cfg.name, "~", ""), -1);
     stripPipeCodes(gFromSite);
-    //strncpy_s(gFromSite, sizeof(gFromSite), gFromSite, 30); // copy only the first 30 characters, now that we've cleaned up the name
     if (strlen(gFromSite) > 30) gFromSite[30] = '\0';
 #if defined(WIN32) || defined(_MSC_VER)  
     _snprintf_s(gUserDataFile, sizeof(gUserDataFile), -1, "%s\\%s.dat", USER_DATA_DIR, user.chatterName);

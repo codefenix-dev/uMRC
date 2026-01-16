@@ -12,6 +12,15 @@ v100 - TBA
     refactored to allow cross-compiling for both Windows and Linux.
   - Backspace and DEL keys now both act like a backspace, in order to 
     ensure compatibility across platforms.
+  - Fixed an issue where laying down on the PGUP or PGDN keys for too 
+    long would crash the door. This required a modification to OpenDoors
+    to redefine the behavior of these keys, so going forward a customized
+    version of OpenDoors will be necessary to run the door, and will be
+    included in the project files and releases. This fixes a particularly
+    horrible way the PGUP and PGDN keys were handled, and the responsiveness
+    of these keys is now much faster as a result. Fixing this issue did also
+    lead to the realization that laying on the ESC key similarly crashes the 
+    door, with no fix as of yet.
   - Display the "Quit to" BBS name it all its pipe code colorful glory.
   - displayMessage function now scrolls up the number of carriage returns
     that was added while wrapping the message.
