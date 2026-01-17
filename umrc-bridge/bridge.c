@@ -24,11 +24,11 @@
 #pragma comment (lib, "AdvApi32.lib")
 
 #if defined(__x86_64__) || defined(_M_X64)
-#pragma comment(lib, "../lib/x64/libssl-43.lib")
-#pragma comment(lib, "../lib/x64/libcrypto-41.lib")
+#pragma comment(lib, "../lib/x64/ssl.lib") 
+#pragma comment(lib, "../lib/x64/crypto.lib")
 #elif defined(i386) || defined(__i386__) || defined(__i386) || defined(_M_IX86)
-#pragma comment(lib, "../lib/x86/libssl-43.lib") 
-#pragma comment(lib, "../lib/x86/libcrypto-41.lib")
+#pragma comment(lib, "../lib/x86/ssl.lib") 
+#pragma comment(lib, "../lib/x86/crypto.lib")
 #endif
 
 #else

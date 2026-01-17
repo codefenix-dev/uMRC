@@ -1,4 +1,4 @@
-/* $OpenBSD: chacha.h,v 1.7 2015/12/09 14:07:55 bcook Exp $ */
+/* $OpenBSD: chacha.h,v 1.9 2025/01/25 17:59:44 tb Exp $ */
 /*
  * Copyright (c) 2014 Joel Sing <jsing@openbsd.org>
  *
@@ -19,10 +19,6 @@
 #define HEADER_CHACHA_H
 
 #include <openssl/opensslconf.h>
-
-#if defined(OPENSSL_NO_CHACHA)
-#error ChaCha is disabled.
-#endif
 
 #include <stddef.h>
 #include <stdint.h>
@@ -46,6 +42,10 @@ void ChaCha(ChaCha_ctx *ctx, unsigned char *out, const unsigned char *in,
 
 void CRYPTO_chacha_20(unsigned char *out, const unsigned char *in, size_t len,
     const unsigned char key[32], const unsigned char iv[8], uint64_t counter);
+void CRYPTO_xchacha_20(unsigned char *out, const unsigned char *in, size_t len,
+    const unsigned char key[32], const unsigned char iv[24]);
+void CRYPTO_hchacha_20(unsigned char out[32],
+    const unsigned char key[32], const unsigned char iv[16]);
 
 #ifdef  __cplusplus
 }

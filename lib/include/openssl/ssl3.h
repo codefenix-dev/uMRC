@@ -1,4 +1,4 @@
-/* $OpenBSD: ssl3.h,v 1.45 2017/01/22 09:02:07 jsing Exp $ */
+/* $OpenBSD: ssl3.h,v 1.61 2025/04/18 07:34:01 tb Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -134,7 +134,7 @@ extern "C" {
 
 #define SSL3_CK_RSA_NULL_MD5			0x03000001
 #define SSL3_CK_RSA_NULL_SHA			0x03000002
-#define SSL3_CK_RSA_RC4_40_MD5 			0x03000003
+#define SSL3_CK_RSA_RC4_40_MD5			0x03000003
 #define SSL3_CK_RSA_RC4_128_MD5			0x03000004
 #define SSL3_CK_RSA_RC4_128_SHA			0x03000005
 #define SSL3_CK_RSA_RC2_40_MD5			0x03000006
@@ -145,10 +145,10 @@ extern "C" {
 
 #define SSL3_CK_DH_DSS_DES_40_CBC_SHA		0x0300000B
 #define SSL3_CK_DH_DSS_DES_64_CBC_SHA		0x0300000C
-#define SSL3_CK_DH_DSS_DES_192_CBC3_SHA 	0x0300000D
+#define SSL3_CK_DH_DSS_DES_192_CBC3_SHA		0x0300000D
 #define SSL3_CK_DH_RSA_DES_40_CBC_SHA		0x0300000E
 #define SSL3_CK_DH_RSA_DES_64_CBC_SHA		0x0300000F
-#define SSL3_CK_DH_RSA_DES_192_CBC3_SHA 	0x03000010
+#define SSL3_CK_DH_RSA_DES_192_CBC3_SHA		0x03000010
 
 #define SSL3_CK_EDH_DSS_DES_40_CBC_SHA		0x03000011
 #define SSL3_CK_EDH_DSS_DES_64_CBC_SHA		0x03000012
@@ -168,22 +168,22 @@ extern "C" {
 #define SSL3_CK_KRB5_DES_64_CBC_SHA		0x0300001E
 #define SSL3_CK_KRB5_DES_192_CBC3_SHA		0x0300001F
 #define SSL3_CK_KRB5_RC4_128_SHA		0x03000020
-#define SSL3_CK_KRB5_IDEA_128_CBC_SHA	       	0x03000021
-#define SSL3_CK_KRB5_DES_64_CBC_MD5       	0x03000022
-#define SSL3_CK_KRB5_DES_192_CBC3_MD5       	0x03000023
-#define SSL3_CK_KRB5_RC4_128_MD5	       	0x03000024
-#define SSL3_CK_KRB5_IDEA_128_CBC_MD5 		0x03000025
+#define SSL3_CK_KRB5_IDEA_128_CBC_SHA		0x03000021
+#define SSL3_CK_KRB5_DES_64_CBC_MD5		0x03000022
+#define SSL3_CK_KRB5_DES_192_CBC3_MD5		0x03000023
+#define SSL3_CK_KRB5_RC4_128_MD5		0x03000024
+#define SSL3_CK_KRB5_IDEA_128_CBC_MD5		0x03000025
 
-#define SSL3_CK_KRB5_DES_40_CBC_SHA 		0x03000026
-#define SSL3_CK_KRB5_RC2_40_CBC_SHA 		0x03000027
-#define SSL3_CK_KRB5_RC4_40_SHA	 		0x03000028
-#define SSL3_CK_KRB5_DES_40_CBC_MD5 		0x03000029
-#define SSL3_CK_KRB5_RC2_40_CBC_MD5 		0x0300002A
-#define SSL3_CK_KRB5_RC4_40_MD5	 		0x0300002B
+#define SSL3_CK_KRB5_DES_40_CBC_SHA		0x03000026
+#define SSL3_CK_KRB5_RC2_40_CBC_SHA		0x03000027
+#define SSL3_CK_KRB5_RC4_40_SHA			0x03000028
+#define SSL3_CK_KRB5_DES_40_CBC_MD5		0x03000029
+#define SSL3_CK_KRB5_RC2_40_CBC_MD5		0x0300002A
+#define SSL3_CK_KRB5_RC4_40_MD5			0x0300002B
 
 #define SSL3_TXT_RSA_NULL_MD5			"NULL-MD5"
 #define SSL3_TXT_RSA_NULL_SHA			"NULL-SHA"
-#define SSL3_TXT_RSA_RC4_40_MD5 		"EXP-RC4-MD5"
+#define SSL3_TXT_RSA_RC4_40_MD5			"EXP-RC4-MD5"
 #define SSL3_TXT_RSA_RC4_128_MD5		"RC4-MD5"
 #define SSL3_TXT_RSA_RC4_128_SHA		"RC4-SHA"
 #define SSL3_TXT_RSA_RC2_40_MD5			"EXP-RC2-CBC-MD5"
@@ -194,10 +194,10 @@ extern "C" {
 
 #define SSL3_TXT_DH_DSS_DES_40_CBC_SHA		"EXP-DH-DSS-DES-CBC-SHA"
 #define SSL3_TXT_DH_DSS_DES_64_CBC_SHA		"DH-DSS-DES-CBC-SHA"
-#define SSL3_TXT_DH_DSS_DES_192_CBC3_SHA 	"DH-DSS-DES-CBC3-SHA"
+#define SSL3_TXT_DH_DSS_DES_192_CBC3_SHA	"DH-DSS-DES-CBC3-SHA"
 #define SSL3_TXT_DH_RSA_DES_40_CBC_SHA		"EXP-DH-RSA-DES-CBC-SHA"
 #define SSL3_TXT_DH_RSA_DES_64_CBC_SHA		"DH-RSA-DES-CBC-SHA"
-#define SSL3_TXT_DH_RSA_DES_192_CBC3_SHA 	"DH-RSA-DES-CBC3-SHA"
+#define SSL3_TXT_DH_RSA_DES_192_CBC3_SHA	"DH-RSA-DES-CBC3-SHA"
 
 #define SSL3_TXT_EDH_DSS_DES_40_CBC_SHA		"EXP-EDH-DSS-DES-CBC-SHA"
 #define SSL3_TXT_EDH_DSS_DES_64_CBC_SHA		"EDH-DSS-DES-CBC-SHA"
@@ -215,18 +215,18 @@ extern "C" {
 #define SSL3_TXT_KRB5_DES_64_CBC_SHA		"KRB5-DES-CBC-SHA"
 #define SSL3_TXT_KRB5_DES_192_CBC3_SHA		"KRB5-DES-CBC3-SHA"
 #define SSL3_TXT_KRB5_RC4_128_SHA		"KRB5-RC4-SHA"
-#define SSL3_TXT_KRB5_IDEA_128_CBC_SHA	       	"KRB5-IDEA-CBC-SHA"
-#define SSL3_TXT_KRB5_DES_64_CBC_MD5       	"KRB5-DES-CBC-MD5"
-#define SSL3_TXT_KRB5_DES_192_CBC3_MD5       	"KRB5-DES-CBC3-MD5"
+#define SSL3_TXT_KRB5_IDEA_128_CBC_SHA		"KRB5-IDEA-CBC-SHA"
+#define SSL3_TXT_KRB5_DES_64_CBC_MD5		"KRB5-DES-CBC-MD5"
+#define SSL3_TXT_KRB5_DES_192_CBC3_MD5		"KRB5-DES-CBC3-MD5"
 #define SSL3_TXT_KRB5_RC4_128_MD5		"KRB5-RC4-MD5"
-#define SSL3_TXT_KRB5_IDEA_128_CBC_MD5 		"KRB5-IDEA-CBC-MD5"
+#define SSL3_TXT_KRB5_IDEA_128_CBC_MD5		"KRB5-IDEA-CBC-MD5"
 
-#define SSL3_TXT_KRB5_DES_40_CBC_SHA 		"EXP-KRB5-DES-CBC-SHA"
-#define SSL3_TXT_KRB5_RC2_40_CBC_SHA 		"EXP-KRB5-RC2-CBC-SHA"
-#define SSL3_TXT_KRB5_RC4_40_SHA	 	"EXP-KRB5-RC4-SHA"
-#define SSL3_TXT_KRB5_DES_40_CBC_MD5 		"EXP-KRB5-DES-CBC-MD5"
-#define SSL3_TXT_KRB5_RC2_40_CBC_MD5 		"EXP-KRB5-RC2-CBC-MD5"
-#define SSL3_TXT_KRB5_RC4_40_MD5	 	"EXP-KRB5-RC4-MD5"
+#define SSL3_TXT_KRB5_DES_40_CBC_SHA		"EXP-KRB5-DES-CBC-SHA"
+#define SSL3_TXT_KRB5_RC2_40_CBC_SHA		"EXP-KRB5-RC2-CBC-SHA"
+#define SSL3_TXT_KRB5_RC4_40_SHA		"EXP-KRB5-RC4-SHA"
+#define SSL3_TXT_KRB5_DES_40_CBC_MD5		"EXP-KRB5-DES-CBC-MD5"
+#define SSL3_TXT_KRB5_RC2_40_CBC_MD5		"EXP-KRB5-RC2-CBC-MD5"
+#define SSL3_TXT_KRB5_RC4_40_MD5		"EXP-KRB5-RC4-MD5"
 
 #define SSL3_SSL_SESSION_ID_LENGTH		32
 #define SSL3_MAX_SSL_SESSION_ID_LENGTH		32
@@ -292,11 +292,11 @@ extern "C" {
 #define SSL3_RT_ALERT			21
 #define SSL3_RT_HANDSHAKE		22
 #define SSL3_RT_APPLICATION_DATA	23
-#define TLS1_RT_HEARTBEAT		24
 
 #define SSL3_AL_WARNING			1
 #define SSL3_AL_FATAL			2
 
+#ifndef LIBRESSL_INTERNAL
 #define SSL3_AD_CLOSE_NOTIFY		 0
 #define SSL3_AD_UNEXPECTED_MESSAGE	10	/* fatal */
 #define SSL3_AD_BAD_RECORD_MAC		20	/* fatal */
@@ -309,80 +309,14 @@ extern "C" {
 #define SSL3_AD_CERTIFICATE_EXPIRED	45
 #define SSL3_AD_CERTIFICATE_UNKNOWN	46
 #define SSL3_AD_ILLEGAL_PARAMETER	47	/* fatal */
+#endif
 
 #define TLS1_HB_REQUEST		1
 #define TLS1_HB_RESPONSE	2
 
-#ifndef OPENSSL_NO_SSL_INTERN
-
-typedef struct ssl3_record_st {
-/*r */	int type;               /* type of record */
-/*rw*/	unsigned int length;    /* How many bytes available */
-/*r */	unsigned int off;       /* read/write offset into 'buf' */
-/*rw*/	unsigned char *data;    /* pointer to the record data */
-/*rw*/	unsigned char *input;   /* where the decode bytes are */
-/*r */  unsigned long epoch;    /* epoch number, needed by DTLS1 */
-/*r */  unsigned char seq_num[8]; /* sequence number, needed by DTLS1 */
-} SSL3_RECORD;
-
-typedef struct ssl3_buffer_st {
-	unsigned char *buf;	/* at least SSL3_RT_MAX_PACKET_SIZE bytes,
-	                         * see ssl3_setup_buffers() */
-	size_t len;		/* buffer size */
-	int offset;		/* where to 'copy from' */
-	int left;		/* how many bytes left */
-} SSL3_BUFFER;
-
-#endif
-
-#define SSL3_CT_RSA_SIGN			1
-#define SSL3_CT_DSS_SIGN			2
-#define SSL3_CT_RSA_FIXED_DH			3
-#define SSL3_CT_DSS_FIXED_DH			4
-#define SSL3_CT_RSA_EPHEMERAL_DH		5
-#define SSL3_CT_DSS_EPHEMERAL_DH		6
-#define SSL3_CT_FORTEZZA_DMS			20
-/* SSL3_CT_NUMBER is used to size arrays and it must be large
- * enough to contain all of the cert types defined either for
- * SSLv3 and TLSv1.
- */
-#define SSL3_CT_NUMBER			11
-
-
 #define SSL3_FLAGS_NO_RENEGOTIATE_CIPHERS	0x0001
-#define SSL3_FLAGS_DELAY_CLIENT_FINISHED	0x0002
-#define SSL3_FLAGS_POP_BUFFER			0x0004
-#define TLS1_FLAGS_TLS_PADDING_BUG		0x0
-#define TLS1_FLAGS_SKIP_CERT_VERIFY		0x0010
-#define TLS1_FLAGS_KEEP_HANDSHAKE		0x0020
+#define TLS1_FLAGS_FREEZE_TRANSCRIPT		0x0020
 #define SSL3_FLAGS_CCS_OK			0x0080
-
-#ifndef OPENSSL_NO_SSL_INTERN
-
-struct ssl3_state_internal_st;
-
-typedef struct ssl3_state_st {
-	long flags;
-
-	unsigned char server_random[SSL3_RANDOM_SIZE];
-	unsigned char client_random[SSL3_RANDOM_SIZE];
-
-	SSL3_BUFFER rbuf;	/* read IO goes into here */
-	SSL3_BUFFER wbuf;	/* write IO goes into here */
-
-	/* we allow one fatal and one warning alert to be outstanding,
-	 * send close alert via the warning alert */
-	int alert_dispatch;
-	unsigned char send_alert[2];
-
-	struct {
-		int new_mac_secret_size;
-	} tmp;
-
-	struct ssl3_state_internal_st *internal;
-} SSL3_STATE;
-
-#endif
 
 /* SSLv3 */
 /*client */
@@ -415,8 +349,6 @@ typedef struct ssl3_state_st {
 #define SSL3_ST_CW_CERT_VRFY_B			(0x191|SSL_ST_CONNECT)
 #define SSL3_ST_CW_CHANGE_A			(0x1A0|SSL_ST_CONNECT)
 #define SSL3_ST_CW_CHANGE_B			(0x1A1|SSL_ST_CONNECT)
-#define SSL3_ST_CW_NEXT_PROTO_A			(0x200|SSL_ST_CONNECT)
-#define SSL3_ST_CW_NEXT_PROTO_B			(0x201|SSL_ST_CONNECT)
 #define SSL3_ST_CW_FINISHED_A			(0x1B0|SSL_ST_CONNECT)
 #define SSL3_ST_CW_FINISHED_B			(0x1B1|SSL_ST_CONNECT)
 /* read from server */
@@ -462,8 +394,6 @@ typedef struct ssl3_state_st {
 #define SSL3_ST_SR_CERT_VRFY_B			(0x1A1|SSL_ST_ACCEPT)
 #define SSL3_ST_SR_CHANGE_A			(0x1B0|SSL_ST_ACCEPT)
 #define SSL3_ST_SR_CHANGE_B			(0x1B1|SSL_ST_ACCEPT)
-#define SSL3_ST_SR_NEXT_PROTO_A			(0x210|SSL_ST_ACCEPT)
-#define SSL3_ST_SR_NEXT_PROTO_B			(0x211|SSL_ST_ACCEPT)
 #define SSL3_ST_SR_FINISHED_A			(0x1C0|SSL_ST_ACCEPT)
 #define SSL3_ST_SR_FINISHED_B			(0x1C1|SSL_ST_ACCEPT)
 /* write to client */
@@ -489,12 +419,11 @@ typedef struct ssl3_state_st {
 #define SSL3_MT_FINISHED			20
 #define SSL3_MT_CERTIFICATE_STATUS		22
 
-#define SSL3_MT_NEXT_PROTO			67
-
 #define DTLS1_MT_HELLO_VERIFY_REQUEST		3
 
 #define SSL3_MT_CCS				1
 
+#ifndef LIBRESSL_INTERNAL
 /* These are used when changing over to a new cipher */
 #define SSL3_CC_READ		0x01
 #define SSL3_CC_WRITE		0x02
@@ -504,6 +433,7 @@ typedef struct ssl3_state_st {
 #define SSL3_CHANGE_CIPHER_SERVER_READ		(SSL3_CC_SERVER|SSL3_CC_READ)
 #define SSL3_CHANGE_CIPHER_CLIENT_READ		(SSL3_CC_CLIENT|SSL3_CC_READ)
 #define SSL3_CHANGE_CIPHER_SERVER_WRITE		(SSL3_CC_SERVER|SSL3_CC_WRITE)
+#endif
 
 #ifdef  __cplusplus
 }

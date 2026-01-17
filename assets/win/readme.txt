@@ -56,8 +56,8 @@ Files Included:
 - umrc-bridge.exe:  MRC host connection program (multiplexer)
 - umrc-client.exe:  MRC Client door
 - ODoors62.dll:     OpenDoors door kit library
-- libssl-43.dll:    LibreSSL (OpenSSL) SSL library
-- libcrypto-41.dll: LibreSSL (OpenSSL) Cryptographic library
+- ssl-60.dll:       LibreSSL (OpenSSL) SSL library
+- crypto-57.dll:    LibreSSL (OpenSSL) Cryptographic library
   [screens]:        Subdirectory containing ANSI & text files
   - intro.ans:      Intro/main menu & status screen
   - help.txt:       Help file showing basic chat commands

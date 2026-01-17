@@ -1,4 +1,4 @@
-/* $OpenBSD: tls.h,v 1.47 2017/01/31 16:18:57 beck Exp $ */
+/* $OpenBSD: tls.h,v 1.68 2024/12/10 08:40:30 tb Exp $ */
 /*
  * Copyright (c) 2014 Joel Sing <jsing@openbsd.org>
  *
@@ -34,16 +34,23 @@ typedef SSIZE_T ssize_t;
 #include <stddef.h>
 #include <stdint.h>
 
-#define TLS_API	20170126
+#define TLS_API	20200120
 
+/*
+ * Deprecated versions of TLS. Using these effectively selects
+ * the minimum supported version.
+ */
 #define TLS_PROTOCOL_TLSv1_0	(1 << 1)
 #define TLS_PROTOCOL_TLSv1_1	(1 << 2)
+/* Supported versions of TLS */
 #define TLS_PROTOCOL_TLSv1_2	(1 << 3)
+#define TLS_PROTOCOL_TLSv1_3	(1 << 4)
+
 #define TLS_PROTOCOL_TLSv1 \
-	(TLS_PROTOCOL_TLSv1_0|TLS_PROTOCOL_TLSv1_1|TLS_PROTOCOL_TLSv1_2)
+	(TLS_PROTOCOL_TLSv1_2|TLS_PROTOCOL_TLSv1_3)
 
 #define TLS_PROTOCOLS_ALL TLS_PROTOCOL_TLSv1
-#define TLS_PROTOCOLS_DEFAULT TLS_PROTOCOL_TLSv1_2
+#define TLS_PROTOCOLS_DEFAULT (TLS_PROTOCOL_TLSv1_2|TLS_PROTOCOL_TLSv1_3)
 
 #define TLS_WANT_POLLIN		-2
 #define TLS_WANT_POLLOUT	-3
@@ -76,6 +83,14 @@ typedef SSIZE_T ssize_t;
 #define TLS_MAX_SESSION_ID_LENGTH		32
 #define TLS_TICKET_KEY_SIZE			48
 
+/* Error codes */
+#if defined(LIBRESSL_NEXT_API) || defined(LIBRESSL_INTERNAL)
+#define TLS_ERROR_UNKNOWN			0x0000
+#define TLS_ERROR_OUT_OF_MEMORY			0x1000
+#define TLS_ERROR_INVALID_CONTEXT		0x2000
+#define TLS_ERROR_INVALID_ARGUMENT		0x2001
+#endif
+
 struct tls;
 struct tls_config;
 
@@ -88,9 +103,15 @@ int tls_init(void);
 
 const char *tls_config_error(struct tls_config *_config);
 const char *tls_error(struct tls *_ctx);
+#if defined(LIBRESSL_NEXT_API) || defined(LIBRESSL_INTERNAL)
+int tls_config_error_code(struct tls_config *_config);
+int tls_error_code(struct tls *_ctx);
+#endif
 
 struct tls_config *tls_config_new(void);
 void tls_config_free(struct tls_config *_config);
+
+const char *tls_default_ca_cert_file(void);
 
 int tls_config_add_keypair_file(struct tls_config *_config,
     const char *_cert_file, const char *_key_file);
@@ -112,8 +133,12 @@ int tls_config_set_cert_file(struct tls_config *_config,
 int tls_config_set_cert_mem(struct tls_config *_config, const uint8_t *_cert,
     size_t _len);
 int tls_config_set_ciphers(struct tls_config *_config, const char *_ciphers);
+int tls_config_set_crl_file(struct tls_config *_config, const char *_crl_file);
+int tls_config_set_crl_mem(struct tls_config *_config, const uint8_t *_crl,
+    size_t _len);
 int tls_config_set_dheparams(struct tls_config *_config, const char *_params);
-int tls_config_set_ecdhecurve(struct tls_config *_config, const char *_name);
+int tls_config_set_ecdhecurve(struct tls_config *_config, const char *_curve);
+int tls_config_set_ecdhecurves(struct tls_config *_config, const char *_curves);
 int tls_config_set_key_file(struct tls_config *_config, const char *_key_file);
 int tls_config_set_key_mem(struct tls_config *_config, const uint8_t *_key,
     size_t _len);
@@ -131,6 +156,7 @@ int tls_config_set_ocsp_staple_mem(struct tls_config *_config,
 int tls_config_set_ocsp_staple_file(struct tls_config *_config,
     const char *_staple_file);
 int tls_config_set_protocols(struct tls_config *_config, uint32_t _protocols);
+int tls_config_set_session_fd(struct tls_config *_config, int _session_fd);
 int tls_config_set_verify_depth(struct tls_config *_config, int _verify_depth);
 
 void tls_config_prefer_ciphers_client(struct tls_config *_config);
@@ -181,18 +207,23 @@ int tls_close(struct tls *_ctx);
 int tls_peer_cert_provided(struct tls *_ctx);
 int tls_peer_cert_contains_name(struct tls *_ctx, const char *_name);
 
+const char *tls_peer_cert_common_name(struct tls *_ctx);
 const char *tls_peer_cert_hash(struct tls *_ctx);
 const char *tls_peer_cert_issuer(struct tls *_ctx);
 const char *tls_peer_cert_subject(struct tls *_ctx);
 time_t	tls_peer_cert_notbefore(struct tls *_ctx);
 time_t	tls_peer_cert_notafter(struct tls *_ctx);
+const uint8_t *tls_peer_cert_chain_pem(struct tls *_ctx, size_t *_len);
 
 const char *tls_conn_alpn_selected(struct tls *_ctx);
 const char *tls_conn_cipher(struct tls *_ctx);
+int tls_conn_cipher_strength(struct tls *_ctx);
 const char *tls_conn_servername(struct tls *_ctx);
+int tls_conn_session_resumed(struct tls *_ctx);
 const char *tls_conn_version(struct tls *_ctx);
 
 uint8_t *tls_load_file(const char *_file, size_t *_len, char *_password);
+void tls_unload_file(uint8_t *_buf, size_t len);
 
 int tls_ocsp_process_response(struct tls *_ctx, const unsigned char *_response,
     size_t _size);

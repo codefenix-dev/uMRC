@@ -21,6 +21,8 @@ v100 - TBA
     of these keys is now much faster as a result. Fixing this issue did also
     lead to the realization that laying on the ESC key similarly crashes the 
     door, with no fix as of yet.
+  - Updated LibreSSL libraries for Windows from 2.5.5 to 4.2.1, the latest 
+    available version as of this update (from October 2025).
   - Display the "Quit to" BBS name it all its pipe code colorful glory.
   - displayMessage function now scrolls up the number of carriage returns
     that was added while wrapping the message.
