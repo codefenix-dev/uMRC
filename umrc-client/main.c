@@ -210,6 +210,84 @@ void getSub(char* s, char* ss, int pos, int len) {
 }
 
 /**
+ * This is basically a re-implementation of od_input_str
+ * which handles both backspace and DEL, and clearly shows 
+ * where text input ends.
+ */
+void getInputString(char* input, INT nMaxLength, unsigned char chMin, unsigned char chMax) {
+
+    bool updateInput = false;
+    char key = ' ';
+    tODInputEvent InputEvent;
+
+    for (int i = 0; i < nMaxLength; i++) {
+        od_disp_emu(pipeToAnsi("|17 "), TRUE);
+    }
+    for (int i = 0; i < nMaxLength; i++) {
+        od_putch('\b');
+    }
+
+    for (int i = 0; i < strlen(input); i++) {
+        od_putch(input[i]);
+    }
+
+    while (true) {
+        Sleep(0);
+        updateInput = false;
+
+        if (od_get_input(&InputEvent, 1, GETIN_NORMAL) == FALSE) {
+            od_sleep(0);
+            continue;
+        }
+        if (InputEvent.EventType == EVENT_EXTENDED_KEY) {
+            switch (InputEvent.chKeyPress)
+            {
+            case OD_KEY_DELETE:
+                // Treat the same as Backspace
+                if (strlen(input) > 0) {
+                    input[strlen(input) - 1] = '\0';
+                    updateInput = true;
+                    key = 8;
+                }
+                break;
+            }
+        }
+        else if (InputEvent.EventType == EVENT_CHARACTER) {
+            key = InputEvent.chKeyPress;
+
+            if (key == 13 || key == 10) {
+                break;
+            }
+            else if (key == 8) { // backspace
+                if (strlen(input) > 0) {
+                    input[strlen(input) - 1] = '\0';
+                    updateInput = true;
+                }
+            }
+            else if (key >= chMin && key <= chMax) { // allowed characters
+                // Add the keystroke to the input string...            
+                if (strlen(input) < nMaxLength-1) {
+                    char tmpipt[80] = "";
+                    _snprintf_s(tmpipt, 80, -1, "%s%c", input, key);
+                    strcpy_s(input, nMaxLength, tmpipt);
+                    updateInput = true;
+                }
+            }
+        }
+
+        if (updateInput) {
+            if (key == 8) {              // Type the backspace...
+                od_disp_str("\b \b");
+            }
+            else {            // Any other character simply gets displayed as typed...
+                od_putch(key);
+            }
+        }
+    }
+    od_disp_emu(pipeToAnsi("|16"), TRUE);
+}
+
+/**
  *  Forms a randomized default display name for the chatter.
  */
 void defaultDisplayName() {
@@ -287,8 +365,8 @@ int colorPrompt(int lo, int hi) {
     }
     while (!validEntry) {
         od_printf("``\r\n\r\nPick a color (%d-%d): ", lo, hi);        
-        char ci[3];
-        od_input_str(ci, 2, '0', '9');
+        char ci[3]="";
+        getInputString(ci, 3, '0', '9');
         pickedColor = atoi(ci);
         validEntry = (pickedColor >= lo && pickedColor <= hi);
     }
@@ -304,7 +382,7 @@ int editDisplayName(char* quitToWhere) {
     int changeCount = 0;
     while (!doneEditing) {
 
-        char newSuf[30] = "";
+        //char newSuf[30] = "";
         char prefixprev[10] = "";
         char nameprev[50] = "";
         _snprintf_s(prefixprev, sizeof(prefixprev), -1, "|%02d|%02d%c", user.chatterNamePrefixFgColor, user.chatterNamePrefixBgColor, user.chatterNamePrefix);
@@ -355,14 +433,10 @@ int editDisplayName(char* quitToWhere) {
 
         case 'S':
             od_printf("`bright white`Suffix``\r\n\r\n");
-            od_printf(" `bright black`Current string is: `bright white`%s``\r\n\r\n\r\n", user.chatterNameSuffix);
-            od_printf(" `bright black`Current string is: `bright white`%s``\r\n\r\n\r\n", user.chatterNameSuffix);
+            //od_printf(" `bright black`Current string is: `bright white`%s``\r\n\r\n\r\n", user.chatterNameSuffix);
             od_printf("Enter a suffix to add to your username:\r\n\r\n `bright black`(pipe colors allowed)\r\n\r\n `bright white`> ");
-            od_input_str(newSuf, 30, 32, 127);
-            if (_stricmp(newSuf, user.chatterNameSuffix) != 0 && strlen(newSuf) != 0) {
-                _snprintf_s(user.chatterNameSuffix, 33, -1, "|07|16%s|16", newSuf);
-                changeCount = changeCount + 1;
-            }
+            getInputString(user.chatterNameSuffix, 30, 32, 127);
+            changeCount = changeCount + 1;
             break;
 
         case 'R':
@@ -437,9 +511,8 @@ void pickTheme(char* pickedTheme) {
     }
     while (!validEntry) {
         od_printf("``\r\n\r\nPick a theme (%d-%d): ", 1, count);
-
-        char ci[3];
-        od_input_str(ci, 2, '0', '9');
+        char ci[3]="";
+        getInputString(ci, 3, '0', '9');
         pickedOption = atoi(ci);
         validEntry = (pickedOption >= 1 && pickedOption <= count);
     }
@@ -473,7 +546,6 @@ void loadTheme() {
             else if (lineCount > 1) {
                 break;
             }
-
             lineCount = lineCount + 1;
         }
         fclose(extFile);
@@ -547,9 +619,6 @@ void drawStatusBar() {
 void enterChatterSettings() {
     bool changesMade = false;
     bool exit = false;
-    char newRoom[30] = "";
-    char newJoin[50] = "";
-    char newExit[50] = "";
     char pickedTheme[20] = "";
 
     // failsafe in case a user hasn't picked a theme
@@ -609,15 +678,12 @@ void enterChatterSettings() {
             od_clr_scr();
             od_printf("`bright white`Default Room``\r\n\r\n");
             od_printf("Enter a new default room (suggestions: `bright green`lobby, `bright magenta` ddial``)\r\n\r\n`bright white`> ");
-            od_input_str(newRoom, 30, 32, 127);
-            if (_stricmp(newRoom, user.defaultRoom) != 0) {
-                if (strlen(newRoom) == 0) {
-                    strncpy_s(newRoom, 30, DEFAULT_ROOM, -1);
-                }
-                stripPipeCodes(newRoom);
-                strncpy_s(user.defaultRoom, 30, strReplace(strReplace(strReplace(newRoom, " ", "_"), "#", ""), "~", ""), -1);
-                changesMade = true;
+            getInputString(user.defaultRoom, 30, 32, 127);
+            if (strlen(user.defaultRoom) == 0) {
+                strncpy_s(user.defaultRoom, 30, DEFAULT_ROOM, -1);
             }
+            stripPipeCodes(user.defaultRoom);
+            changesMade = true;
             break;
 
         case '3':
@@ -637,31 +703,23 @@ void enterChatterSettings() {
         case '5':
             od_clr_scr();
             od_printf("`bright white`Join Message``\r\n\r\n");
-            od_printf(" `bright black`Current string is: `bright white`%s``\r\n\r\n\r\n", user.joinMessage);
             od_printf("Enter a message you'd like to announce you when you JOIN chat:\r\n\r\n `bright black`(pipe colors allowed)\r\n\r\n `bright white`> ");
-            od_input_str(newJoin, 50, 32, 127);
-            if (_stricmp(newJoin, user.joinMessage) != 0) {
-                if (strlen(newJoin) == 0) {
-                    _snprintf_s(newJoin, 50, -1, DEFAULT_JOIN_MSG, user.chatterName);
-                }
-                strncpy_s(user.joinMessage, 50, newJoin, -1);
-                changesMade = true;
+            getInputString(user.joinMessage, 50, 32, 127);
+            if (strlen(user.joinMessage) == 0) {
+                _snprintf_s(user.joinMessage, 50, -1, DEFAULT_JOIN_MSG, user.chatterName);
             }
+            changesMade = true;
             break;
 
         case '6':
             od_clr_scr();
             od_printf("`bright white`Exit Message``\r\n\r\n");
-            od_printf(" `bright black`Current string is: `bright white`%s``\r\n\r\n\r\n", user.exitMessage);
             od_printf("Enter a message you'd like to announce you when you EXIT chat:\r\n\r\n `bright black`(pipe colors allowed)\r\n\r\n `bright white`> ");
-            od_input_str(newExit, 50, 32, 127);
-            if (_stricmp(newExit, user.exitMessage) != 0) {
-                if (strlen(newExit) == 0) {
-                    _snprintf_s(newExit, 50, -1, DEFAULT_EXIT_MSG, user.chatterName);
-                }
-                strncpy_s(user.exitMessage, 50, newExit, -1);
-                changesMade = true;
+            getInputString(user.exitMessage, 50, 32, 127);
+            if (strlen(user.exitMessage) == 0) {
+                _snprintf_s(user.exitMessage, 50, -1, DEFAULT_EXIT_MSG, user.chatterName);
             }
+            changesMade = true;
             break;
 
         case '7':
@@ -1510,7 +1568,6 @@ void* handleIncomingMessages(void* lpArg) {
  */
 void doChatRoutines(char* input) {
 
-    //bool isEscapeSequence = false;
     char key = ' ';
     tODInputEvent InputEvent;
 
@@ -2066,7 +2123,7 @@ int main(int argc, char** argv)
             char newchatname[36] = "";
             od_printf("``\r\n\r\nOK, what shall your chat name be?\r\n`bright black`Don't use pipe codes or anything here. We'll cover that shortly.`` \r\n\r\n> ");
             do {
-                od_input_str(newchatname, 36, 32, 127);
+                /*od_input_str*/getInputString(newchatname, 36, 32, 127);
                 if (strchr(newchatname, ' ') != NULL || strchr(newchatname, '~') != NULL) {
                     strncpy_s(newchatname, 36, strReplace(newchatname, " ", "_"), -1);
                     strncpy_s(newchatname, 36, strReplace(newchatname, "~", ""), -1);

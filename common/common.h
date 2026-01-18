@@ -75,7 +75,7 @@ void Sleep(int ms);
 #define UMRC_VERSION "100"
 #define YEAR_AND_AUTHOR "2025 Craig Hendricks (aka Codefenix)"
 #define AUTHOR_INITIALS "cf" // alias initials
-#define COMPILE_DATE "2026-01-16"
+#define COMPILE_DATE "2026-01-18"
 
 // These defaults should remain the same, and
 // not be changed without a good reason.
