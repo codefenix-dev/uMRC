@@ -227,7 +227,7 @@ void getInputString(char* input, INT nMaxLength, unsigned char chMin, unsigned c
         od_putch('\b');
     }
 
-    for (int i = 0; i < strlen(input); i++) {
+    for (int i = 0; i < (int)strlen(input); i++) {
         od_putch(input[i]);
     }
 
@@ -266,7 +266,7 @@ void getInputString(char* input, INT nMaxLength, unsigned char chMin, unsigned c
             }
             else if (key >= chMin && key <= chMax) { // allowed characters
                 // Add the keystroke to the input string...            
-                if (strlen(input) < nMaxLength-1) {
+                if ((int)strlen(input) < nMaxLength-1) {
                     char tmpipt[80] = "";
                     _snprintf_s(tmpipt, 80, -1, "%s%c", input, key);
                     strcpy_s(input, nMaxLength, tmpipt);
@@ -382,7 +382,6 @@ int editDisplayName(char* quitToWhere) {
     int changeCount = 0;
     while (!doneEditing) {
 
-        //char newSuf[30] = "";
         char prefixprev[10] = "";
         char nameprev[50] = "";
         _snprintf_s(prefixprev, sizeof(prefixprev), -1, "|%02d|%02d%c", user.chatterNamePrefixFgColor, user.chatterNamePrefixBgColor, user.chatterNamePrefix);
@@ -433,7 +432,6 @@ int editDisplayName(char* quitToWhere) {
 
         case 'S':
             od_printf("`bright white`Suffix``\r\n\r\n");
-            //od_printf(" `bright black`Current string is: `bright white`%s``\r\n\r\n\r\n", user.chatterNameSuffix);
             od_printf("Enter a suffix to add to your username:\r\n\r\n `bright black`(pipe colors allowed)\r\n\r\n `bright white`> ");
             getInputString(user.chatterNameSuffix, 30, 32, 127);
             changeCount = changeCount + 1;
@@ -1188,7 +1186,7 @@ void processUserCommand(char* cmd, char* params) {
         if (nextspcidx > 0) {
             getSub(params, to, 0, nextspcidx-1);
             _snprintf_s(msg, PACKET_LEN, -1, "|15* |08(|15%s|08/|14DirectMsg|08) |07%s", user.chatterName, params + nextspcidx);
-            sendMsgPacket(&mrcSock, to, "", gRoom, msg);
+            sendMsgPacket(&mrcSock, to, "", /*gRoom*/ "", msg);
             _snprintf_s(msg, PACKET_LEN, -1, "|15* |08(|14DirectMsg|08->|15%s|08) |07%s", to, params + nextspcidx);
             displayMessage(msg, false);
         }
@@ -1196,7 +1194,7 @@ void processUserCommand(char* cmd, char* params) {
     else if (_stricmp(cmd, "r") == 0) {
         char rep[PACKET_LEN] = "";
         _snprintf_s(rep, PACKET_LEN, -1, "|15* |08(|15%s|08/|14DirectMsg|08) |07%s", user.chatterName, params);
-        sendMsgPacket(&mrcSock, gLastDirectMsgFrom, "", gRoom, rep);
+        sendMsgPacket(&mrcSock, gLastDirectMsgFrom, "", /*gRoom*/ "", rep);
         _snprintf_s(rep, PACKET_LEN, -1, "|15* |08(|14DirectMsg|08->|15%s|08) |07%s", gLastDirectMsgFrom, params);
         displayMessage(rep, false);
     }
@@ -2123,7 +2121,7 @@ int main(int argc, char** argv)
             char newchatname[36] = "";
             od_printf("``\r\n\r\nOK, what shall your chat name be?\r\n`bright black`Don't use pipe codes or anything here. We'll cover that shortly.`` \r\n\r\n> ");
             do {
-                /*od_input_str*/getInputString(newchatname, 36, 32, 127);
+                getInputString(newchatname, 36, 32, 127);
                 if (strchr(newchatname, ' ') != NULL || strchr(newchatname, '~') != NULL) {
                     strncpy_s(newchatname, 36, strReplace(newchatname, " ", "_"), -1);
                     strncpy_s(newchatname, 36, strReplace(newchatname, "~", ""), -1);

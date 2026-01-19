@@ -1066,7 +1066,7 @@ int main(int argc, char** argv)
         gRetry = gRetry + 1;
         printDateTimeStamp();
         char logstring[50] = "";
-        _snprintf_s(logstring, sizeof(logstring), -1, "Retry %d of %d...\r\n", gRetry, DEFAULT_MAX_RETRIES);
+        _snprintf_s(logstring, sizeof(logstring), -1, "Retry %d of %d...\r\n", gRetry, maxRetries);
         printf(logstring);
         writeToLog(logstring);
     }

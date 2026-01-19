@@ -30,6 +30,7 @@ v100 - TBA
   - Fixed pipe-code color to ANSI translation for strings containing dim 
     colors immediately after background colors.
   - Fix for incoming and outgoing /ctcp commands.
+  - Fix for direct msgs (/msg /t /r) sent to users not in the same room.
   - New "anet" themes contibuted by StingRay!
   
 
