@@ -6,6 +6,8 @@ v100 - TBA
     number of reconnection attempts: -r[x] where x is the maximum number
     of failed attempts allowed. If not set, the default is 10. Specify
     a 0 for infinite attempts.
+  - Basic twit list implemented. Added an additional help file called
+    helptwit.txt containing usage.
   - Added a /nick chat command, which lets users edit their display name 
     (aka nick) without leaving chat.
   - Initial support for Linux added. Many sections of code have been 

@@ -56,6 +56,7 @@ bool isChatPaused = false;
 
 int gMentionCount = 0;
 int gChatterCount = 0;
+int gTwitCount = 0;
 char gDisplayChatterName[80] = "";
 char gRoom[30] = "";
 char gTopic[55] = "";
@@ -63,12 +64,13 @@ char gLatency[6] = "";
 char gFromSite[140] = "";
 char gLastDirectMsgFrom[36] = "";
 char gUserDataFile[260] = "";
-
-char** gChattersInRoom;
-char** sTwits;
+char gTwitFile[260] = "";
 
 char* gScrollBack;
 char* gMentions;
+
+char** gTwits;
+char** gChattersInRoom;
 
 // dummy theme in case the theme file doesn't load properly
 char gStatusThemeLine1[400] = "\325\315\315[                                                                 /help ]\315\315\270";
@@ -336,7 +338,7 @@ void stripPipeCodes(char* str) {
     for (int i = 0; i < (int)strlen(str); i++) {
         if (str[i] == '|' && i < ((int)strlen(str) - 2)) { // check the next 2 characters for digits
             if (isdigit(str[i + 1]) && isdigit(str[i + 2])) {
-                i = i + 2; // skip and don't don't if it's a pipe code
+                i = i + 2; // skip if it's a pipe code
             }
             else {
 				str[len] = str[i];
@@ -558,7 +560,7 @@ void updateRoomTopic() {
         return;
     }
     char displayableTopic[65] = "";
-    strncpy_s(displayableTopic, 65 - (strlen(gRoom) + 2), gTopic, /*64 - (strlen(gRoom) + 2)*/ -1);
+    strcpy_s(displayableTopic, 65 - (strlen(gRoom) + 2), gTopic);
     od_set_cursor(od_control.user_screen_length - 2, 6); 
     od_printf("`white`#`bright white`%s`bright black`:`bright white`%s ", gRoom, displayableTopic);
 }
@@ -678,7 +680,7 @@ void enterChatterSettings() {
             od_printf("Enter a new default room (suggestions: `bright green`lobby, `bright magenta` ddial``)\r\n\r\n`bright white`> ");
             getInputString(user.defaultRoom, 30, 32, 127);
             if (strlen(user.defaultRoom) == 0) {
-                strncpy_s(user.defaultRoom, 30, DEFAULT_ROOM, -1);
+                strcpy_s(user.defaultRoom, 30, DEFAULT_ROOM);
             }
             stripPipeCodes(user.defaultRoom);
             changesMade = true;
@@ -723,7 +725,7 @@ void enterChatterSettings() {
         case '7':
             od_clr_scr();
             pickTheme(pickedTheme);
-            strncpy_s(user.theme, 20, pickedTheme, -1);
+            strcpy_s(user.theme, 20, pickedTheme);
             changesMade = true;
             loadTheme();
             break;
@@ -751,9 +753,9 @@ bool sendCmdPacket(SOCKET* sock, char* cmd, char* cmdArg) {
         _snprintf_s(cmdstr, MSG_LEN, -1, strchr(cmd, ':') ? "%s%s" : "%s %s", cmd, cmdArg);
     }
     else {
-        strncpy_s(cmdstr, MSG_LEN, cmd, -1);
+        strcpy_s(cmdstr, MSG_LEN, cmd);
     }
-    strncpy_s(packet, PACKET_LEN, createPacket(user.chatterName, gFromSite, gRoom, "SERVER", "", "", cmdstr), -1);
+    strcpy_s(packet, PACKET_LEN, createPacket(user.chatterName, gFromSite, gRoom, "SERVER", "", "", cmdstr));
     iResult = send(*sock, packet, (int)strlen(packet), 0);
     return (iResult != SOCKET_ERROR);
 }
@@ -766,7 +768,7 @@ bool sendCtcpPacket(SOCKET* sock, char* target, char* p, char* data) {
     char ctcpstr[MSG_LEN] = "";
     char packet[PACKET_LEN] = "";
     _snprintf_s(ctcpstr, MSG_LEN, -1, "%s %s %s", p, user.chatterName, data);
-    strncpy_s(packet, PACKET_LEN, createPacket(user.chatterName, gFromSite, CTCP_ROOM, target, "", CTCP_ROOM, ctcpstr), -1);
+    strcpy_s(packet, PACKET_LEN, createPacket(user.chatterName, gFromSite, CTCP_ROOM, target, "", CTCP_ROOM, ctcpstr));
     iResult = send(*sock, packet, (int)strlen(packet), 0);
     return (iResult != SOCKET_ERROR);
 }
@@ -777,7 +779,7 @@ bool sendCtcpPacket(SOCKET* sock, char* target, char* p, char* data) {
 bool sendMsgPacket(SOCKET* sock, char* toUser, char* msgExt, char* toRoom, char* body) {
     int iResult;
     char packet[PACKET_LEN] = "";
-    strncpy_s(packet, PACKET_LEN, createPacket(user.chatterName, gFromSite, gRoom, toUser, msgExt, toRoom, body), -1);
+    strcpy_s(packet, PACKET_LEN, createPacket(user.chatterName, gFromSite, gRoom, toUser, msgExt, toRoom, body));
     iResult = send(*sock, packet, (int)strlen(packet), 0);
     return (iResult != SOCKET_ERROR);
 }
@@ -960,7 +962,7 @@ void enterScrollBack(int initialScroll, int mode) {
 void addToScrollBack(char* msg, int mode) {
     const size_t a = strlen(mode==0 ? gScrollBack : gMentions);
     const size_t b = strlen(msg);
-    const size_t size_ab = a + b + 1 +1 ;
+    const size_t size_ab = a + b + 2;
     char* tmp = realloc(mode == 0 ? gScrollBack : gMentions, size_ab);
     if (tmp != NULL) {
         memcpy(tmp + a, msg, b + 1);
@@ -1010,7 +1012,7 @@ void displayMessage(char* msg, bool mention) {
             if (insertExtraCrLf) { // an extra CRLF is needed in wrappedMsg for the long token.
                 char tkn1[80] = "", tkn2[80] = "";
                 strncpy_s(tkn1, sizeof(tkn1), token, od_control.user_screenwidth - 7);
-                strncpy_s(tkn2, sizeof(tkn2), token + od_control.user_screenwidth - 7, -1);
+                strcpy_s(tkn2, sizeof(tkn2), token + od_control.user_screenwidth - 7);
                 strcat_s(wrappedMsg, sizeof(wrappedMsg), tkn1);
                 strcat_s(wrappedMsg, sizeof(wrappedMsg), "\r\n");
                 strcat_s(wrappedMsg, sizeof(wrappedMsg), tkn2);
@@ -1025,7 +1027,7 @@ void displayMessage(char* msg, bool mention) {
             tokencnt = tokencnt + 1;
             token = strtok_s(NULL, " ", &context);
         }
-        strncpy_s(msg, sizeof(wrappedMsg), wrappedMsg, -1);
+        strcpy_s(msg, sizeof(wrappedMsg), wrappedMsg);
     }
 
     char dispMsg[512]="";
@@ -1042,6 +1044,109 @@ void displayMessage(char* msg, bool mention) {
         od_disp_emu(pipeToAnsi(dispMsg), TRUE);
     }
 }
+
+/**
+ * Reads the twits into the gTwits array.
+ */
+void loadTwits() {
+    FILE* tfile;
+#if defined(WIN32) || defined(_MSC_VER)  
+    fopen_s(&tfile, gTwitFile, "r");
+#else
+    tfile = fopen(gTwitFile, "r");
+#endif
+    char* tbuf = malloc(40);
+    strcpy_s(tbuf, 40, "");
+    if (tfile != NULL) {
+        char tline[40] = "";
+        while (fgets(tline, sizeof(tline), tfile)) {
+            const size_t a = strlen(tbuf);
+            const size_t b = strlen(tline);
+            const size_t size_ab = a + b + 1;
+            char* tmp = realloc(tbuf, size_ab);
+            if (tmp != NULL) {
+                memcpy(tmp + a, tline, b + 1);
+                tbuf = tmp;
+            }
+        }
+        fclose(tfile);
+        gTwitCount = split(tbuf, '\n', &gTwits);
+    }
+    free(tbuf);
+}
+
+bool checkTwit(char* twit) {
+    bool isTwit = false;
+    for (int i = 0; i < gTwitCount; i++) {
+        if (_stricmp(gTwits[i], twit) == 0) {
+            isTwit = true;
+            break;
+        }
+    }
+    return isTwit;
+}
+
+/**
+ * This should be easy... add the new twit to the file, and then read the file into the gTwits array...
+ *
+ */
+void addTwit(char* twit) {
+
+    if (checkTwit(twit)) {
+        return;
+    }
+
+    FILE* tfile;
+#if defined(WIN32) || defined(_MSC_VER)  
+    fopen_s(&tfile, gTwitFile, "a");
+#else
+    tfile = fopen(gTwitFile, "a");
+#endif
+    if (tfile != NULL) {
+        /*int flag = 0;
+        flag = */fprintf(tfile, "%s\n", twit);
+        fclose(tfile);
+        loadTwits();
+        if (checkTwit(twit)) {
+            char result[140] = "";
+            _snprintf_s(result, 140, -1, "|15* |14%s |07added to twit list.", twit);
+            displayMessage(result, false);
+        }
+    }
+}
+
+/**
+ * Rewrites the twit list, ommitting the one to be deleted.
+ */
+void removeTwit(char* twit) {
+    bool wasInList = false;
+    remove(gTwitFile);
+    od_sleep(100);
+    FILE* tfile;
+#if defined(WIN32) || defined(_MSC_VER)  
+    fopen_s(&tfile, gTwitFile, "w");
+#else
+    tfile = fopen(gTwitFile, "w");
+#endif
+    if (tfile != NULL) {
+        for (int i = 0; i < gTwitCount; i++) {
+            if (_stricmp(gTwits[i], twit) != 0 && strlen(gTwits[i]) > 0) {
+                fprintf(tfile, "%s\n", gTwits[i]);
+            }
+            else if (_stricmp(gTwits[i], twit) == 0) {
+                wasInList = true;
+            }
+        }
+        fclose(tfile);
+    }
+    loadTwits();
+    if (!checkTwit(twit) && wasInList) {
+        char result[140] = "";
+        _snprintf_s(result, 140, -1, "|15* |14%s |07removed from twit list.", twit);
+        displayMessage(result, false);
+    }
+}
+
 
 /**
  *  This function takes an incoming message string,
@@ -1152,14 +1257,14 @@ void processUserCommand(char* cmd, char* params) {
     }
     else if (_stricmp(cmd, "join") == 0 || _stricmp(cmd, "j") == 0) {
         char newRoom[20] = "";
-        strncpy_s(newRoom, 20, strReplace(params, "#", ""), -1);  // no #
-        strncpy_s(newRoom, 20, strReplace(newRoom, " ", "_"), -1); // Single word
+        strcpy_s(newRoom, 20, strReplace(params, "#", ""));  // no #
+        strcpy_s(newRoom, 20, strReplace(newRoom, " ", "_")); // Single word
         stripPipeCodes(newRoom); // No pipe codes
 
         char newRoomCmd[30] = "";
         _snprintf_s(newRoomCmd, 30, -1, "NEWROOM:%s:", gRoom); // include the OLD room as the first parameter...
         sendCmdPacket(&mrcSock, newRoomCmd, newRoom); // the NEW room will be included as the second parameter...
-        strncpy_s(gRoom, 30, newRoom, -1); 
+        strcpy_s(gRoom, 30, newRoom); 
         sendCmdPacket(&mrcSock, "USERLIST", ""); // Need a new user list after joining a different room
     }
     else if (_stricmp(cmd, "topic") == 0) {              
@@ -1182,7 +1287,7 @@ void processUserCommand(char* cmd, char* params) {
     else if (_stricmp(cmd, "t") == 0 || _stricmp(cmd, "msg") == 0) {
         char to[36] = "";
         char msg[PACKET_LEN] = "";
-        int nextspcidx = indexOfChar(params, ' ') +1;
+        int nextspcidx = indexOfChar(params, ' ') + 1;
         if (nextspcidx > 0) {
             getSub(params, to, 0, nextspcidx-1);
             _snprintf_s(msg, PACKET_LEN, -1, "|15* |08(|15%s|08/|14DirectMsg|08) |07%s", user.chatterName, params + nextspcidx);
@@ -1239,18 +1344,38 @@ void processUserCommand(char* cmd, char* params) {
         resetInputLine();
         od_printf(CHAT_CURSOR);
     }
-    //else if (_stricmp(cmd, "twit") == 0) { // For later
-    //}
+    else if (_stricmp(cmd, "twit") == 0) {
+        char action[10] = "";
+        int nextspcidx = indexOfChar(params, ' ') + 1;
+        if (nextspcidx > 0) {
+            getSub(params, action, 0, nextspcidx - 1);
+            if (_stricmp(action, "add") == 0 && _stricmp(params + 4, user.chatterName) != 0) {
+                addTwit(params + 4);                
+            } else if (_stricmp(action, "del") == 0) {
+                removeTwit(params + 4);
+            }
+        }
+        else if (_stricmp(params, "clear") == 0) {
+            gTwitCount = split("", '\n', &gTwits);
+            remove(gTwitFile);
+            displayMessage("|15* |07Twit list cleared|08.", false);
+        }
+        else if (_stricmp(params, "list") == 0) {
+            displayMessage("|09___ |15Twit List|09___", false);
+            displayPipeFileInChat(gTwitFile);
+        }
+    }
     else if (_stricmp(cmd, "help") == 0) {
-
-        if (_stricmp(params, "ctcp") == 0) {
+        if (strlen(params) > 0) {
+            char topic[30] = "";
+            _snprintf_s(topic, 30, -1, "screens\\help%s.txt", params);
 #if defined(WIN32) || defined(_MSC_VER)  
-            displayPipeFileInChat("screens\\helpctcp.txt");
+            displayPipeFileInChat(topic);
         }
         else {
             displayPipeFileInChat("screens\\help.txt");
 #else
-            displayPipeFileInChat("screens/helpctcp.txt");
+            displayPipeFileInChat(topic);
         }
         else {
             displayPipeFileInChat("screens/help.txt");
@@ -1311,7 +1436,7 @@ bool processServerMessage(char* body, char* toUser) {
         getSub(body, params, cmdsep+1, strlen(body));
     }
     else {
-        strncpy_s(cmd, sizeof(cmd), body, -1);
+        strcpy_s(cmd, sizeof(cmd), body);
     }
 
     // Implemented SERVER commands - notes provided from the MRC developer wiki on how each is handled:
@@ -1332,13 +1457,13 @@ bool processServerMessage(char* body, char* toUser) {
         // No pipe codes
         // Room name cannot contain spaces
         // Topic can contain spaces
-        strncpy_s(gTopic, sizeof(gTopic), params + strlen(gRoom) + 1, -1);
+        strcpy_s(gTopic, sizeof(gTopic), params + strlen(gRoom) + 1);
         gRoomTopicChanged = true;
     }
     else if (strcmp(cmd, "USERROOM") == 0) {
         // USERROOM: Server confirm the room user is in, usually sent after NEWROOM but may be the result of other reasons.[NEW in 1.3]
         // Client must enforce or routing will break
-        strncpy_s(gRoom, 30, params, -1);
+        strcpy_s(gRoom, 30, params);
         gRoomTopicChanged = true;
     }
     else if (strcmp(cmd, "USERNICK") == 0) {
@@ -1346,7 +1471,7 @@ bool processServerMessage(char* body, char* toUser) {
         // Client must enforce or routing will break.
         // This will be used to avoid delivery conflict in case 2 users with the same nick on 2 different BBSes are connected.
         // The server will append a number to the original nick to resolve the conflict.
-        strncpy_s(user.chatterName, 30, params, -1);
+        strcpy_s(user.chatterName, 30, params);
         _snprintf_s(gDisplayChatterName, 80, -1, "|%02d|%02d%c|%02d|%02d%s%s|16", user.chatterNamePrefixFgColor, user.chatterNamePrefixBgColor, user.chatterNamePrefix, user.chatterNameFgColor, user.chatterNameBgColor, user.chatterName, user.chatterNameSuffix);
         // inform the user of the change...
         char nicknotice[140] = "";
@@ -1367,7 +1492,7 @@ bool processServerMessage(char* body, char* toUser) {
         gUserCountChanged = true;
     }
     else if (strcmp(cmd, "LATENCY") == 0) {
-        strncpy_s(gLatency, sizeof(gLatency), params, -1);
+        strcpy_s(gLatency, sizeof(gLatency), params);
         gLatencyChanged = true;
     }
     else if (strcmp(cmd, "RECONNECT") == 0) {
@@ -1394,7 +1519,7 @@ void processCtcpCommand(char* body, char* toUser, char* fromUser) {
         char cmdStr[80] = "";
         char repStr[80] = "";
 
-        strncpy_s(cmdStr, sizeof(cmdStr), body + 7 + strlen(fromUser) + /*1 +*/ (strlen(toUser) == 0 ? 1 : strlen(toUser)) + 2, -1);
+        strcpy_s(cmdStr, sizeof(cmdStr), body + 7 + strlen(fromUser) + (strlen(toUser) == 0 ? 1 : strlen(toUser)) + 2);
 
         if (_strnicmp(cmdStr, "VERSION", 7) == 0) {
             _snprintf_s(repStr, sizeof(repStr), -1, "VERSION %s v%s.%s %s [%s]", TITLE, PROTOCOL_VERSION, UMRC_VERSION, COMPILE_DATE, AUTHOR_INITIALS);
@@ -1517,10 +1642,15 @@ void* handleIncomingMessages(void* lpArg) {
                         ((strcmp(gRoom, toRoom)==0 || strlen(toRoom)==0) && (strlen(toUser) == 0 || _stricmp(toUser, user.chatterName) == 0)) || 
                         // broadcast: messages addressed to everyone; no room and no user specified
                         (strlen(toRoom) == 0 && strlen(toUser) == 0)) {
+
+                    if (checkTwit(fromUser)) {
+                        queueIncomingMessage("|15* |08Incoming message filtered.", false);
+                    }
+
                     // Direct message (DirectMsg) ...? 
-                    if (strlen(toUser) != 0 && strlen(fromUser) != 0) {
+                    else if (strlen(toUser) != 0 && strlen(fromUser) != 0) {
                         queueIncomingMessage(body, false);
-                        strncpy_s(gLastDirectMsgFrom, 36, fromUser, -1);
+                        strcpy_s(gLastDirectMsgFrom, 36, fromUser);
                     }
 
                     // Standard message
@@ -1558,7 +1688,6 @@ void* handleIncomingMessages(void* lpArg) {
     }
     return 0;
 }
-
 
 /**
  *  This function handles all chat I/O: getting input from the user as
@@ -1728,7 +1857,7 @@ void doChatRoutines(char* input) {
 
                 for (int i = 0; i < gChatterCount; i++) {
                     if (_strnicmp(tabSearch, gChattersInRoom[i], strlen(tabSearch)) == 0 && _stricmp(gChattersInRoom[i], user.chatterName) != 0) {
-                        strcpy_s(tabResult, 30, gChattersInRoom[i] /* + strlen(tabSearch) */);
+                        strcpy_s(tabResult, 30, gChattersInRoom[i]);
                         strncpy_s(input, MSG_LEN, input, strlen(input) - strlen(tabSearch));
 #if defined(WIN32) || defined(_MSC_VER) 
                         _snprintf_s(input, MSG_LEN, -1, "%s%s", input, tabResult);
@@ -1749,12 +1878,9 @@ void doChatRoutines(char* input) {
             else {
                 continue;
             }
-        }
+        } // Done capturing input...
 
         if (updateInput) {
-
-            //
-            // Done capturing input...
             // 
             // Below updates the input display...
             // 
@@ -1802,7 +1928,6 @@ void doChatRoutines(char* input) {
 
                     od_putch('*'); 
                 }
-
                 else {            // Any other character simply gets displayed as typed...
                     od_putch(key);
                 }
@@ -1822,6 +1947,41 @@ void removeNonAlphanumeric(char *str) {
         readPos++;
     }
     str[writePos] = '\0';
+}
+ 
+/**
+ * Removes illegal characters/strings from strings
+ * to be used as filenames.
+ */
+void cleanUpFilename(char *str) {
+    int readPos = 0, writePos = 0;
+    while (str[readPos] != '\0') {
+        if (str[readPos] == '<' || // .... Disallowed characters
+            str[readPos] == '>' || 
+            str[readPos] == ':' || 
+            str[readPos] == '"' || 
+            str[readPos] == '/' || 
+            str[readPos] == '\\' || 
+            str[readPos] == '|' || 
+            str[readPos] == '?' || 
+            str[readPos] == '|' || 
+            str[readPos] == '*') {
+            str[writePos++] = '_';
+        } else {            
+            str[writePos++] = str[readPos];
+        }
+        readPos++;
+    }
+    str[writePos] = '\0';
+
+    if (_stricmp(str, "CON") == 0 || // .... Disallowed filenames
+        _stricmp(str, "PRN") == 0 ||
+        _stricmp(str, "AUX") == 0 ||
+        _stricmp(str, "NUL") == 0 ||
+        (_strnicmp(str, "COM", 3) == 0 && isdigit(str[3]) ) ||
+        (_strnicmp(str, "LPT", 3) == 0 && isdigit(str[3]) )) {
+        strcat_s(str, 36, "_"); // append a character to make it allowed
+    }
 } 
 
 bool enterChat() {
@@ -1829,7 +1989,8 @@ bool enterChat() {
     if (user.theme == NULL || strlen(user.theme) == 0) {
         strcpy_s(user.theme, sizeof(user.theme), "default.ans");
     }
-    loadTheme();    
+    loadTheme();  
+    loadTwits();
 
     od_disp_emu("\x1b[?25l", TRUE); // disable the blinking cursor.. don't need it since we're going to make our own..
     od_clr_scr();    
@@ -1981,7 +2142,7 @@ bool enterChat() {
                 getSub(input, params, spcidx+1, strlen(input));
             }
             else {
-                strncpy_s(cmd, 15, input + 1, -1);
+                strcpy_s(cmd, 15, input + 1);
             }
             processUserCommand(cmd, params);
         }
@@ -2003,6 +2164,7 @@ bool enterChat() {
 
     free(gScrollBack);
     free(gMentions);
+    free(gTwits);
     gMentionCount=0;
     strcpy_s(gRoom, sizeof(gRoom), "");
     strcpy_s(gTopic, sizeof(gTopic), "");
@@ -2042,9 +2204,9 @@ int main(int argc, char** argv)
     od_control.od_page_pausing = false;
     od_control.od_disable |= DIS_NAME_PROMPT; // Disable the local user name prompt; it doesn't work.. always results in "Sysop"
     od_control.od_time_msg_func = displayTimeWarning;
-    strncpy_s(od_control.od_prog_name, 40, TITLE, -1);
+    strcpy_s(od_control.od_prog_name, 40, TITLE);
     _snprintf_s(od_control.od_prog_version, 40, -1, "v%s", UMRC_VERSION);
-    strncpy_s(od_control.od_prog_copyright, 40, YEAR_AND_AUTHOR, -1);
+    strcpy_s(od_control.od_prog_copyright, 40, YEAR_AND_AUTHOR);
 
 #if defined(WIN32) || defined(_MSC_VER)
     HICON hIcon = (HICON)LoadImage(NULL, "icon.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED);
@@ -2071,21 +2233,31 @@ int main(int argc, char** argv)
     userNumber = od_control.user_num;
     if (0 == userNumber && strcmp(od_control.user_name, "Sysop") == 0) {
         od_printf("`bright yellow`***`bright white`LOCAL MODE`bright yellow`***``\r\n\r\n");
-        strncpy_s(user.chatterName, 36, od_control.user_name, -1);
+        strcpy_s(user.chatterName, 36, od_control.user_name);
     }
     else {
-        strncpy_s(user.chatterName, 36, strlen(od_control.user_handle) > 0 ? od_control.user_handle : od_control.user_name, -1);
+        strcpy_s(user.chatterName, 36, strlen(od_control.user_handle) > 0 ? od_control.user_handle : od_control.user_name);
     }    
-    strncpy_s(user.chatterName, 36, strReplace(user.chatterName, " ", "_"), -1); // spaces are disallowed; replace with underscores
-    strncpy_s(user.chatterName, 36, strReplace(user.chatterName, "~", ""), -1);  // tildes are disallowed; strip them out
-    strncpy_s(gFromSite, sizeof(gFromSite), strReplace(cfg.name, "~", ""), -1);
+    strcpy_s(user.chatterName, 36, strReplace(user.chatterName, " ", "_")); // spaces are disallowed; replace with underscores
+    strcpy_s(user.chatterName, 36, strReplace(user.chatterName, "~", ""));  // tildes are disallowed; strip them out
+    strcpy_s(gFromSite, sizeof(gFromSite), strReplace(cfg.name, "~", ""));
     stripPipeCodes(gFromSite);
     if (strlen(gFromSite) > 30) gFromSite[30] = '\0';
+    char userFileName[36] = "";
+    strcpy_s(userFileName, sizeof(userFileName), user.chatterName);
+    cleanUpFilename(userFileName); 
 #if defined(WIN32) || defined(_MSC_VER)  
-    _snprintf_s(gUserDataFile, sizeof(gUserDataFile), -1, "%s\\%s.dat", USER_DATA_DIR, user.chatterName);
+    _snprintf_s(gUserDataFile, sizeof(gUserDataFile), -1, "%s\\%s.dat", USER_DATA_DIR, userFileName);
+    _snprintf_s(gTwitFile, sizeof(gTwitFile), -1, "%s\\%s.twit", USER_DATA_DIR, userFileName);
 #else
-    _snprintf_s(gUserDataFile, sizeof(gUserDataFile), -1, "%s/%s.dat", USER_DATA_DIR, user.chatterName);
+    _snprintf_s(gUserDataFile, sizeof(gUserDataFile), -1, "%s/%s.dat", USER_DATA_DIR, userFileName);
+    _snprintf_s(gTwitFile, sizeof(gTwitFile), -1, "%s/%s.twit", USER_DATA_DIR, userFileName);
 #endif
+
+#if defined(WIN32) || defined(_MSC_VER)  
+#else
+#endif
+
 
 #if defined(WIN32) || defined(_MSC_VER)  
     DWORD attributes = GetFileAttributesA(USER_DATA_DIR);
@@ -2109,7 +2281,7 @@ int main(int argc, char** argv)
         user.chatterNamePrefixBgColor = 16;
         user.chatterNameFgColor = 7;
         user.chatterNameBgColor = 16;
-        strncpy_s(user.defaultRoom, 30, DEFAULT_ROOM, -1);
+        strcpy_s(user.defaultRoom, 30, DEFAULT_ROOM);
         stripPipeCodes(user.defaultRoom);
 
         od_printf("`bright white`Welcome to %s!``\r\n", TITLE);
@@ -2123,8 +2295,8 @@ int main(int argc, char** argv)
             do {
                 getInputString(newchatname, 36, 32, 127);
                 if (strchr(newchatname, ' ') != NULL || strchr(newchatname, '~') != NULL) {
-                    strncpy_s(newchatname, 36, strReplace(newchatname, " ", "_"), -1);
-                    strncpy_s(newchatname, 36, strReplace(newchatname, "~", ""), -1);
+                    strcpy_s(newchatname, 36, strReplace(newchatname, " ", "_"));
+                    strcpy_s(newchatname, 36, strReplace(newchatname, "~", ""));
                 }
 
                 if (strstr(newchatname, "|") != NULL) {
@@ -2145,7 +2317,7 @@ int main(int argc, char** argv)
 
             } while (!namevalid);
 
-            strncpy_s(user.chatterName, 36, newchatname, -1);
+            strcpy_s(user.chatterName, 36, newchatname);
             od_printf("`bright white`\r\n\r\nOK, you will be known as `bright green`%s`bright white` while in chat!``\r\n\r\n", user.chatterName);
         }
         else {
@@ -2207,7 +2379,7 @@ int main(int argc, char** argv)
                 rooms = stat[1];
                 users = stat[2];
                 activity = stat[3];
-                strncpy_s(gLatency, sizeof(gLatency), stat[4], -1);
+                strcpy_s(gLatency, sizeof(gLatency), stat[4]);
             }
             act = atoi(activity);
             fclose(mrcstats);
@@ -2217,9 +2389,9 @@ int main(int argc, char** argv)
         if (stat(MRC_STATS_FILE, &file_stat) == 0) {
 #if defined(WIN32) || defined(_MSC_VER)  
             ctime_s(mrcStTm, 30, &file_stat.st_mtime);
-            strncpy_s(mrcStTm, 30, strReplace(mrcStTm, "\n", ""), -1);
+            strcpy_s(mrcStTm, 30, strReplace(mrcStTm, "\n", ""));
 #else
-            strncpy_s(mrcStTm, 30, strReplace(ctime(&file_stat.st_mtime), "\n", ""), -1);
+            strcpy_s(mrcStTm, 30, strReplace(ctime(&file_stat.st_mtime), "\n", ""));
 #endif
         }
 

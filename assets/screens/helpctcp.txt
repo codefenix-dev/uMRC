@@ -1,0 +1,14 @@
+|09__[ |15How to use CTCP commands|07: |09]_______________________________|07
+
+ CTCP (Client-to-Client Protocol) commands are special messages
+ that can be sent to a channel or other clients.
+
+ Usage:
+   |15/|11ctcp |15target |09command|07
+
+ A |15target |07is a user or room name. |09* |07targets all.
+
+ Supported commands:
+|09   VERSION  TIME  PING  CLIENTINFO|07
+
+ Type |15/|11toggle_ctcp |07to hide/show incoming requests. |14TODO

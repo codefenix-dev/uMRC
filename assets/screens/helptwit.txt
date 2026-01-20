@@ -1,0 +1,9 @@
+|07|09__[ |15How to use the twit list|07: |09]_______________________________
+
+|07 The |15twit list |07hides messages from problematic chatters.
+
+|07 Usage:
+   |15/|11twit |07|15add |09nameoftwit |08:|15 |07Filters out nameoftwit's messages
+   |15/|11twit |07|15del |09nameoftwit |08:|15 |07nameoftwit's messages are re-allowed
+   |15/|11twit |07|15list           |08:|15 |07Lists twits you have added
+   |15/|11twit |07|15clear          |08:|15 |07Empties your twit list

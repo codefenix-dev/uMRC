@@ -357,7 +357,7 @@ void printPipeCodeString(char* str) {
  *
  */
 void printPipeCodeString(char* str) {
-    printf(pipeToAnsi(str));    
+    printf("%s", pipeToAnsi(str));
 }
 
 #endif
@@ -403,7 +403,7 @@ void clearScreen()
 
 void clearScreen()
 {
-    printf(CL);
+    printf("%s", CL);
 }
 
 void initTermios(int echo) {
