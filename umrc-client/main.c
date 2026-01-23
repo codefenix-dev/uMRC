@@ -1103,8 +1103,7 @@ void addTwit(char* twit) {
     tfile = fopen(gTwitFile, "a");
 #endif
     if (tfile != NULL) {
-        /*int flag = 0;
-        flag = */fprintf(tfile, "%s\n", twit);
+        fprintf(tfile, "%s\n", twit);
         fclose(tfile);
         loadTwits();
         if (checkTwit(twit)) {
@@ -1291,7 +1290,7 @@ void processUserCommand(char* cmd, char* params) {
         if (nextspcidx > 0) {
             getSub(params, to, 0, nextspcidx-1);
             _snprintf_s(msg, PACKET_LEN, -1, "|15* |08(|15%s|08/|14DirectMsg|08) |07%s", user.chatterName, params + nextspcidx);
-            sendMsgPacket(&mrcSock, to, "", /*gRoom*/ "", msg);
+            sendMsgPacket(&mrcSock, to, "", "", msg);
             _snprintf_s(msg, PACKET_LEN, -1, "|15* |08(|14DirectMsg|08->|15%s|08) |07%s", to, params + nextspcidx);
             displayMessage(msg, false);
         }
@@ -1299,7 +1298,7 @@ void processUserCommand(char* cmd, char* params) {
     else if (_stricmp(cmd, "r") == 0) {
         char rep[PACKET_LEN] = "";
         _snprintf_s(rep, PACKET_LEN, -1, "|15* |08(|15%s|08/|14DirectMsg|08) |07%s", user.chatterName, params);
-        sendMsgPacket(&mrcSock, gLastDirectMsgFrom, "", /*gRoom*/ "", rep);
+        sendMsgPacket(&mrcSock, gLastDirectMsgFrom, "", "", rep);
         _snprintf_s(rep, PACKET_LEN, -1, "|15* |08(|14DirectMsg|08->|15%s|08) |07%s", gLastDirectMsgFrom, params);
         displayMessage(rep, false);
     }
@@ -1540,7 +1539,7 @@ void processCtcpCommand(char* body, char* toUser, char* fromUser) {
     }
     else if (strncmp(body, "[CTCP-REPLY] ", 13) == 0 && _stricmp(toUser, user.chatterName) == 0) {
         char resp[MSG_LEN] = "";
-        _snprintf_s(resp, MSG_LEN, -1, "* |14[CTCP-REPLY] |10%s |15%s", fromUser, /*repStr*/ body + 13 + strlen(fromUser) + 1);
+        _snprintf_s(resp, MSG_LEN, -1, "* |14[CTCP-REPLY] |10%s |15%s", fromUser, body + 13 + strlen(fromUser) + 1);
         queueIncomingMessage(resp, false);
         od_sleep(20);
     }

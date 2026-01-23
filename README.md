@@ -61,6 +61,7 @@ has been confirmed to run it.
   + **intro.ans**:      Intro/main menu & status screen
   + **help.txt**:       Help file showing basic chat commands
   + **helpctcp.txt**:   Help file on CTCP command usage
+  + **helptwit.txt**:   Help file on twit filter management
 - **\[themes\]**:       Subdirectory containing ANSI files
   + **\*.ans**:         ANSI theme files
 
@@ -74,18 +75,16 @@ your platform.
 > this time. The MRC host generally does not play well with concurrent 
 > connections from the same BBS.
 
-1. Extract all files to their own directory, keeping the structure 
-   the same as shown above in the list of files included.
-   
-   On Debian-based systems like Ubuntu, you can run the build.sh script to compile from source.
-   First run `sudo apt install gcc` if you don't already have gcc installed,
-   then run `sudo apt install libssl-dev` since the bridge makes use
-   of LibreSSL, then `./build.sh` should complete successfully (with 
-   warnings). It should create a subdirectory named "bin" and place the 
-   compiled binaries there. Copy these binaries to your preferred directory 
-   for the door. Finally, copy the contents of `assets/nix` to the to the
-   door directory.
-      
+If you're on Windows, skip this paragraph and proceed to step #1.
+On Debian-based systems like Ubuntu, run the build.sh script to compile from source.
+First run `sudo apt install gcc` if you don't already have gcc installed,
+then run `sudo apt install libssl-dev` since the bridge makes use
+of LibreSSL, then `./build.sh` should complete successfully. It should 
+create a subdirectory named "bin" and place the compiled binaries into it
+along with all other necessary asset subdirectories and files.
+
+1. Place all files to their own directory, keeping the structure 
+   the same as shown above in the list of files included.      
 
 2. Run **setup**, and press `1` to begin.
 
@@ -157,7 +156,7 @@ your platform.
 3. Run **umrc-bridge**. This program is responsible for maintaining a 
    connection to the MRC host and passing chat traffic back and forth 
    between the host and your BBS. It must run continuously in order for 
-   umrc-client.exe to work, so it's recommended to have this program 
+   umrc-client to work, so it's recommended to have this program 
    launch on system startup.
    
    When umrc-bridge starts up, it should say "Ready for clients" if
@@ -306,6 +305,16 @@ Options:
 - **Rooms**:    Current number of chat rooms.
 - **Users**:    Total number of users in all chat room.
 - **Activity**: `NUL`, `LOW`, `MED`, or `HI`, based on chatter activity.
+
+umrc-bridge makes requests for server stats every 60 seconds and stores 
+them in the mrcstats.dat file for display elsewhere on the BBS.
+
+The stats are separated by spaces and follow this order:
+   1 - BBSES
+   2 - Rooms
+   3 - Users
+   4 - Activity (0=NONE, 1=LOW, 2=MED, 3, HI)
+   5 - Latency (as calculated by the client)
     
     
 ### Basic Chat Usage:
@@ -394,12 +403,6 @@ is used only from the umrc-bridge to the MRC host, while local umrc-client
 connections to the umrc-bridge are made using standard TCP/IP sockets, using 
 the same port number as selected in the Setup program.
 
-I chose OpenDoors because it's available, free, works well, and has many great 
-functions built in for handling text movement on the screen, which uMRC uses 
-extensively. Not everyone likes the local pop-up window that OpenDoors shows 
-when running the door on Windows systems, but it can be hidden by using the 
-`-SILENT` command line switch.
-
 You should NOT have ports 5000/5001 open on your firewall/router, since 
 umrc-client makes OUTBOUND requests to the MRC host on ports 5000/5001. 
 If you leave these ports open on your end, then you may occasionally see 
@@ -464,13 +467,3 @@ and is always happy to try running new things on his board.
 ## Enjoy!
 
 See you in chat!
-
-
-
-
-
-
-
-
-
-

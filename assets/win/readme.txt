@@ -18,8 +18,7 @@ uMRC
 
 by Craig Hendricks
 codefenix@conchaos.synchro.net
- telnet://conchaos.synchro.net
-  https://conchaos.synchro.net
+  https://conchaos.synchro.net/umrc/
 
 
 What is uMRC?
@@ -62,6 +61,7 @@ Files Included:
   - intro.ans:      Intro/main menu & status screen
   - help.txt:       Help file showing basic chat commands
   - helpctcp.txt:   Help file on CTCP command usage
+  - helptwit.txt:   Help file on twit filter management
   [themes]:         Subdirectory containing ANSI files
   - *.ans:          ANSI theme files
 
@@ -153,14 +153,36 @@ connections from the same BBS.
    umrc-bridge takes an optional -V command line switch, which enables
    verbose logging. This can be used for troubleshooting purposes.
 
+   umrc-bridge makes automatic reconnect attempts in the event the
+   connection to the MRC host is lost, up to 10 times by default. This
+   can be changed by starting umrc-bridge with the -Rx option, where
+   "x" is the number of retries (e.g.: -R30 for 30 retries). To make
+   infinite reconnection attempts, specify -R0.   
+
 4. Set up a menu item to launch a 32-bit door on your BBS.
 
    The command line syntax is:
 
      umrc-client -D c:\path\to\DOOR32.SYS
 
-   Optionally, include the -SILENT option to prevent the local Windows
-   GUI from popping up while the door is running.
+   If you get an error saying, "Invalid config. Run setup", it means you either
+   did not run Setup, or you're not launching umrc-client from the directory
+   it's located in. On some BBSes (like Mystic) it will be necessary to use
+   a batch file or bash script to launch the door. Something like the below ought
+   to do the trick:
+
+   
+   :: call this file "launch.bat" and pass the node number (%N) to it
+   C:
+   cd \path_to\umrc
+   umrc-client -D c:\path_to\node%1\door32.sys
+   
+
+   Optionally include the -SILENT option to prevent the local Windows GUI 
+   from popping up while the door is running. This is highly recommended, 
+   since umrc-client takes a noticeable performance hit when outputting to 
+   both the BBS and the local Window, especially while paging through the chat
+   scrollback.
 
      umrc-client -D c:\path\to\DOOR32.SYS -SILENT
 
@@ -235,25 +257,35 @@ of the MRC Host as reported by umrc-bridge.
 Options:
 
 C Enter Chat:       Places the user into chat, automatically joining
-                           their default room.
+                    their default room.
 
 S Chatter Settings: Lets the user modify their options.
 
 I Instructions:     Shows a list of basic chat commands, as listed in
-                           the screens/help.ans file.
+                    the screens/help.ans file.
 
 Q Quit:             Exits back to the BBS.
 
 
 MRC Stats, as reported by umrc-bridge:
 
-State**:    ONLINE or OFFLINE. 60 seconds or less since last ping = ONLINE
-Latency**:  Elapsed milliseconds between the last client message and the
-                server's response.
-BBSes**:    Number of BBSes currently connected to the MRC host.
-Rooms**:    Current number of chat rooms.
-Users**:    Total number of users in all chat room.
-Activity**: NUL, LOW, MED, or HI, based on chatter activity.
+State:    ONLINE or OFFLINE. 60 seconds or less since last ping = ONLINE
+Latency:  Elapsed milliseconds between the last client message and the
+          server's response.
+BBSes:    Number of BBSes currently connected to the MRC host.
+Rooms:    Current number of chat rooms.
+Users:    Total number of users in all chat room.
+Activity: NUL, LOW, MED, or HI, based on chatter activity.
+
+umrc-bridge makes requests for server stats every 60 seconds and stores 
+them in the mrcstats.dat file for display elsewhere on the BBS.
+
+The stats are separated by spaces and follow this order:
+   1 - BBSES
+   2 - Rooms
+   3 - Users
+   4 - Activity (0=NONE, 1=LOW, 2=MED, 3, HI)
+   5 - Latency (as calculated by the client)
 
 
 Basic Chat Usage:
@@ -295,20 +327,20 @@ Type /meetups in chat for a current list of meetups.
 Known Issues & Limitations:
 
 Height and width are limited to 80 columns by 24 rows. OpenDoors has
-  a default maximum row limit of 23, but umrc-client is hard-coded with
-  this setting adjusted to 24. As far as I know, OpenDoors cannot
-  automatically detect the terminal's height and width.
+a default maximum row limit of 23, but umrc-client is hard-coded with
+this setting adjusted to 24. As far as I know, OpenDoors cannot
+automatically detect the terminal's height and width.
 
 The font size of the local window cannot be adjusted. This seems to be
-  an internal limitation of the OpenDoors kit.
+an internal limitation of the OpenDoors kit.
 
 Masked input becomes unmasked when changing text colors with left and
-  right arrows.
+right arrows.
 
 umrc-bridge occasionally reports "partial packets" in verbose mode,
-  especially when using the !ddial command. Most partial packets are
-  either ignored or handled gracefully by the bridge when they occur (the
-  Syncrhonet mrc-connector service logs similar warnings for !ddial).
+especially when using the !ddial command. Most partial packets are
+either ignored or handled gracefully by the bridge when they occur (the
+Syncrhonet mrc-connector service logs similar warnings for !ddial).
 
 
 Future Plans:
@@ -332,12 +364,6 @@ Secure SSL sockets are implemented using LibreSSL, a variant of OpenSSL. SSL
 is used only from the umrc-bridge to the MRC host, while local umrc-client
 connections to the umrc-bridge are made using standard TCP/IP sockets, using
 the same port number as selected in the Setup program.
-
-I chose OpenDoors because it's available, free, works well, and has many great
-functions built in for handling text movement on the screen, which uMRC uses
-extensively. Not everyone likes the local pop-up window that OpenDoors shows 
-when running the door, but it can be hidden by using the -SILENT command line
-switch.
 
 You should NOT have ports 5000/5001 open on your firewall/router, since
 umrc-client makes OUTBOUND requests to the MRC host on ports 5000/5001.

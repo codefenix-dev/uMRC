@@ -18,8 +18,7 @@ uMRC
 
 by Craig Hendricks
 codefenix@conchaos.synchro.net
- telnet://conchaos.synchro.net
-  https://conchaos.synchro.net
+  https://conchaos.synchro.net/umrc/
 
 
 What is uMRC?
@@ -55,6 +54,7 @@ Files Included:
   - intro.ans:      Intro/main menu & status screen
   - help.txt:       Help file showing basic chat commands
   - helpctcp.txt:   Help file on CTCP command usage
+  - helptwit.txt:   Help file on twit filter management
   [themes]:         Subdirectory containing ANSI files
   - *.ans:          ANSI theme files
 
@@ -69,6 +69,11 @@ connections from the same BBS.
    the same as shown above in the list of files included.
 
    Example:  /doors/umrc
+
+   If the pre-built binaries don't run on your system for some reason, 
+   try compiling from source using the latest code from the GitHub 
+   project page. Instructions are provided in the README.md file.
+   https://github.com/codefenix-dev/uMRC   
 
 
 2. Run setup, and press 1 to begin.
@@ -137,7 +142,7 @@ connections from the same BBS.
 3. Run umrc-bridge. This program is responsible for maintaining a
    connection to the MRC host and passing chat traffic back and forth
    between the host and your BBS. It must run continuously in order for
-   umrc-client.exe to work, so it's recommended to have this program
+   umrc-client to work, so it's recommended to have this program
    launch on system startup.
 
    When umrc-bridge starts up, it should say "Ready for clients" if
@@ -146,14 +151,37 @@ connections from the same BBS.
    umrc-bridge takes an optional -V command line switch, which enables
    verbose logging. This can be used for troubleshooting purposes.
 
+   umrc-bridge makes automatic reconnect attempts in the event the
+   connection to the MRC host is lost, up to 10 times by default. This
+   can be changed by starting umrc-bridge with the -Rx option, where
+   "x" is the number of retries (e.g.: -R30 for 30 retries). To make
+   infinite reconnection attempts, specify -R0.   
+
 4. Set up a menu item to launch a 32-bit door on your BBS.
 
    The command line syntax is:
 
      ./umrc-client -D /path/to/DOOR32.SYS
 	 
-   Refer to your BBS software documentation on whether the ./ prefix
+   It has been observed that using the DOOR32.SYS drop file type with this 
+   door can lead to user-input issues on Mystic under Linux. If DOOR32.SYS 
+   does not work properly with your BBS type, then use DOOR.SYS instead.
+	 
+   Also refer to your BBS software documentation on whether the ./ prefix
    needs to be included.
+
+   If you get an error saying, "Invalid config. Run setup", it means you either
+   did not run Setup, or you're not launching umrc-client from the directory
+   it's located in. On some BBSes (like Mystic) it will be necessary to use
+   a batch file or bash script to launch the door. Something like the below ought
+   to do the trick:
+
+   
+   #bash
+   # call this file "launch.sh" and pass the node number (%N) to it
+   cd /path_to/umrc
+   ./umrc-client -D /path_to/temp$1/door.sys
+
 
    You can test it locally from the command line as well:
 
@@ -226,25 +254,35 @@ of the MRC Host as reported by umrc-bridge.
 Options:
 
 C Enter Chat:       Places the user into chat, automatically joining
-                           their default room.
+                    their default room.
 
 S Chatter Settings: Lets the user modify their options.
 
 I Instructions:     Shows a list of basic chat commands, as listed in
-                           the screens/help.ans file.
+                    the screens/help.ans file.
 
 Q Quit:             Exits back to the BBS.
 
 
 MRC Stats, as reported by umrc-bridge:
 
-State**:    ONLINE or OFFLINE. 60 seconds or less since last ping = ONLINE
-Latency**:  Elapsed milliseconds between the last client message and the
-                server's response.
-BBSes**:    Number of BBSes currently connected to the MRC host.
-Rooms**:    Current number of chat rooms.
-Users**:    Total number of users in all chat room.
-Activity**: NUL, LOW, MED, or HI, based on chatter activity.
+State:    ONLINE or OFFLINE. 60 seconds or less since last ping = ONLINE
+Latency:  Elapsed milliseconds between the last client message and the
+          server's response.
+BBSes:    Number of BBSes currently connected to the MRC host.
+Rooms:    Current number of chat rooms.
+Users:    Total number of users in all chat room.
+Activity: NUL, LOW, MED, or HI, based on chatter activity.
+
+umrc-bridge makes requests for server stats every 60 seconds and stores 
+them in the mrcstats.dat file for display elsewhere on the BBS.
+
+The stats are separated by spaces and follow this order:
+   1 - BBSES
+   2 - Rooms
+   3 - Users
+   4 - Activity (0=NONE, 1=LOW, 2=MED, 3, HI)
+   5 - Latency (as calculated by the client)
 
 
 Basic Chat Usage:
@@ -270,6 +308,12 @@ spent idling.
 The user types /quit or /q to exit chat and return to the main menu.
 
 
+MRC Stats
+
+
+
+
+
 Meetups!
 
 Now that your BBS offers MRC, here's where the most action is!
@@ -289,9 +333,6 @@ Height and width are limited to 80 columns by 24 rows. OpenDoors has
 a default maximum row limit of 23, but umrc-client is hard-coded with
 this setting adjusted to 24. As far as I know, OpenDoors cannot
 automatically detect the terminal's height and width.
-
-The font size of the local window in Windows cannot be adjusted. This 
-seems to be an internal limitation of the OpenDoors kit.
 
 Masked input becomes unmasked when changing text colors with left and
 right arrows.
@@ -324,10 +365,6 @@ Secure SSL sockets are implemented using LibreSSL, a variant of OpenSSL. SSL
 is used only from the umrc-bridge to the MRC host, while local umrc-client
 connections to the umrc-bridge are made using standard TCP/IP sockets, using
 the same port number as selected in the Setup program.
-
-I chose OpenDoors because it's available, free, works well, and has many great
-functions built in for handling text movement on the screen, which uMRC uses
-extensively.
 
 You should NOT have ports 5000/5001 open on your firewall/router, since
 umrc-client makes OUTBOUND requests to the MRC host on ports 5000/5001.

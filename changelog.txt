@@ -33,6 +33,8 @@ v100 - TBA
     colors immediately after background colors.
   - Fix for incoming and outgoing /ctcp commands.
   - Fix for direct msgs (/msg /t /r) sent to users not in the same room.
+  - Fix to strip forward slashes from BBS and platform stings to ensure
+    proper formatting in the the handshake string.
   - New "anet" themes contibuted by StingRay!
   
 

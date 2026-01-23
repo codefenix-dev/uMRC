@@ -11,4 +11,3 @@
  Supported commands:
 |09   VERSION  TIME  PING  CLIENTINFO|07
 
- Type |15/|11toggle_ctcp |07to hide/show incoming requests. |14TODO

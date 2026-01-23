@@ -18,6 +18,7 @@
 
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include <sys/timeb.h>
 
 #pragma comment (lib, "Ws2_32.lib")
 #pragma comment (lib, "Mswsock.lib")
@@ -39,13 +40,13 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <time.h>
+#include <sys/time.h>
     
 typedef uint32_t  DWORD;
 
 #endif
 
 #include "../common/common.h"
-#include <sys/timeb.h>
 #include "openssl/ssl.h"
 #include "openssl/err.h"
 
@@ -139,8 +140,7 @@ void writeToLog(char* text) {
     logfile = fopen(LOG_FILE, "a");
 #endif
     if (logfile != NULL) {
-        int flag = 0;
-        flag = fprintf(logfile, "%s %s\n", tm_str, strReplace(strReplace(text, "\r", ""), "\n", ""));
+        fprintf(logfile, "%s %s\n", tm_str, strReplace(strReplace(text, "\r", ""), "\n", ""));
         fclose(logfile);
     }
 }
@@ -221,9 +221,9 @@ bool sendCmdPacket(const char* cmd, const char* cmdArg) {
 
     if (gVerboseLogging) {
         char logstring[1024] = "";
-        _snprintf_s(logstring, sizeof(logstring), -1, "sendCmdPacket \"%s\" to host\r\n", packet);
+        _snprintf_s(logstring, sizeof(logstring), -1, "sendCmdPacket \"%s\" to host", packet);
         printDateTimeStamp();
-        printf(logstring);
+        puts(logstring);
         writeToLog(logstring);
     }    
     iResult = usingSSL ? SSL_write(mrcHostSsl, packet, (int)strlen(packet)) : send(mrcHostSock, packet, (int)strlen(packet), 0);
@@ -232,12 +232,12 @@ bool sendCmdPacket(const char* cmd, const char* cmdArg) {
     if (iResult == SOCKET_ERROR) {
         char logstring[1024] = "";
 #if defined(WIN32) || defined(_MSC_VER)  
-        _snprintf_s(logstring, sizeof(logstring), -1, "sendCmdPacket failed with error: %d\r\n", usingSSL ? SSL_get_error(mrcHostSsl, iResult) : WSAGetLastError());
+        _snprintf_s(logstring, sizeof(logstring), -1, "sendCmdPacket failed with error: %d", usingSSL ? SSL_get_error(mrcHostSsl, iResult) : WSAGetLastError());
 #else
-        _snprintf_s(logstring, sizeof(logstring), -1, "sendCmdPacket failed with error: %d\r\n", usingSSL ? SSL_get_error(mrcHostSsl, iResult) : errno);
+        _snprintf_s(logstring, sizeof(logstring), -1, "sendCmdPacket failed with error: %d", usingSSL ? SSL_get_error(mrcHostSsl, iResult) : errno);
 #endif
         printDateTimeStamp();        
-        printf(logstring);
+        puts(logstring);
         writeToLog(logstring);
         return false;
     } else {
@@ -263,9 +263,9 @@ bool sendMsgPacket(char* fromUser, char* fromSite, char* fromRoom, char* toUser,
     
     if (gVerboseLogging) {
         char logstring[1024] = "";
-        _snprintf_s(logstring, sizeof(logstring), -1, "sendMsgPacket \"%s\" to host\r\n", packet);
+        _snprintf_s(logstring, sizeof(logstring), -1, "sendMsgPacket \"%s\" to host", packet);
         printDateTimeStamp();
-        printf(logstring);
+        puts(logstring);
         writeToLog(logstring);
     }
     iResult = usingSSL ? SSL_write(mrcHostSsl, packet, (int)strlen(packet)) : send(mrcHostSock, packet, (int)strlen(packet), 0);
@@ -274,12 +274,12 @@ bool sendMsgPacket(char* fromUser, char* fromSite, char* fromRoom, char* toUser,
     if (iResult == SOCKET_ERROR) {
         char logstring[1024] = "";
 #if defined(WIN32) || defined(_MSC_VER)  
-        _snprintf_s(logstring, sizeof(logstring), -1, "sendMsgPacket failed with error: %d\r\n", usingSSL ? SSL_get_error(mrcHostSsl, iResult) : WSAGetLastError());
+        _snprintf_s(logstring, sizeof(logstring), -1, "sendMsgPacket failed with error: %d", usingSSL ? SSL_get_error(mrcHostSsl, iResult) : WSAGetLastError());
 #else
-        _snprintf_s(logstring, sizeof(logstring), -1, "sendMsgPacket failed with error: %d\r\n", usingSSL ? SSL_get_error(mrcHostSsl, iResult) : errno);
+        _snprintf_s(logstring, sizeof(logstring), -1, "sendMsgPacket failed with error: %d", usingSSL ? SSL_get_error(mrcHostSsl, iResult) : errno);
 #endif
         printDateTimeStamp();
-        printf(logstring);
+        puts(logstring);
         writeToLog(logstring);
         return false;
     }
@@ -302,9 +302,9 @@ bool sendHostPacket(const char* packet) {
     int iResult;
     if (gVerboseLogging) {
         char logstring[1024] = "";
-        _snprintf_s(logstring, sizeof(logstring), -1, "sendHostPacket \"%s\" to host\r\n", packet);
+        _snprintf_s(logstring, sizeof(logstring), -1, "sendHostPacket \"%s\" to host", packet);
         printDateTimeStamp();
-        printf(logstring);
+        puts(logstring);
         writeToLog(logstring);
     }
     iResult = usingSSL ? SSL_write(mrcHostSsl, packet, (int)strlen(packet)) : send(mrcHostSock, packet, (int)strlen(packet), 0);
@@ -313,12 +313,12 @@ bool sendHostPacket(const char* packet) {
     if (iResult == SOCKET_ERROR) {
         char logstring[1024] = "";
 #if defined(WIN32) || defined(_MSC_VER)  
-        _snprintf_s(logstring, sizeof(logstring), -1, "sendHostPacket failed with error: %d\r\n", usingSSL ? SSL_get_error(mrcHostSsl, iResult) : WSAGetLastError());
+        _snprintf_s(logstring, sizeof(logstring), -1, "sendHostPacket failed with error: %d", usingSSL ? SSL_get_error(mrcHostSsl, iResult) : WSAGetLastError());
 #else        
-        _snprintf_s(logstring, sizeof(logstring), -1, "sendHostPacket failed with error: %d\r\n", usingSSL ? SSL_get_error(mrcHostSsl, iResult) : errno);
+        _snprintf_s(logstring, sizeof(logstring), -1, "sendHostPacket failed with error: %d", usingSSL ? SSL_get_error(mrcHostSsl, iResult) : errno);
 #endif
         printDateTimeStamp();
-        printf(logstring);
+        puts(logstring);
         writeToLog(logstring);
         return false;
     }
@@ -342,9 +342,9 @@ bool sendClientPacket(SOCKET* sock, char* packet) {
     int iResult;
     if (gVerboseLogging) {
         char logstring[1024] = "";
-        _snprintf_s(logstring, sizeof(logstring), -1, "sendClientPacket \"%s\" to socket %d\r\n", packet, (int)*sock);
+        _snprintf_s(logstring, sizeof(logstring), -1, "sendClientPacket \"%s\" to socket %d", packet, (int)*sock);
         printDateTimeStamp();
-        printf(logstring);
+        puts(logstring);
         writeToLog(logstring);
     }
     iResult = send(*sock, packet, (int)strlen(packet), 0);
@@ -353,12 +353,12 @@ bool sendClientPacket(SOCKET* sock, char* packet) {
     if (iResult == SOCKET_ERROR) {
         char logstring[1024] = "";
 #if defined(WIN32) || defined(_MSC_VER) 
-        _snprintf_s(logstring, sizeof(logstring), -1, "sendClientPacket to client #%d failed with error: %d\r\n", (int)*sock, WSAGetLastError());
+        _snprintf_s(logstring, sizeof(logstring), -1, "sendClientPacket to client #%d failed with error: %d", (int)*sock, WSAGetLastError());
 #else        
-        _snprintf_s(logstring, sizeof(logstring), -1, "sendClientPacket to client #%d failed with error: %d\r\n", *sock, errno);
+        _snprintf_s(logstring, sizeof(logstring), -1, "sendClientPacket to client #%d failed with error: %d", *sock, errno);
 #endif
         printDateTimeStamp();
-        printf(logstring);
+        puts(logstring);
         writeToLog(logstring);
         return false;
     }
@@ -415,8 +415,8 @@ void* clientProcess(void* lpArg) {
                     printDateTimeStamp();
 
                     char logstring[100] = "";
-                    _snprintf_s(logstring, sizeof(logstring), -1, "%s entered chat (slot #%d occupied).\r\n", thisUser, pSlot);
-                    printf(logstring);
+                    _snprintf_s(logstring, sizeof(logstring), -1, "%s entered chat (slot #%d occupied).", thisUser, pSlot);
+                    puts(logstring);
                     if (gVerboseLogging) {
                         writeToLog(logstring);
                     }
@@ -443,8 +443,8 @@ void* clientProcess(void* lpArg) {
     printDateTimeStamp();
 
     char logstring[100] = "";
-    _snprintf_s(logstring, sizeof(logstring), -1, "%s has left chat (slot #%d cleared).\r\n", thisUser, pSlot);
-    printf(logstring);
+    _snprintf_s(logstring, sizeof(logstring), -1, "%s has left chat (slot #%d cleared).", thisUser, pSlot);
+    puts(logstring);
     if (gVerboseLogging) {
         writeToLog(logstring);
     }
@@ -512,7 +512,7 @@ void* waitProcess(void* lpArg) {
 #if defined(WIN32) || defined(_MSC_VER)  
         printf("client socket failed with error: %ld\n", WSAGetLastError());
 #else
-        printf("client socket failed with error: %ld\n", errno);
+        printf("client socket failed with error: %d\n", errno);
 #endif
         freeaddrinfo(liResult);
 #if defined(WIN32) || defined(_MSC_VER)  
@@ -528,11 +528,11 @@ void* waitProcess(void* lpArg) {
 
         char logstring[50] = "";
 #if defined(WIN32) || defined(_MSC_VER)  
-        _snprintf_s(logstring, sizeof(logstring), -1, "client bind failed with error: %d\n", WSAGetLastError());
+        _snprintf_s(logstring, sizeof(logstring), -1, "client bind failed with error: %d", WSAGetLastError());
 #else
-        _snprintf_s(logstring, sizeof(logstring), -1, "client bind failed with error: %d\n", errno);
+        _snprintf_s(logstring, sizeof(logstring), -1, "client bind failed with error: %d", errno);
 #endif        
-        printf(logstring);
+        puts(logstring);
         writeToLog(logstring);
 
         freeaddrinfo(liResult);
@@ -549,10 +549,10 @@ void* waitProcess(void* lpArg) {
     freeaddrinfo(liResult);
 
     printDateTimeStamp();
-    printf("Ready for clients.\r\n");
+    puts("Ready for clients.");
     printDateTimeStamp();
-    printf("To exit any time, press CTRL+C.\r\n");
-    while (listen(listenSock, SOMAXCONN) != SOCKET_ERROR /* && !gConnectionIsDown*/) {
+    puts("To exit any time, press CTRL+C.");
+    while (listen(listenSock, SOMAXCONN) != SOCKET_ERROR) {
 
         // Accept a client socket, and run it in its own thread
         SOCKET newSock = INVALID_SOCKET;
@@ -593,7 +593,7 @@ SSL* performSslHandshake(SOCKET* sock) {
     if (!ctx) {
         // Handle error
         printDateTimeStamp();
-        printf("!ctx...\r\n");
+        puts("!ctx...");
         writeToLog("!ctx...");
         return NULL;
     }
@@ -602,7 +602,7 @@ SSL* performSslHandshake(SOCKET* sock) {
     if (!ssl) {
         // Handle error
         printDateTimeStamp();
-        printf("!ssl...\r\n");
+        puts("!ssl...");
         writeToLog("!ssl...");
         SSL_CTX_free(ctx);
         return NULL;
@@ -616,7 +616,7 @@ SSL* performSslHandshake(SOCKET* sock) {
         SSL_CTX_free(ctx);
 
         printDateTimeStamp();
-        printf("SSL_connect failed.\r\n");
+        puts("SSL_connect failed.");
         writeToLog("SSL_connect failed");
         return NULL;
     }
@@ -631,18 +631,18 @@ void mrcHostProcess(struct settings cfg) {
     int iResult;
 
     char handshake[PACKET_LEN] = "";
-    _snprintf_s(handshake, PACKET_LEN, -1, "%s~%s/%s.%s/%s.%s", cfg.name, cfg.soft, PLATFORM, ARC, PROTOCOL_VERSION, UMRC_VERSION);
+    _snprintf_s(handshake, PACKET_LEN, -1, "%s~%s/%s.%s/%s.%s", strReplace(cfg.name, "/", ""), strReplace(cfg.soft, "/", ""), PLATFORM, ARC, PROTOCOL_VERSION, UMRC_VERSION);
 
     printDateTimeStamp();
-    printf("Starting up...\r\n");
+    puts("Starting up...");
 
 #if defined(WIN32) || defined(_MSC_VER)    
    iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
     if (iResult != 0) {
         printDateTimeStamp();
         char logstring[50] = "";
-        _snprintf_s(logstring, sizeof(logstring), -1, "WSAStartup failed with error: %d\r\n", iResult);
-        printf(logstring);
+        _snprintf_s(logstring, sizeof(logstring), -1, "WSAStartup failed with error: %d", iResult);
+        puts(logstring);
         writeToLog(logstring);
         return;
     }	
@@ -659,8 +659,8 @@ void mrcHostProcess(struct settings cfg) {
     iResult = getaddrinfo(cfg.host, cfg.port, &mrcHost, &mhResult);
     if (iResult != 0) {
         char logstring[50] = "";
-        _snprintf_s(logstring, sizeof(logstring), -1, "getaddrinfo failed with error: %d\r\n", iResult);
-        printf(logstring);
+        _snprintf_s(logstring, sizeof(logstring), -1, "getaddrinfo failed with error: %d", iResult);
+        puts(logstring);
         writeToLog(logstring);
 #if defined(WIN32) || defined(_MSC_VER)
         WSACleanup();
@@ -674,11 +674,11 @@ void mrcHostProcess(struct settings cfg) {
         if (mrcHostSock == INVALID_SOCKET) {            
             char logstring[50] = "";
 #if defined(WIN32) || defined(_MSC_VER)  
-            _snprintf_s(logstring, sizeof(logstring), -1, "socket failed with error: %d\r\n", WSAGetLastError());
+            _snprintf_s(logstring, sizeof(logstring), -1, "socket failed with error: %d", WSAGetLastError());
 #else
-            _snprintf_s(logstring, sizeof(logstring), -1, "socket failed with error: %d\r\n", errno);
+            _snprintf_s(logstring, sizeof(logstring), -1, "socket failed with error: %d", errno);
 #endif            
-            printf(logstring);
+            puts(logstring);
             writeToLog(logstring);
 #if defined(WIN32) || defined(_MSC_VER)    
             WSACleanup();
@@ -696,7 +696,7 @@ void mrcHostProcess(struct settings cfg) {
             close(mrcHostSock);
             _snprintf_s(logstring, sizeof(logstring), -1, "connect failed with error: %d. ", errno);
 #endif            
-            printf(logstring);
+            puts(logstring);
             writeToLog(logstring);
             mrcHostSock = INVALID_SOCKET;
             continue;
@@ -706,7 +706,7 @@ void mrcHostProcess(struct settings cfg) {
 
         if (cfg.ssl) {
             printDateTimeStamp();
-            printf("SSL...");   
+            printf("SSL...");
 
             SSL_library_init();
             OpenSSL_add_all_algorithms();
@@ -722,7 +722,7 @@ void mrcHostProcess(struct settings cfg) {
                 }
             }
             else {
-                printf("failed.");   
+                puts("failed.");   
             }
         }
         break;
@@ -731,7 +731,7 @@ void mrcHostProcess(struct settings cfg) {
     freeaddrinfo(mhResult);
 
     if (mrcHostSock == INVALID_SOCKET) {
-        printf("Unable to connect to server!\r\n");
+        puts("Unable to connect to server!");
         writeToLog("Unable to connect to server!");
 #if defined(WIN32) || defined(_MSC_VER)
         WSACleanup();
@@ -753,7 +753,7 @@ void mrcHostProcess(struct settings cfg) {
         close(mrcHostSock);
         _snprintf_s(logstring, sizeof(logstring), -1, "send failed with error: %d\r\n", usingSSL ? SSL_get_error(mrcHostSsl, iResult) : errno);
 #endif        
-        printf(logstring);
+        puts(logstring);
         writeToLog(logstring);
 #if defined(WIN32) || defined(_MSC_VER)    
         WSACleanup();
@@ -897,8 +897,7 @@ void mrcHostProcess(struct settings cfg) {
                         mrcstats=fopen(MRC_STATS_FILE, "w+");
 #endif
                         if (mrcstats != NULL) {
-                            int flag = 0;
-                            flag = fprintf(mrcstats, "%s %.0f", stats, gLatency);
+                            fprintf(mrcstats, "%s %.0f", stats, gLatency);
                             fclose(mrcstats);
                         }
                     }
@@ -921,16 +920,15 @@ void mrcHostProcess(struct settings cfg) {
 #endif
             printDateTimeStamp();
             char logstring[50] = "";
-            _snprintf_s(logstring, sizeof(logstring), -1, "Connection closed with error: %d\r\n", errcode);
-            printf(logstring);
+            _snprintf_s(logstring, sizeof(logstring), -1, "Connection closed with error: %d", errcode);
+            puts(logstring);
             writeToLog(logstring);
 			if (usingSSL) {
 				unsigned long err_code = ERR_get_error();
 				char err_msg[256];
                 ERR_error_string_n(err_code, err_msg, sizeof(err_msg));
                 printDateTimeStamp();
-                printf(err_msg);
-                printf("\r\n");
+                puts(err_msg);
 				ERR_clear_error();
 			}
         }
@@ -942,15 +940,15 @@ void mrcHostProcess(struct settings cfg) {
 #endif
             printDateTimeStamp();
             char logstring[50] = "";
-            _snprintf_s(logstring, sizeof(logstring), -1, "recv failed with error: %d\r\n", errcode);
-            printf(logstring);
+            _snprintf_s(logstring, sizeof(logstring), -1, "recv failed with error: %d", errcode);
+            puts(logstring);
             writeToLog(logstring);
 			if (usingSSL) {
 				unsigned long err_code = ERR_get_error();
 				char err_msg[256];
                 ERR_error_string_n(err_code, err_msg, sizeof(err_msg));
 				printDateTimeStamp();
-				printf(err_msg);				
+				puts(err_msg);				
 				ERR_clear_error();
 			}
         }
@@ -983,17 +981,15 @@ int main(int argc, char** argv)
 {
     int maxRetries = DEFAULT_MAX_RETRIES;
     struct settings cfg;
+    char* clientport;
 
 #if defined(WIN32) || defined(_MSC_VER)
     HANDLE hClient;
     DWORD clientThreadId;
     hCon = GetStdHandle(STD_OUTPUT_HANDLE);
     if (hCon == INVALID_HANDLE_VALUE) return;
-    char** clientport;
-    clientport = (char**)malloc(sizeof(char*));
 #else 
     pthread_t hClient;
-    char* clientport;
 #endif
 
     for (int i = 0; i < MAX_CLIENTS; i++) {
@@ -1004,29 +1000,29 @@ int main(int argc, char** argv)
 
     // logo time...
 
-    printf("\r\n\r\n|~|\\                           /|\\                           /|~|\r\n");
-    printf("| |  |\\                     /|  |  |\\                     /|  | |\r\n");
-    printf("| |  |  |\\               /|  |  |  |  |\\               /|  |  | |\r\n");
-    printf("| |  |  |  |\\         /|  |  |  |  |  |  |\\         /|  |  |  | |\r\n");
-    printf("| |  |  |  |  |\\   /|  |  |  |  |  |  |  |  |\\   /|  |  |  |  | |\r\n");
-    printf("| |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | |\r\n");
-    printf("+-+------------===================================------------+-+\r\n");
+    puts("\r\n\r\n|~|\\                           /|\\                           /|~|");
+    puts("| |  |\\                     /|  |  |\\                     /|  | |");
+    puts("| |  |  |\\               /|  |  |  |  |\\               /|  |  | |");
+    puts("| |  |  |  |\\         /|  |  |  |  |  |  |\\         /|  |  |  | |");
+    puts("| |  |  |  |  |\\   /|  |  |  |  |  |  |  |  |\\   /|  |  |  |  | |");
+    puts("| |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | |");
+    puts("+-+------------===================================------------+-+");
     printf("|              <    u M R C - B R I D G E v%s   >              |\r\n", UMRC_VERSION);
-    printf("+-+------------===================================------------+-+\r\n\r\n");
+    puts("+-+------------===================================------------+-+");
 
     for (int i = 0; i < argc; i++) {
 
         if (_strnicmp(argv[i], "-?", 2) == 0) {
-            printf("\r\nuMRC-Bridge options:\r\n\r\n");
-            printf("-V     Enable verbose logging. Display and log all packet strings.\r\n");
-            printf("-R[n]  Maximum connection retry attempts. Default=10. 0=Infinite.\r\n");
+            puts("\r\nuMRC-Bridge options:\r\n");
+            puts("-V     Enable verbose logging. Display and log all packet strings.");
+            puts("-R[n]  Maximum connection retry attempts. Default=10. 0=Infinite.");
             return 0;
         }
 
         else if (_stricmp(argv[i], "-V") == 0) {
             gVerboseLogging = true;
             printDateTimeStamp();
-            printf("Verbose logging ");
+            puts("Verbose logging ");
             printPipeCodeString(OK);
         }
 
@@ -1034,7 +1030,7 @@ int main(int argc, char** argv)
             maxRetries = atoi(argv[i] + 2);
             printDateTimeStamp();
             if (maxRetries == 0) {
-                printf("Max connection retries: Infinite\r\n");
+                puts("Max connection retries: Infinite");
             }
             else {
                 printf("Max connection retries: %d\r\n", maxRetries);
@@ -1044,7 +1040,7 @@ int main(int argc, char** argv)
     
     if (loadData(&cfg, CONFIG_FILE) != 0) {
         printDateTimeStamp();
-        printf("Invalid config. Run setup.\r\n");
+        puts("Invalid config. Run setup.");
         if (gVerboseLogging) {
             writeToLog("Invalid config. Run setup.");
         }
@@ -1052,11 +1048,10 @@ int main(int argc, char** argv)
     }
 
     // create a new thread for waiting for client connections.
-#if defined(WIN32) || defined(_MSC_VER)
-    *clientport = cfg.port; // TODO: "Dereferencing NULL pointer" warning
-    hClient = CreateThread(NULL, 0, waitProcess, clientport, 0, &clientThreadId);
-#else
     clientport = cfg.port;
+#if defined(WIN32) || defined(_MSC_VER)
+    hClient = CreateThread(NULL, 0, waitProcess, &clientport, 0, &clientThreadId);
+#else
     pthread_create(&hClient, NULL, waitProcess, (void*)clientport);
 #endif
     
@@ -1067,7 +1062,7 @@ int main(int argc, char** argv)
         printDateTimeStamp();
         char logstring[50] = "";
         _snprintf_s(logstring, sizeof(logstring), -1, "Retry %d of %d...\r\n", gRetry, maxRetries);
-        printf(logstring);
+        puts(logstring);
         writeToLog(logstring);
     }
 

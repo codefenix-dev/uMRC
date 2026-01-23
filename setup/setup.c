@@ -17,10 +17,11 @@
 #include "../common/common.h"
 
 #define NOT_LISTED "Something Else..."
-#define BBS_TYPE_COUNT 9
+#define BBS_TYPE_COUNT 10
 const char* BBS_TYPES[BBS_TYPE_COUNT] = {
 	"EleBBS",
 	"Mystic",
+	"Oblivion/2",
 	"PCBoard",
 	"ProBoard",
 	"Renegade",
@@ -58,18 +59,18 @@ char* textPrompt(char* promptText, int maxLen, int displayableLen, char* default
 			printf("\b");
 		}
         fflush(stdin);
-		fgets(buffer, /*maxLen + 1*/ sizeof(buffer), stdin);
+		fgets(buffer, sizeof(buffer), stdin);
 		buffer[strcspn(buffer, "\r")] = '\0';
 		buffer[strcspn(buffer, "\n")] = '\0';
 		if (strlen(buffer) == 0) {
-			strncpy_s(buffer, sizeof(buffer), defaultValue, -1);
+			strcpy_s(buffer, sizeof(buffer), defaultValue);
 		}
 		printPipeCodeString("|07|16");
 
 		for (int i = 1; i <= 255; i++) { // strip out invalid/disallowed characters
 			if (i < 32 || i > 125) {
 				char f[] = { i, '\0' };
-				strncpy_s(buffer, sizeof(buffer), strReplace(buffer, f, ""), -1);
+				strcpy_s(buffer, sizeof(buffer), strReplace(buffer, f, ""));
 			}
 		}
 		enteredLen = (int)strlen(buffer);
@@ -112,7 +113,7 @@ char charPrompt(char* promptText, char allowedChars[], char defaultChar) {
 char* listPrompt(char* promptText, const char* choices[], int choiceCount, char* freeTextPrompt, int size) {
 
 	printPipeCodeString(promptText);
-	printf("\r\n\r\n");
+	puts("\r\n");
 
 	char buffer[5];
 	int iIpt = 0;
@@ -148,36 +149,36 @@ void enterInfo(struct settings info, bool enter_new) {
 		
 	clearScreen(); 
 
-	strncpy_s(info.host, 80, textPrompt("|07Enter the |15MRC host address|08:|07", 70, 0, enter_new ? DEFAULT_HOST : info.host, false), -1);
+	strcpy_s(info.host, 80, textPrompt("|07Enter the |15MRC host address|08:|07", 70, 0, enter_new ? DEFAULT_HOST : info.host, false));
 	lstr(info.host);
-	printf("\r\n");
+	puts("");
 	info.ssl = charPrompt("|07Use |15SSL|08 (|15Y|07/|15N|08)|07:", "YN", (enter_new ? 'Y' : (info.ssl ? 'Y' : 'N'))) == 'Y';
 
-	printf("\r\n"); 
-	strncpy_s(info.port, 6, textPrompt("|07Enter the |15MRC host port number|08:|07", 6, 0, enter_new ? (info.ssl ? DEFAULT_SSL_PORT : DEFAULT_PORT) : info.port, false), -1);
+	puts(""); 
+	strcpy_s(info.port, 6, textPrompt("|07Enter the |15MRC host port number|08:|07", 6, 0, enter_new ? (info.ssl ? DEFAULT_SSL_PORT : DEFAULT_PORT) : info.port, false));
 
 	// BBS info
 	clearScreen(); 
-	strncpy_s(info.name, 140, textPrompt("|07Enter your |15BBS name|08:|07", 70, 60, enter_new ? "" : info.name, true), -1);
+	strcpy_s(info.name, 140, textPrompt("|07Enter your |15BBS name|08:|07", 70, 60, enter_new ? "" : info.name, true));
 
 	clearScreen(); 
-	strncpy_s(info.soft, 140, listPrompt("|07Choose your |15BBS software|08:|07", BBS_TYPES, BBS_TYPE_COUNT, "|07Enter your |15BBS software|08:|07", 30), -1);
+	strcpy_s(info.soft, 140, listPrompt("|07Choose your |15BBS software|08:|07", BBS_TYPES, BBS_TYPE_COUNT, "|07Enter your |15BBS software|08:|07", 30));
 	ustr(info.soft);
     
 	clearScreen(); 
-	strncpy_s(info.web, 140, textPrompt("|07If your BBS has a |15website|07, enter it here |08(include either |07http:// |08or |07https://|08):|07", 70, 60, enter_new ? "NONE" : info.web, true), -1);
+	strcpy_s(info.web, 140, textPrompt("|07If your BBS has a |15website|07, enter it here |08(include either |07http:// |08or |07https://|08):|07", 70, 60, enter_new ? "NONE" : info.web, true));
 	
 	clearScreen(); 
-    strncpy_s(info.tel, 140, textPrompt("|07Enter your BBS |15telnet address|07 (and port number)|08:|07", 70, 60, enter_new ? "" : info.tel, true), -1);
+    strcpy_s(info.tel, 140, textPrompt("|07Enter your BBS |15telnet address|07 (and port number)|08:|07", 70, 60, enter_new ? "" : info.tel, true));
 	
 	clearScreen(); 
-    strncpy_s(info.ssh, 140, textPrompt("|07Enter your BBS |15SSH address|07 (and port number)|08:|07", 70, 60, enter_new ? "NONE" : info.ssh, true), -1);
+    strcpy_s(info.ssh, 140, textPrompt("|07Enter your BBS |15SSH address|07 (and port number)|08:|07", 70, 60, enter_new ? "NONE" : info.ssh, true));
 	
 	clearScreen(); 
-    strncpy_s(info.sys, 140, textPrompt("|07Enter your |15sysop name|08:|07", 70, 60, enter_new ? "" : info.sys, true), -1);
+    strcpy_s(info.sys, 140, textPrompt("|07Enter your |15sysop name|08:|07", 70, 60, enter_new ? "" : info.sys, true));
 	
 	clearScreen(); 
-    strncpy_s(info.dsc, 140, textPrompt("|07Enter a |15description for your BBS|08:|07", 70, 60, enter_new ? "" : info.dsc, true), -1);
+    strcpy_s(info.dsc, 140, textPrompt("|07Enter a |15description for your BBS|08:|07", 70, 60, enter_new ? "" : info.dsc, true));
 
 	if (saveData(&info, CONFIG_FILE) != -1) {		
 		printPipeCodeString("\r\n\r\n|07 BBS info saved |15successfully|07!\r\n\r\nPress any key...");
@@ -203,7 +204,7 @@ int main()
 		_snprintf_s(dispStr, 140,-1,"|13 uMRC for %s Setup|07\r\n", PLATFORM);
 		printPipeCodeString(dispStr);
 		printPipeCodeString("|01 ==========================================================================|07\r\n");
-		printf("\r\n");
+		puts("");
 		if (loadData(&info, CONFIG_FILE) == 0) {
 						
 			printPipeCodeString("|10 MRC SERVER INFO|07:\r\n");
@@ -216,12 +217,12 @@ int main()
 			printPipeCodeString(dispStr);
 
 
-			printf("\r\n");
+			puts("");
 			printPipeCodeString("|10 BBS INFO|07 - |02This is how your BBS appears in the MRC BBS list|07:\r\n");
 
-			_snprintf_s(dispStr, 140, -1, "|08     BBS Name|07: |07%s|07\r\n", info.name);
+			_snprintf_s(dispStr, 140, -1, "|08     BBS Name|07: |07%s|07\r\n", strReplace(info.name, "/", ""));
 			printPipeCodeString(dispStr);
-			_snprintf_s(dispStr, 140, -1, "|08     Platform|07: |07%s / %s.%s / %s.%s|07\r\n", info.soft, PLATFORM, ARC, PROTOCOL_VERSION, UMRC_VERSION);
+			_snprintf_s(dispStr, 140, -1, "|08     Platform|07: |07%s / %s.%s / %s.%s|07\r\n", strReplace(info.soft, "/", ""), PLATFORM, ARC, PROTOCOL_VERSION, UMRC_VERSION);
 			printPipeCodeString(dispStr);
 			_snprintf_s(dispStr, 140, -1, "|08          Web|07: |07%s|07\r\n", info.web);
 			printPipeCodeString(dispStr);
@@ -234,7 +235,7 @@ int main()
 			_snprintf_s(dispStr, 140, -1, "|08  Description|07: |07%s|07\r\n", info.dsc);
 			printPipeCodeString(dispStr);
 
-			printf("\r\n");
+			puts("");
 			printPipeCodeString("|01 ==========================================================================|07\r\n");
 
 		} else {
@@ -243,11 +244,11 @@ int main()
 		
 		printPipeCodeString(fullSetup == true ? "|15 1|08) |07Setup\r\n" : "|15 1|08) |07Redo setup\r\n");
 		printPipeCodeString("|15 Q|08) |07Quit \r\n\r\n");
-		printf("Make a selection: ");
+		puts("Make a selection: ");
 		selection = toupper(_getch());
 		if (selection == '1') {
 			enterInfo(info, fullSetup);
 		}
 	}
-    printf("\r\n");
+    puts("\r\n");
 }
