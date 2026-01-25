@@ -302,8 +302,8 @@ the user was mentioned, latency, and input buffer (max input: 140). These
 stats update continuously throughout chat.
 
 The door should let the user remain in chat up to the number of minutes
-reported allowed by the BBS, and should not have an issue with any time
-spent idling.
+allowed by the BBS, and should not have an issue with any time spent 
+idling.
 
 The user types /quit or /q to exit chat and return to the main menu.
 
@@ -337,10 +337,10 @@ automatically detect the terminal's height and width.
 Masked input becomes unmasked when changing text colors with left and
 right arrows.
 
-umrc-bridge occasionally reports "partial packets" in verbose mode,
-especially when using the !ddial command. Most partial packets are
-either ignored or handled gracefully by the bridge when they occur (the
-Syncrhonet mrc-connector service logs similar warnings for !ddial).
+At the time of this writing, when using the !ddial command, the MRC
+host returns extraneous packets missing the BODY field. uMRC treats
+these as invalid, since they contain fewer than 6 tildes (~). 
+Syncrhonet mrc-connector service logs similar warnings for !ddial.
 
 
 Future Plans:

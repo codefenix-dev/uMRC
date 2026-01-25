@@ -1,0 +1,6 @@
+This release includes 64-bit Windows builds of the setup.exe and 
+umrc-bridge.exe programs.
+
+The umrc-client.exe door is 32-bit and probably always will be because
+of the OpenDoors library.
+

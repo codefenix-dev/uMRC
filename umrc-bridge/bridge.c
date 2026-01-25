@@ -631,7 +631,7 @@ void mrcHostProcess(struct settings cfg) {
     int iResult;
 
     char handshake[PACKET_LEN] = "";
-    _snprintf_s(handshake, PACKET_LEN, -1, "%s~%s/%s.%s/%s.%s", strReplace(cfg.name, "/", ""), strReplace(cfg.soft, "/", ""), PLATFORM, ARC, PROTOCOL_VERSION, UMRC_VERSION);
+    _snprintf_s(handshake, PACKET_LEN, -1, "%s~%s/%s.%s/%s.%s", cfg.name, cfg.soft, PLATFORM, ARC, PROTOCOL_VERSION, UMRC_VERSION);
 
     printDateTimeStamp();
     puts("Starting up...");

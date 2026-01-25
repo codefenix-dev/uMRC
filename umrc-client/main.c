@@ -977,8 +977,8 @@ void addToScrollBack(char* msg, int mode) {
 }
 
 void displayMessage(char* msg, bool mention) {
-    char timeStamp[50] = "";
-    _snprintf_s(timeStamp, 50, -1, (mention ? "|00|23%s|26\x1b[5m\376\x1b[0m|07" : "|08%s|07 "), getTimestamp());
+    char timeStamp[30] = "";
+    _snprintf_s(timeStamp, 30, -1, (mention ? "|00|23%s|26\x1b[5m\376\x1b[0m|07" : "|08%s|07 "), getTimestamp());
 
     if (strLenWithoutPipecodes(msg) >= (od_control.user_screenwidth - 7)) {
 
@@ -1483,7 +1483,7 @@ bool processServerMessage(char* body, char* toUser) {
         // This is to allow for the chat interface to gracefully terminate the connection.
         gIsInChat = false;
         displayMessage(params, true); // should be displayed immediately
-        doPause();
+        //doPause();
         shouldTerminateSession = true;
     }
     else if (strcmp(cmd, "USERLIST") == 0) {
@@ -1574,6 +1574,9 @@ void* handleIncomingMessages(void* lpArg) {
 #endif
                     continue; // iterate again to get more data
                 }
+                else {
+                    break;
+                }
             }
             else {
                 break;
@@ -1581,9 +1584,9 @@ void* handleIncomingMessages(void* lpArg) {
         }
 
         // I know it's redundant, but I need a check here to abort the loop and not enter the next if
-        if (!gIsInChat) {
-            break;
-        }
+        //if (!gIsInChat) {
+        //    break;
+        //}
 
         if (iResult > 0) {
 
@@ -1671,18 +1674,20 @@ void* handleIncomingMessages(void* lpArg) {
             }
         }
         else if (iResult == 0) {
-            od_printf("%s Connection closed\r\n", getTimestamp());
+            displayMessage("|12* |14Connection closed", true);
             gIsInChat = false;
-            doPause();
+            //doPause();
         }
         else {
+            char errstr[50] = "";
 #if defined(WIN32) || defined(_MSC_VER) 
-            od_printf("%s recv failed with error: %d\r\n", getTimestamp(), WSAGetLastError());
+            _snprintf_s(errstr, 50, -1, "|12* |14recv failed with error: %d", WSAGetLastError());
 #else
-            od_printf("%s recv failed with error: %d\r\n", getTimestamp(), errno);
-#endif           
+            _snprintf_s(errstr, 50, -1, "|12* |14recv failed with error: %d", errno);
+#endif      
+            displayMessage(errstr, true);
             gIsInChat = false;
-            doPause();
+            //doPause();
         }
     }
     return 0;
@@ -1731,14 +1736,18 @@ void doChatRoutines(char* input) {
             continue;
         }
 
+        if (!gIsInChat) { // check the connection status
+            doPause();
+            break;
+        }
+
         key = ' ';
         bool updateInput = false;
         char pcol[4] = "";
         int endOfInput = 0;
         char tabResult[30] = "";
 
-        if (InputEvent.EventType == EVENT_EXTENDED_KEY)
-        {
+        if (InputEvent.EventType == EVENT_EXTENDED_KEY) {
             int overfill = 0;
             switch (InputEvent.chKeyPress)
             {
@@ -1814,9 +1823,7 @@ void doChatRoutines(char* input) {
                 break;
             }
         }
-
-        else if (InputEvent.EventType == EVENT_CHARACTER)
-        {
+        else if (InputEvent.EventType == EVENT_CHARACTER) {
             key = InputEvent.chKeyPress;
             updateInput = true;
 
@@ -2059,7 +2066,6 @@ bool enterChat() {
         }
         break;
     }
-
     freeaddrinfo(mhResult);
 
     if (mrcSock == INVALID_SOCKET) {
@@ -2236,7 +2242,7 @@ int main(int argc, char** argv)
     }
     else {
         strcpy_s(user.chatterName, 36, strlen(od_control.user_handle) > 0 ? od_control.user_handle : od_control.user_name);
-    }    
+    }
     strcpy_s(user.chatterName, 36, strReplace(user.chatterName, " ", "_")); // spaces are disallowed; replace with underscores
     strcpy_s(user.chatterName, 36, strReplace(user.chatterName, "~", ""));  // tildes are disallowed; strip them out
     strcpy_s(gFromSite, sizeof(gFromSite), strReplace(cfg.name, "~", ""));
@@ -2282,6 +2288,16 @@ int main(int argc, char** argv)
         user.chatterNameBgColor = 16;
         strcpy_s(user.defaultRoom, 30, DEFAULT_ROOM);
         stripPipeCodes(user.defaultRoom);
+
+        // Reserved words
+        // Usernames: SERVER, CLIENT and NOTME must be blacklisted 
+        // from being used as BBS users in the client
+        if (_stricmp(user.chatterName, "SERVER") == 0 ||
+            _stricmp(user.chatterName, "CLIENT") == 0 ||
+            _stricmp(user.chatterName, "NOTME") == 0) {
+            // replace it with a generic name
+            _snprintf_s(user.chatterName, sizeof(user.chatterName), -1, "User_%d", user.userNumber);
+        }
 
         od_printf("`bright white`Welcome to %s!``\r\n", TITLE);
         od_printf(DIVIDER);

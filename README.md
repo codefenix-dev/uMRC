@@ -310,11 +310,11 @@ umrc-bridge makes requests for server stats every 60 seconds and stores
 them in the mrcstats.dat file for display elsewhere on the BBS.
 
 The stats are separated by spaces and follow this order:
-   1 - BBSES
-   2 - Rooms
-   3 - Users
-   4 - Activity (0=NONE, 1=LOW, 2=MED, 3, HI)
-   5 - Latency (as calculated by the client)
+1. BBSES
+2. Rooms
+3. Users
+4. Activity (0=NONE, 1=LOW, 2=MED, 3, HI)
+5. Latency (as calculated by the client)
     
     
 ### Basic Chat Usage:
@@ -334,8 +334,8 @@ the user was mentioned, latency, and input buffer (max input: 140). These
 stats update continuously throughout chat.
 
 The door should let the user remain in chat up to the number of minutes
-reported allowed by the BBS, and should not have an issue with any time 
-spent idling.
+allowed by the BBS, and should not have an issue with any time spent 
+idling.
 
 The user types `/quit` or `/q` to exit chat and return to the main menu.
 
@@ -367,10 +367,6 @@ Type `/meetups` in chat for a current list of meetups.
 
 - The font size of the local window in Windows cannot be adjusted. This 
   seems to be an internal limitation of the OpenDoors kit.
-
-- umrc-bridge occasionally reports "partial packets" in verbose mode.
-  Most partial packets are either ignored or handled gracefully by the
-  bridge when they occur.
 
 - At the time of this writing, when using the `!ddial` command, the MRC
   host returns extraneous packets missing the BODY field. uMRC treats

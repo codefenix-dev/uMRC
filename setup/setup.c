@@ -67,10 +67,9 @@ char* textPrompt(char* promptText, int maxLen, int displayableLen, char* default
 		}
 		printPipeCodeString("|07|16");
 
-		for (int i = 1; i <= 255; i++) { // strip out invalid/disallowed characters
-			if (i < 32 || i > 125) {
-				char f[] = { i, '\0' };
-				strcpy_s(buffer, sizeof(buffer), strReplace(buffer, f, ""));
+		for (int i = 0; buffer[i] != '\0'; i++) { // replace invalid/disallowed characters with underscores
+			if (buffer[i] < 32 || buffer[i] > 125) {
+				buffer[i] = '_';
 			}
 		}
 		enteredLen = (int)strlen(buffer);
@@ -164,6 +163,11 @@ void enterInfo(struct settings info, bool enter_new) {
 	clearScreen(); 
 	strcpy_s(info.soft, 140, listPrompt("|07Choose your |15BBS software|08:|07", BBS_TYPES, BBS_TYPE_COUNT, "|07Enter your |15BBS software|08:|07", 30));
 	ustr(info.soft);
+	for (int i = 0; info.soft[i] != '\0'; i++) { // replace forward slash with underscore in the BBS type (e.g.: Oblivion/2)
+		if (info.soft[i]=='/') {
+			info.soft[i] = '_';
+		}
+	}
     
 	clearScreen(); 
 	strcpy_s(info.web, 140, textPrompt("|07If your BBS has a |15website|07, enter it here |08(include either |07http:// |08or |07https://|08):|07", 70, 60, enter_new ? "NONE" : info.web, true));
@@ -220,9 +224,9 @@ int main()
 			puts("");
 			printPipeCodeString("|10 BBS INFO|07 - |02This is how your BBS appears in the MRC BBS list|07:\r\n");
 
-			_snprintf_s(dispStr, 140, -1, "|08     BBS Name|07: |07%s|07\r\n", strReplace(info.name, "/", ""));
+			_snprintf_s(dispStr, 140, -1, "|08     BBS Name|07: |07%s|07\r\n", info.name);
 			printPipeCodeString(dispStr);
-			_snprintf_s(dispStr, 140, -1, "|08     Platform|07: |07%s / %s.%s / %s.%s|07\r\n", strReplace(info.soft, "/", ""), PLATFORM, ARC, PROTOCOL_VERSION, UMRC_VERSION);
+			_snprintf_s(dispStr, 140, -1, "|08     Platform|07: |07%s / %s.%s / %s.%s|07\r\n", info.soft, PLATFORM, ARC, PROTOCOL_VERSION, UMRC_VERSION);
 			printPipeCodeString(dispStr);
 			_snprintf_s(dispStr, 140, -1, "|08          Web|07: |07%s|07\r\n", info.web);
 			printPipeCodeString(dispStr);
