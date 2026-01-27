@@ -38,6 +38,7 @@
 #include "OpenDoor.h"
 #include "../common/common.h"
 
+#define PROGRAM "umrc-client"
 #define DIVIDER "`bright blue`___________________________________________________________________________\r\n``"
 #define DEFAULT_ROOM "lobby"
 #define DEFAULT_JOIN_MSG "|07- |11%s |03has arrived."
@@ -202,7 +203,7 @@ bool strContainsStrI(char* str, char* contains) {
 /**
  * Gets a substring from a string. Result stored in: ss
  */
-void getSub(char* s, char* ss, int pos, int len) {
+void getSubStr(char* s, char* ss, int pos, int len) {
     int i = 0;
     s += pos; // Move pointer to starting position
     while (len--) {
@@ -757,6 +758,15 @@ bool sendCmdPacket(SOCKET* sock, char* cmd, char* cmdArg) {
     }
     strcpy_s(packet, PACKET_LEN, createPacket(user.chatterName, gFromSite, gRoom, "SERVER", "", "", cmdstr));
     iResult = send(*sock, packet, (int)strlen(packet), 0);
+    if (iResult == SOCKET_ERROR) {
+        char logstring[1024] = "";
+#if defined(WIN32) || defined(_MSC_VER)  
+        _snprintf_s(logstring, sizeof(logstring), -1, "sendCmdPacket failed with error: %d", WSAGetLastError());
+#else
+        _snprintf_s(logstring, sizeof(logstring), -1, "sendCmdPacket failed with error: %d", errno);
+#endif
+        writeToLog(logstring, PROGRAM, od_control.user_handle);
+    }
     return (iResult != SOCKET_ERROR);
 }
 
@@ -770,6 +780,15 @@ bool sendCtcpPacket(SOCKET* sock, char* target, char* p, char* data) {
     _snprintf_s(ctcpstr, MSG_LEN, -1, "%s %s %s", p, user.chatterName, data);
     strcpy_s(packet, PACKET_LEN, createPacket(user.chatterName, gFromSite, CTCP_ROOM, target, "", CTCP_ROOM, ctcpstr));
     iResult = send(*sock, packet, (int)strlen(packet), 0);
+    if (iResult == SOCKET_ERROR) {
+        char logstring[1024] = "";
+#if defined(WIN32) || defined(_MSC_VER)  
+        _snprintf_s(logstring, sizeof(logstring), -1, "sendCtcpPacket failed with error: %d", WSAGetLastError());
+#else
+        _snprintf_s(logstring, sizeof(logstring), -1, "sendCtcpPacket failed with error: %d", errno);
+#endif
+        writeToLog(logstring, PROGRAM, od_control.user_handle);
+    }
     return (iResult != SOCKET_ERROR);
 }
 
@@ -781,6 +800,15 @@ bool sendMsgPacket(SOCKET* sock, char* toUser, char* msgExt, char* toRoom, char*
     char packet[PACKET_LEN] = "";
     strcpy_s(packet, PACKET_LEN, createPacket(user.chatterName, gFromSite, gRoom, toUser, msgExt, toRoom, body));
     iResult = send(*sock, packet, (int)strlen(packet), 0);
+    if (iResult == SOCKET_ERROR) {
+        char logstring[1024] = "";
+#if defined(WIN32) || defined(_MSC_VER)  
+        _snprintf_s(logstring, sizeof(logstring), -1, "sendMsgPacket failed with error: %d", WSAGetLastError());
+#else
+        _snprintf_s(logstring, sizeof(logstring), -1, "sendMsgPacket failed with error: %d", errno);
+#endif
+        writeToLog(logstring, PROGRAM, od_control.user_handle);
+    }
     return (iResult != SOCKET_ERROR);
 }
 
@@ -1166,7 +1194,7 @@ void queueIncomingMessage(char* msg, bool mention) {
     }
     else {
         while (mc.message != NULL) {
-            od_sleep(0);
+            od_sleep(1);
         }
         mc.message = msg;
         mc.isMention = mention;
@@ -1248,11 +1276,6 @@ void processUserCommand(char* cmd, char* params) {
         sendMsgPacket(&mrcSock, "NOTME", "", "", user.exitMessage);
         sendMsgPacket(&mrcSock, "SERVER", "", "", "LOGOFF");
         gIsInChat = false;
-#if defined(WIN32) || defined(_MSC_VER)  
-        shutdown(mrcSock, SD_SEND);
-#else
-        shutdown(mrcSock, SHUT_WR);
-#endif
     }
     else if (_stricmp(cmd, "join") == 0 || _stricmp(cmd, "j") == 0) {
         char newRoom[20] = "";
@@ -1288,7 +1311,7 @@ void processUserCommand(char* cmd, char* params) {
         char msg[PACKET_LEN] = "";
         int nextspcidx = indexOfChar(params, ' ') + 1;
         if (nextspcidx > 0) {
-            getSub(params, to, 0, nextspcidx-1);
+            getSubStr(params, to, 0, nextspcidx-1);
             _snprintf_s(msg, PACKET_LEN, -1, "|15* |08(|15%s|08/|14DirectMsg|08) |07%s", user.chatterName, params + nextspcidx);
             sendMsgPacket(&mrcSock, to, "", "", msg);
             _snprintf_s(msg, PACKET_LEN, -1, "|15* |08(|14DirectMsg|08->|15%s|08) |07%s", to, params + nextspcidx);
@@ -1318,7 +1341,7 @@ void processUserCommand(char* cmd, char* params) {
         char ctcp_data[50] = "";
         int nextspcidx = indexOfChar(params, ' ');
         if (nextspcidx > 0) {
-            getSub(params, target, 0, nextspcidx);
+            getSubStr(params, target, 0, nextspcidx);
             ustr(params);
             _snprintf_s(ctcp_data, 50, -1, "%s %s", target, params + nextspcidx+1);
             sendCtcpPacket(&mrcSock, (strcmp(target, "*") == 0 || target[0] == '#') ? "" : target, "[CTCP]", ctcp_data);
@@ -1347,7 +1370,7 @@ void processUserCommand(char* cmd, char* params) {
         char action[10] = "";
         int nextspcidx = indexOfChar(params, ' ') + 1;
         if (nextspcidx > 0) {
-            getSub(params, action, 0, nextspcidx - 1);
+            getSubStr(params, action, 0, nextspcidx - 1);
             if (_stricmp(action, "add") == 0 && _stricmp(params + 4, user.chatterName) != 0) {
                 addTwit(params + 4);                
             } else if (_stricmp(action, "del") == 0) {
@@ -1421,9 +1444,7 @@ void processUserCommand(char* cmd, char* params) {
     }
 }
 
-bool processServerMessage(char* body, char* toUser) {
-
-    bool shouldTerminateSession = false;
+void processServerMessage(char* body, char* toUser) {
 
     // Parse the body for command strings
     char cmd[141] = "";
@@ -1431,8 +1452,8 @@ bool processServerMessage(char* body, char* toUser) {
     int cmdsep = indexOfChar(body, ':');
 
     if (cmdsep > 0) {
-        getSub(body, cmd, 0, cmdsep);
-        getSub(body, params, cmdsep+1, strlen(body));
+        getSubStr(body, cmd, 0, cmdsep);
+        getSubStr(body, params, cmdsep+1, strlen(body));
     }
     else {
         strcpy_s(cmd, sizeof(cmd), body);
@@ -1476,6 +1497,8 @@ bool processServerMessage(char* body, char* toUser) {
         char nicknotice[140] = "";
         _snprintf_s(nicknotice, 140, -1, "|15* |08(|14Notice|08) |07The MRC server has updated your name to |15%s|07.", user.chatterName);
         queueIncomingMessage(nicknotice, true);
+        stripPipeCodes(nicknotice);
+        writeToLog(nicknotice, PROGRAM, od_control.user_handle);
     }
     else if (strcmp(cmd, "TERMINATE") == 0) {
         // TERMINATE: Server requests the client interface to terminate.[NEW in 1.3]
@@ -1483,8 +1506,8 @@ bool processServerMessage(char* body, char* toUser) {
         // This is to allow for the chat interface to gracefully terminate the connection.
         gIsInChat = false;
         displayMessage(params, true); // should be displayed immediately
-        //doPause();
-        shouldTerminateSession = true;
+        writeToLog("User was terminated by the server", PROGRAM, od_control.user_handle);
+        writeToLog(params, PROGRAM, od_control.user_handle);
     }
     else if (strcmp(cmd, "USERLIST") == 0) {
         gChatterCount = split(params, ',', &gChattersInRoom);
@@ -1499,6 +1522,7 @@ bool processServerMessage(char* body, char* toUser) {
         // Rejoin the room if re-connecting to the host
         sendCmdPacket(&mrcSock, "IAMHERE", "");
         sendCmdPacket(&mrcSock, "NEWROOM::", gRoom);
+        writeToLog("MRC host connection re-established", PROGRAM, od_control.user_handle);
     }
     // Just display the whole incoming server message if it's not a recognized command string,
     // since it's most likely an informational message from the SERVER.
@@ -1506,7 +1530,6 @@ bool processServerMessage(char* body, char* toUser) {
         queueIncomingMessage(body, false);
         od_sleep(5);
     }
-    return shouldTerminateSession;
 }
 
 void processCtcpCommand(char* body, char* toUser, char* fromUser) {
@@ -1583,10 +1606,9 @@ void* handleIncomingMessages(void* lpArg) {
             }
         }
 
-        // I know it's redundant, but I need a check here to abort the loop and not enter the next if
-        //if (!gIsInChat) {
-        //    break;
-        //}
+        if (!gIsInChat) { // user left chat.. none of the below needs to be executed
+            break;
+        }
 
         if (iResult > 0) {
 
@@ -1606,15 +1628,11 @@ void* handleIncomingMessages(void* lpArg) {
 
                 if (strcmp(fromUser, "SERVER") == 0 && (strcmp(toRoom, gRoom) == 0 || strlen(toRoom) == 0)) {
 
-                    if (processServerMessage(body, toUser)) {
-                        // Returns TRUE if the incoming server command should
-                        // terminate the session, breaking the loop.
-                        gIsInChat = false;
-#if defined(WIN32) || defined(_MSC_VER)  
-                        shutdown(mrcSock, SD_SEND);
-#else
-                        shutdown(mrcSock, SHUT_WR);
-#endif
+                    processServerMessage(body, toUser);
+
+                    // Check whether the incoming server command should
+                    // terminate the session, breaking the loop.
+                    if (!gIsInChat) {
                         break;
                     }
                                         
@@ -1670,13 +1688,13 @@ void* handleIncomingMessages(void* lpArg) {
                         queueIncomingMessage(body, mentioned);
                     }
                 }
-                od_sleep(1);
+                od_sleep(0);
             }
         }
         else if (iResult == 0) {
             displayMessage("|12* |14Connection closed", true);
+            writeToLog("Connection closed", PROGRAM, od_control.user_handle);
             gIsInChat = false;
-            //doPause();
         }
         else {
             char errstr[50] = "";
@@ -1686,11 +1704,14 @@ void* handleIncomingMessages(void* lpArg) {
             _snprintf_s(errstr, 50, -1, "|12* |14recv failed with error: %d", errno);
 #endif      
             displayMessage(errstr, true);
+            stripPipeCodes(errstr);
+            writeToLog(errstr, PROGRAM, od_control.user_handle);
             gIsInChat = false;
-            //doPause();
         }
     }
+#if defined(WIN32) || defined(_MSC_VER)  
     return 0;
+#endif
 }
 
 /**
@@ -2025,6 +2046,7 @@ bool enterChat() {
     iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
     if (iResult != 0) {
         displayMessage("WSAStartup failed", false);
+        writeToLog("WSAStartup failed", PROGRAM, od_control.user_handle);
         doPause();
         return false;
     } 
@@ -2038,6 +2060,7 @@ bool enterChat() {
     iResult = getaddrinfo("localhost", cfg.port, &mrcHost, &mhResult);
     if (iResult != 0) {
         displayMessage("getaddrinfo failed", false);
+        writeToLog("getaddrinfo failed", PROGRAM, od_control.user_handle);
 #if defined(WIN32) || defined(_MSC_VER)  
         WSACleanup();
 #endif
@@ -2069,7 +2092,8 @@ bool enterChat() {
     freeaddrinfo(mhResult);
 
     if (mrcSock == INVALID_SOCKET) {
-        displayMessage("Unable to connect to bridge!", false);
+        displayMessage("Unable to connect to bridge", false);
+        writeToLog("Unable to connect to bridge", PROGRAM, od_control.user_handle);
 #if defined(WIN32) || defined(_MSC_VER)  
         WSACleanup();
 #endif
@@ -2143,8 +2167,8 @@ bool enterChat() {
             int spcidx = indexOfChar(input, ' ');
 
             if (spcidx > 0) {
-                getSub(input, cmd, 1, spcidx - 1);
-                getSub(input, params, spcidx+1, strlen(input));
+                getSubStr(input, cmd, 1, spcidx - 1);
+                getSubStr(input, params, spcidx+1, strlen(input));
             }
             else {
                 strcpy_s(cmd, 15, input + 1);
@@ -2161,9 +2185,11 @@ bool enterChat() {
 
     // cleanup
 #if defined(WIN32) || defined(_MSC_VER)  
+    shutdown(mrcSock, SD_SEND);
     closesocket(mrcSock);
     WSACleanup();
 #else 
+    shutdown(mrcSock, SHUT_WR);
     close(mrcSock);
 #endif
 
@@ -2427,11 +2453,8 @@ int main(int argc, char** argv)
         od_set_cursor(11, 25);
         od_printf("`bright white`(`bright magenta`I`bright white`) `white`Read `bright white`I`white`nstructions");
         
-        //od_set_cursor(12, 25);
-        //od_printf("`bright white`(`cyan`T`bright white`) `white`Show `bright white`T`white`ester Information");
-        
         od_set_cursor(13, 25);
-        od_printf("`bright white`(`bright green`Q`bright white`) `bright white`Q`white`uit to `bright white`");// , strReplace(gFromSite, "_", " "));
+        od_printf("`bright white`(`bright green`Q`bright white`) `bright white`Q`white`uit to `bright white`");
         od_disp_emu(pipeToAnsi(cfg.name), TRUE); // display the bbs name it all its pipe code colorful glory :P
 
         time_t curtime;
@@ -2453,7 +2476,7 @@ int main(int argc, char** argv)
         od_printf("`bright black`Activity``: `bright white`%s", ACTIVITY[act]);
         
         od_set_cursor(14, 29);
-        od_printf("`white`Make a selection `bright black`(`bright blue`C`white`,`bright blue`S`white`,`bright blue`I`white`,`bright blue`Q`bright black`)"); //,`bright blue`B`white`
+        od_printf("`white`Make a selection `bright black`(`bright blue`C`white`,`bright blue`S`white`,`bright blue`I`white`,`bright blue`Q`bright black`)");
 
         switch (od_get_answer("CSITQ")) {
         case 'C':
@@ -2498,7 +2521,7 @@ int main(int argc, char** argv)
             od_printf("\r\n");
             od_printf(DIVIDER);
             od_printf("This screen is for testing and troubleshooting purposes.\r\n");
-            od_printf("Include this screen when posting a Github issue.\r\n");
+            od_printf("Include this screen when posting a GitHub issue.\r\n");
 
             doPause();
             break;

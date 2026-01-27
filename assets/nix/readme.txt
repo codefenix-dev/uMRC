@@ -19,6 +19,7 @@ uMRC
 by Craig Hendricks
 codefenix@conchaos.synchro.net
   https://conchaos.synchro.net/umrc/
+  https://github.com/codefenix-dev/uMRC
 
 
 What is uMRC?
@@ -43,6 +44,7 @@ Features:
 - Pipe code color support
 - CTCP command support
 - Sysop-editable 2-line ANSI status bar themes
+- Twit filter
 
 
 Files Included:
@@ -243,6 +245,11 @@ Theme:
 
 The user presses the Q key to save their options and quit to the
 main menu.
+
+User settings are saved the userdata subdirectory. One file per user,
+named using their alias or username on the BBS. If a user's settings 
+ever need to be reset, simply delete (or rename) the file associated 
+with them.
 
 
 Main Menu:

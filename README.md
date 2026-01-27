@@ -10,7 +10,7 @@
 ▄▀  ██▄▀██ ▀ ▄█▀   Multi-Relay Chat  
 ▀ ▐█▄▀██ ▀ ▄█▀       Client Door     
 ▐█▄▀██▄▀ ▄█▀ .│┌────────────────────┐
- ▀███▀ ▄█▀ .││|│ ■ Win32 & Linux    │
+ ▀███▀ ▄█▀ .││|│ ■ Windows & Linux  │
 █▄ ▀ ▄█▀ .││|│││ ■ DOOR32.SYS       │
  ▀█▄█▀ .││|│││││ ■ SSL capable      │
  └ ▀ ──┴─┴─┴─┴─┴──────────────────── 
@@ -28,13 +28,12 @@ running 32-bit doors, then you and your users can participate in MRC.
 
 
 It should be compatible with any DOOR32.SYS capable BBS such as EleBBS, WWIV, 
-Synchronet, Mystic, and possibly others. It has been tested on Windows 7 and 
-later, but Windows versions earlier than 7 have not been confirmed. The Linux
-build has been tested on Ubuntu 22.04 and should run on similar.
+Synchronet, Mystic, and possibly others. It runs on Windows 7 and later. 
+The Linux build has been tested on Ubuntu 22.04 and should run on similar.
 
 If you use NetFoss to start up your DOS-based BBS, then the NFU utility 
 bundled with NetFoss should run the uMRC Client. As of this writing, Renegade 
-has been confirmed to run it.
+has been confirmed.
 
 
 
@@ -49,7 +48,7 @@ has been confirmed to run it.
 - Pipe code color support
 - CTCP command support
 - Sysop-editable 2-line ANSI status bar themes
-
+- Twit filter
 
 
 ## Common Files Included:
@@ -256,7 +255,7 @@ to change them.
 
    Console beeps can optionally be heard any time the user's name
    is mentioned in chat. These beeps are disabled by default. They 
-   can be toggled on or off with the /sound command while in-chat,
+   can be toggled on or off with the `/sound` command while in-chat,
    
 5. **Join Message**:
    
@@ -276,6 +275,11 @@ to change them.
    
 The user presses the `Q` key to save their options and quit to the 
 main menu.
+
+User settings are saved the userdata subdirectory. One file per user,
+named using their alias or username on the BBS. If a user's settings 
+ever need to be reset, simply delete (or rename) the file associated 
+with them.
 
 
 ### Main Menu:

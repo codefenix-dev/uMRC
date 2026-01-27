@@ -9,7 +9,7 @@
 ▄▀  ██▄▀██ ▀ ▄█▀   Multi-Relay Chat
 ▀ ▐█▄▀██ ▀ ▄█▀       Client Door
 ▐█▄▀██▄▀ ▄█▀ .│┌────────────────────┐
- ▀███▀ ▄█▀ .││|│ ■ Win32            │
+ ▀███▀ ▄█▀ .││|│ ■ Windows 32/64-bit│
 █▄ ▀ ▄█▀ .││|│││ ■ DOOR32.SYS       │
  ▀█▄█▀ .││|│││││ ■ SSL capable      │
  └ ▀ ──┴─┴─┴─┴─┴────────────────────
@@ -19,6 +19,7 @@ uMRC
 by Craig Hendricks
 codefenix@conchaos.synchro.net
   https://conchaos.synchro.net/umrc/
+  https://github.com/codefenix-dev/uMRC
 
 
 What is uMRC?
@@ -28,8 +29,7 @@ BBS and Python. As long as your BBS is capable of running 32-bit Windows doors,
 then you and your users can participate in MRC.
 
 It should be compatible with any DOOR32.SYS capable BBS such as EleBBS, WWIV,
-Synchronet, Mystic, and possibly others. It has been tested on Windows 7 and
-later, but Windows versions earlier than 7 have not been confirmed.
+Synchronet, Mystic, and possibly others. It runs on Windows 7 and later.
 
 If you use NetFoss to start up your DOS-based BBS, then the NFU utility
 bundled with NetFoss should run the uMRC Client. As of this writing, Renegade
@@ -47,6 +47,7 @@ Features:
 - Pipe code color support
 - CTCP command support
 - Sysop-editable 2-line ANSI status bar themes
+- Twit filter
 
 
 Files Included:
@@ -246,6 +247,11 @@ Theme:
 
 The user presses the Q key to save their options and quit to the
 main menu.
+
+User settings are saved the userdata subdirectory. One file per user,
+named using their alias or username on the BBS. If a user's settings 
+ever need to be reset, simply delete (or rename) the file associated 
+with them.
 
 
 Main Menu:

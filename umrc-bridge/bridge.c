@@ -50,6 +50,7 @@ typedef uint32_t  DWORD;
 #include "openssl/ssl.h"
 #include "openssl/err.h"
 
+#define PROGRAM "umrc-bridge"
 #define OK "|10OK|07\r\n"
 
 const char* ACTIVITY[4] = {
@@ -103,46 +104,6 @@ int64_t currentTimeMillis() {
   int64_t s2 = (time.tv_usec / 1000);
   return s1 + s2;
 #endif
-}
-
-void writeToLog(char* text) {
-    char tm_str[32] = "";
-    time_t rawtime;
-    time(&rawtime);
-#if defined(WIN32) || defined(_MSC_VER)  
-    struct tm timeinfo; 
-    localtime_s(&timeinfo, &rawtime);
-#else
-    struct tm *timeinfo; 
-    timeinfo = localtime(&rawtime);
-#endif
-
-    _snprintf_s(tm_str, 32, -1, "[%d/%02d/%02d %02d:%02d:%02d] ",
-#if defined(WIN32) || defined(_MSC_VER)  
-        timeinfo.tm_year + 1900,
-        timeinfo.tm_mon + 1,
-        timeinfo.tm_mday,
-        timeinfo.tm_hour,
-        timeinfo.tm_min,
-        timeinfo.tm_sec);
-#else
-        timeinfo->tm_year + 1900,
-        timeinfo->tm_mon + 1,
-        timeinfo->tm_mday,
-        timeinfo->tm_hour,
-        timeinfo->tm_min,
-        timeinfo->tm_sec);
-#endif
-    FILE* logfile;
-#if defined(WIN32) || defined(_MSC_VER)  
-    fopen_s(&logfile, LOG_FILE, "a");
-#else
-    logfile = fopen(LOG_FILE, "a");
-#endif
-    if (logfile != NULL) {
-        fprintf(logfile, "%s %s\n", tm_str, strReplace(strReplace(text, "\r", ""), "\n", ""));
-        fclose(logfile);
-    }
 }
 
 char* getDateTimeStamp() {
@@ -224,7 +185,7 @@ bool sendCmdPacket(const char* cmd, const char* cmdArg) {
         _snprintf_s(logstring, sizeof(logstring), -1, "sendCmdPacket \"%s\" to host", packet);
         printDateTimeStamp();
         puts(logstring);
-        writeToLog(logstring);
+        writeToLog(logstring, PROGRAM, "");
     }    
     iResult = usingSSL ? SSL_write(mrcHostSsl, packet, (int)strlen(packet)) : send(mrcHostSock, packet, (int)strlen(packet), 0);
     Sleep(10);
@@ -238,7 +199,7 @@ bool sendCmdPacket(const char* cmd, const char* cmdArg) {
 #endif
         printDateTimeStamp();        
         puts(logstring);
-        writeToLog(logstring);
+        writeToLog(logstring, PROGRAM, "");
         return false;
     } else {
         for (int i = 0; i < MAX_LATENCIES; i++) {
@@ -266,7 +227,7 @@ bool sendMsgPacket(char* fromUser, char* fromSite, char* fromRoom, char* toUser,
         _snprintf_s(logstring, sizeof(logstring), -1, "sendMsgPacket \"%s\" to host", packet);
         printDateTimeStamp();
         puts(logstring);
-        writeToLog(logstring);
+        writeToLog(logstring, PROGRAM, "");
     }
     iResult = usingSSL ? SSL_write(mrcHostSsl, packet, (int)strlen(packet)) : send(mrcHostSock, packet, (int)strlen(packet), 0);
     Sleep(10);
@@ -280,7 +241,7 @@ bool sendMsgPacket(char* fromUser, char* fromSite, char* fromRoom, char* toUser,
 #endif
         printDateTimeStamp();
         puts(logstring);
-        writeToLog(logstring);
+        writeToLog(logstring, PROGRAM, "");
         return false;
     }
     else {
@@ -305,7 +266,7 @@ bool sendHostPacket(const char* packet) {
         _snprintf_s(logstring, sizeof(logstring), -1, "sendHostPacket \"%s\" to host", packet);
         printDateTimeStamp();
         puts(logstring);
-        writeToLog(logstring);
+        writeToLog(logstring, PROGRAM, "");
     }
     iResult = usingSSL ? SSL_write(mrcHostSsl, packet, (int)strlen(packet)) : send(mrcHostSock, packet, (int)strlen(packet), 0);
     Sleep(10);
@@ -319,7 +280,7 @@ bool sendHostPacket(const char* packet) {
 #endif
         printDateTimeStamp();
         puts(logstring);
-        writeToLog(logstring);
+        writeToLog(logstring, PROGRAM, "");
         return false;
     }
     else {
@@ -345,7 +306,7 @@ bool sendClientPacket(SOCKET* sock, char* packet) {
         _snprintf_s(logstring, sizeof(logstring), -1, "sendClientPacket \"%s\" to socket %d", packet, (int)*sock);
         printDateTimeStamp();
         puts(logstring);
-        writeToLog(logstring);
+        writeToLog(logstring, PROGRAM, "");
     }
     iResult = send(*sock, packet, (int)strlen(packet), 0);
     Sleep(5);
@@ -359,7 +320,7 @@ bool sendClientPacket(SOCKET* sock, char* packet) {
 #endif
         printDateTimeStamp();
         puts(logstring);
-        writeToLog(logstring);
+        writeToLog(logstring, PROGRAM, "");
         return false;
     }
     else {     
@@ -418,7 +379,7 @@ void* clientProcess(void* lpArg) {
                     _snprintf_s(logstring, sizeof(logstring), -1, "%s entered chat (slot #%d occupied).", thisUser, pSlot);
                     puts(logstring);
                     if (gVerboseLogging) {
-                        writeToLog(logstring);
+                        writeToLog(logstring, PROGRAM, "");
                     }
                 }
             }
@@ -446,7 +407,7 @@ void* clientProcess(void* lpArg) {
     _snprintf_s(logstring, sizeof(logstring), -1, "%s has left chat (slot #%d cleared).", thisUser, pSlot);
     puts(logstring);
     if (gVerboseLogging) {
-        writeToLog(logstring);
+        writeToLog(logstring, PROGRAM, "");
     }
 
     return 0;
@@ -533,7 +494,7 @@ void* waitProcess(void* lpArg) {
         _snprintf_s(logstring, sizeof(logstring), -1, "client bind failed with error: %d", errno);
 #endif        
         puts(logstring);
-        writeToLog(logstring);
+        writeToLog(logstring, PROGRAM, "");
 
         freeaddrinfo(liResult);
 #if defined(WIN32) || defined(_MSC_VER)    
@@ -594,7 +555,7 @@ SSL* performSslHandshake(SOCKET* sock) {
         // Handle error
         printDateTimeStamp();
         puts("!ctx...");
-        writeToLog("!ctx...");
+        writeToLog("!ctx...", PROGRAM, "");
         return NULL;
     }
 
@@ -603,7 +564,7 @@ SSL* performSslHandshake(SOCKET* sock) {
         // Handle error
         printDateTimeStamp();
         puts("!ssl...");
-        writeToLog("!ssl...");
+        writeToLog("!ssl...", PROGRAM, "");
         SSL_CTX_free(ctx);
         return NULL;
     }
@@ -617,7 +578,7 @@ SSL* performSslHandshake(SOCKET* sock) {
 
         printDateTimeStamp();
         puts("SSL_connect failed.");
-        writeToLog("SSL_connect failed");
+        writeToLog("SSL_connect failed", PROGRAM, "");
         return NULL;
     }
     return ssl;
@@ -643,7 +604,7 @@ void mrcHostProcess(struct settings cfg) {
         char logstring[50] = "";
         _snprintf_s(logstring, sizeof(logstring), -1, "WSAStartup failed with error: %d", iResult);
         puts(logstring);
-        writeToLog(logstring);
+        writeToLog(logstring, PROGRAM, "");
         return;
     }	
     ZeroMemory(&mrcHost, sizeof(mrcHost));
@@ -661,7 +622,7 @@ void mrcHostProcess(struct settings cfg) {
         char logstring[50] = "";
         _snprintf_s(logstring, sizeof(logstring), -1, "getaddrinfo failed with error: %d", iResult);
         puts(logstring);
-        writeToLog(logstring);
+        writeToLog(logstring, PROGRAM, "");
 #if defined(WIN32) || defined(_MSC_VER)
         WSACleanup();
 #endif
@@ -679,7 +640,7 @@ void mrcHostProcess(struct settings cfg) {
             _snprintf_s(logstring, sizeof(logstring), -1, "socket failed with error: %d", errno);
 #endif            
             puts(logstring);
-            writeToLog(logstring);
+            writeToLog(logstring, PROGRAM, "");
 #if defined(WIN32) || defined(_MSC_VER)    
             WSACleanup();
 #endif            
@@ -697,7 +658,7 @@ void mrcHostProcess(struct settings cfg) {
             _snprintf_s(logstring, sizeof(logstring), -1, "connect failed with error: %d. ", errno);
 #endif            
             puts(logstring);
-            writeToLog(logstring);
+            writeToLog(logstring, PROGRAM, "");
             mrcHostSock = INVALID_SOCKET;
             continue;
         }else {
@@ -718,7 +679,7 @@ void mrcHostProcess(struct settings cfg) {
                 usingSSL = true;
                 printPipeCodeString(OK);
                 if (gVerboseLogging) {
-                    writeToLog("SSL...OK");
+                    writeToLog("SSL...OK", PROGRAM, "");
                 }
             }
             else {
@@ -732,7 +693,7 @@ void mrcHostProcess(struct settings cfg) {
 
     if (mrcHostSock == INVALID_SOCKET) {
         puts("Unable to connect to server!");
-        writeToLog("Unable to connect to server!");
+        writeToLog("Unable to connect to server!", PROGRAM, "");
 #if defined(WIN32) || defined(_MSC_VER)
         WSACleanup();
 #endif
@@ -754,7 +715,7 @@ void mrcHostProcess(struct settings cfg) {
         _snprintf_s(logstring, sizeof(logstring), -1, "send failed with error: %d\r\n", usingSSL ? SSL_get_error(mrcHostSsl, iResult) : errno);
 #endif        
         puts(logstring);
-        writeToLog(logstring);
+        writeToLog(logstring, PROGRAM, "");
 #if defined(WIN32) || defined(_MSC_VER)    
         WSACleanup();
 #endif        
@@ -764,7 +725,7 @@ void mrcHostProcess(struct settings cfg) {
         printPipeCodeString(OK);
         gConnectionIsDown = false;
         if (gRetry > 0) {
-            writeToLog("Reconnection successful");
+            writeToLog("Reconnection successful", PROGRAM, "");
         }
         gRetry = 0;
     }   
@@ -789,8 +750,8 @@ void mrcHostProcess(struct settings cfg) {
             if (gVerboseLogging) {
                 printDateTimeStamp();
                 printf("partial packet recovered: %s\r\n", partialPacket);
-                writeToLog("partial packet recovered:");
-                writeToLog(partialPacket);
+                writeToLog("partial packet recovered:", PROGRAM, "");
+                writeToLog(partialPacket, PROGRAM, "");
             }
             strcpy_s(partialPacket, sizeof(partialPacket), "");
         }
@@ -818,8 +779,8 @@ void mrcHostProcess(struct settings cfg) {
                     if (gVerboseLogging) {
                         printDateTimeStamp();
                         printf("partial packet detected: \"%s\"\r\n", packet);
-                        writeToLog("partial packet detected:");
-                        writeToLog(packet);
+                        writeToLog("partial packet detected:", PROGRAM, "");
+                        writeToLog(packet, PROGRAM, "");
                     }
                     strcpy_s(partialPacket, sizeof(partialPacket), strReplace(packet, "\n", "")); // strip out the LF
                     break;
@@ -848,8 +809,8 @@ void mrcHostProcess(struct settings cfg) {
                         printDateTimeStamp();
                         printf("WARNING: invalid packet: \"%s\"\r\n", packet);
                     }
-                    writeToLog("WARNING: invalid packet:");
-                    writeToLog(packet);
+                    writeToLog("WARNING: invalid packet:", PROGRAM, "");
+                    writeToLog(packet, PROGRAM, "");
                     continue;
                 }  
 
@@ -922,7 +883,7 @@ void mrcHostProcess(struct settings cfg) {
             char logstring[50] = "";
             _snprintf_s(logstring, sizeof(logstring), -1, "Connection closed with error: %d", errcode);
             puts(logstring);
-            writeToLog(logstring);
+            writeToLog(logstring, PROGRAM, "");
 			if (usingSSL) {
 				unsigned long err_code = ERR_get_error();
 				char err_msg[256];
@@ -942,7 +903,7 @@ void mrcHostProcess(struct settings cfg) {
             char logstring[50] = "";
             _snprintf_s(logstring, sizeof(logstring), -1, "recv failed with error: %d", errcode);
             puts(logstring);
-            writeToLog(logstring);
+            writeToLog(logstring, PROGRAM, "");
 			if (usingSSL) {
 				unsigned long err_code = ERR_get_error();
 				char err_msg[256];
@@ -1042,7 +1003,7 @@ int main(int argc, char** argv)
         printDateTimeStamp();
         puts("Invalid config. Run setup.");
         if (gVerboseLogging) {
-            writeToLog("Invalid config. Run setup.");
+            writeToLog("Invalid config. Run setup.", PROGRAM, "");
         }
         return -1;
     }
@@ -1063,7 +1024,7 @@ int main(int argc, char** argv)
         char logstring[50] = "";
         _snprintf_s(logstring, sizeof(logstring), -1, "Retry %d of %d...\r\n", gRetry, maxRetries);
         puts(logstring);
-        writeToLog(logstring);
+        writeToLog(logstring, PROGRAM, "");
     }
 
     return 0;

@@ -7,6 +7,50 @@
 
 #include "common.h"
 
+void writeToLog(char* msg, char* source, char* user) {
+    char tm_str[32] = "";
+    time_t rawtime;
+    time(&rawtime);
+#if defined(WIN32) || defined(_MSC_VER)  
+    struct tm timeinfo;
+    localtime_s(&timeinfo, &rawtime);
+#else
+    struct tm* timeinfo;
+    timeinfo = localtime(&rawtime);
+#endif
+
+    _snprintf_s(tm_str, 32, -1, "%d/%02d/%02d %02d:%02d:%02d",
+#if defined(WIN32) || defined(_MSC_VER)  
+        timeinfo.tm_year + 1900,
+        timeinfo.tm_mon + 1,
+        timeinfo.tm_mday,
+        timeinfo.tm_hour,
+        timeinfo.tm_min,
+        timeinfo.tm_sec);
+#else
+        timeinfo->tm_year + 1900,
+        timeinfo->tm_mon + 1,
+        timeinfo->tm_mday,
+        timeinfo->tm_hour,
+        timeinfo->tm_min,
+        timeinfo->tm_sec);
+#endif
+    FILE* logfile;
+#if defined(WIN32) || defined(_MSC_VER)  
+    fopen_s(&logfile, LOG_FILE, "a");
+#else
+    logfile = fopen(LOG_FILE, "a");
+#endif
+    if (logfile != NULL) {
+        if (strlen(user) > 0) {
+            fprintf(logfile, "[%s] source=%s user=%s %s\n", tm_str, source, user, strReplace(strReplace(msg, "\r", ""), "\n", ""));
+        }
+        else {
+            fprintf(logfile, "[%s] source=%s %s\n", tm_str, source, strReplace(strReplace(msg, "\r", ""), "\n", ""));
+        }
+        fclose(logfile);
+    }
+}
 
 char* strReplace(char* orig, char* rep, char* with) {
 	// set the length of this the largest string length that will be converted

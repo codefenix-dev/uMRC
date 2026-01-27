@@ -75,7 +75,7 @@ void Sleep(int ms);
 #define UMRC_VERSION "100"
 #define YEAR_AND_AUTHOR "2026 Craig Hendricks (aka Codefenix)"
 #define AUTHOR_INITIALS "cf" // alias initials
-#define COMPILE_DATE "2026-01-24"
+#define COMPILE_DATE "2026-01-27"
 
 // These defaults should remain the same, and
 // not be changed without a good reason.
@@ -198,6 +198,7 @@ struct userdata {
     char theme[20];
 };
 
+void writeToLog(char* msg, char* source, char* user);
 char* strReplace(char* orig, char* rep, char* with);
 void ustr(char* s);
 void lstr(char* s);
