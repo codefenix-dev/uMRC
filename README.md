@@ -1,21 +1,4 @@
-﻿```
-       ┌──── ▄█▀▀▀▀▀█▄ ───┬───┬───┬─┐
-     ┌──── ▄██ ▄███ ▀▀█▄ ·────────┐ ┤
-   ┌──── ▄█▀▀ ▐█▀ ▀ █ ██  ▄ ▄ ▄ · │ │
- ┌──── ▄█▀ ▄██▄▀█▄▄██ ██  █████ · │ ┤
-┌─── ▄█▀ ▐██▀▀█▌ ▀▀▀ ▄█▀  ▐▄█▄▌   │ │
-┌─ ▄█▀ ▄▄ ██▄████  ▄█▀  · ▐█╫█▌ cf│ ┤
- ▄▀▀ ▄█▀██▄▀██▌  ▄█▀  · · · · · · ┘ │
- █ ▐█▀██▄▀██▄▀ ▄█▀    Universal     ┘
-▄▀  ██▄▀██ ▀ ▄█▀   Multi-Relay Chat  
-▀ ▐█▄▀██ ▀ ▄█▀       Client Door     
-▐█▄▀██▄▀ ▄█▀ .│┌────────────────────┐
- ▀███▀ ▄█▀ .││|│ ■ Windows & Linux  │
-█▄ ▀ ▄█▀ .││|│││ ■ DOOR32.SYS       │
- ▀█▄█▀ .││|│││││ ■ SSL capable      │
- └ ▀ ──┴─┴─┴─┴─┴──────────────────── 
-```
-
+<img width="304" height="240" alt="file_id" src="https://github.com/user-attachments/assets/d7ec4955-7692-45d5-a526-f0a4c531be62" />
 
 
 ## What is uMRC?
@@ -24,7 +7,8 @@ uMRC lets you run Multi-Relay Chat on your BBS without having to install and
 maintain a Mystic BBS instance and Python. As long as your BBS is capable of
 running 32-bit doors, then you and your users can participate in MRC.
 
-<img width="637" height="472" alt="image" src="https://github.com/user-attachments/assets/4cd1acf1-4efc-48b7-87b0-f34185f9a240" />
+
+<img width="949" height="694" alt="sschat" src="https://github.com/user-attachments/assets/e41b12b9-9383-49f5-b46e-d94b68159bec" />
 
 
 It should be compatible with any DOOR32.SYS capable BBS such as EleBBS, WWIV, 
@@ -221,7 +205,7 @@ along with all other necessary asset subdirectories and files.
 
 At this point, you should be ready to launch the door and join chat.
     
-<img width="632" height="469" alt="image" src="https://github.com/user-attachments/assets/91b3684a-028f-45a7-b817-4c30a7b86fe4" />
+<img width="948" height="696" alt="ssmenu" src="https://github.com/user-attachments/assets/ec982775-5553-4b2d-911f-3e4144e2a163" />
     
 
 ## uMRC Client Usage:   
@@ -467,3 +451,4 @@ and is always happy to try running new things on his board.
 ## Enjoy!
 
 See you in chat!
+
