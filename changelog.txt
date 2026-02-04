@@ -1,6 +1,6 @@
 Change Log:
 
-v100 - TBA
+v100 - January 27, 2026:
 
   - Added a new command line option to umrc-bridge to set the maximum
     number of reconnection attempts: -r[x] where x is the maximum number

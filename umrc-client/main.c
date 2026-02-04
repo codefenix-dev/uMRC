@@ -354,6 +354,15 @@ void stripPipeCodes(char* str) {
 	str[len] = '\0';
 }
 
+void showPipeColors(int lo, int hi) {
+    for (int i = lo; i <= hi; i++) {
+        char c[15] = "";
+        _snprintf_s(c, 15, -1, i < 17 ? "|%02d%02d " : "|00|%02d%02d ", i, i);
+        od_disp_emu(pipeToAnsi(c), TRUE);
+    }
+}
+
+
 /**
  *  Prompts the user to select a color within a range. 
  */
@@ -361,11 +370,7 @@ int colorPrompt(int lo, int hi) {
     bool validEntry = false;
     int pickedColor = -1;
 
-    for (int i = lo; i <= hi; i++) {
-        char c[9] = "";
-        _snprintf_s(c, 9, -1, i < 17 ? "|%02d%d " : "|00|%02d%d ", i, i);
-        od_disp_emu(pipeToAnsi(c), TRUE);
-    }
+    showPipeColors(lo, hi);
     while (!validEntry) {
         od_printf("``\r\n\r\nPick a color (%d-%d): ", lo, hi);        
         char ci[3]="";
@@ -435,7 +440,9 @@ int editDisplayName(char* quitToWhere) {
 
         case 'S':
             od_printf("`bright white`Suffix``\r\n\r\n");
-            od_printf("Enter a suffix to add to your username:\r\n\r\n `bright black`(pipe colors allowed)\r\n\r\n `bright white`> ");
+            od_printf("Enter a suffix to add to your username:\r\n\r\n `bright black`(pipe colors allowed)\r\n\r\n");
+            showPipeColors(1, 23);
+            od_printf("\r\n\r\n`bright white`> ");
             getInputString(user.chatterNameSuffix, 30, 32, 127);
             changeCount = changeCount + 1;
             break;
@@ -704,7 +711,9 @@ void enterChatterSettings() {
         case '5':
             od_clr_scr();
             od_printf("`bright white`Join Message``\r\n\r\n");
-            od_printf("Enter a message you'd like to announce you when you JOIN chat:\r\n\r\n `bright black`(pipe colors allowed)\r\n\r\n `bright white`> ");
+            od_printf("Enter a message you'd like to announce you when you JOIN chat:\r\n\r\n `bright black`(pipe colors allowed)\r\n\r\n");
+            showPipeColors(1, 23);
+            od_printf("\r\n\r\n`bright white`> ");
             getInputString(user.joinMessage, 50, 32, 127);
             if (strlen(user.joinMessage) == 0) {
                 _snprintf_s(user.joinMessage, 50, -1, DEFAULT_JOIN_MSG, user.chatterName);
@@ -715,7 +724,9 @@ void enterChatterSettings() {
         case '6':
             od_clr_scr();
             od_printf("`bright white`Exit Message``\r\n\r\n");
-            od_printf("Enter a message you'd like to announce you when you EXIT chat:\r\n\r\n `bright black`(pipe colors allowed)\r\n\r\n `bright white`> ");
+            od_printf("Enter a message you'd like to announce you when you EXIT chat:\r\n\r\n `bright black`(pipe colors allowed)\r\n\r\n");
+            showPipeColors(1, 23);
+            od_printf("\r\n\r\n`bright white`> ");
             getInputString(user.exitMessage, 50, 32, 127);
             if (strlen(user.exitMessage) == 0) {
                 _snprintf_s(user.exitMessage, 50, -1, DEFAULT_EXIT_MSG, user.chatterName);
@@ -1038,9 +1049,9 @@ void displayMessage(char* msg, bool mention) {
                 linelen = 3 + (tokenLen + 1);
             }
             if (insertExtraCrLf) { // an extra CRLF is needed in wrappedMsg for the long token.
-                char tkn1[80] = "", tkn2[80] = "";
+                char tkn1[100] = "", tkn2[100] = "";
                 strncpy_s(tkn1, sizeof(tkn1), token, od_control.user_screenwidth - 7);
-                strcpy_s(tkn2, sizeof(tkn2), token + od_control.user_screenwidth - 7);
+                strncpy_s(tkn2, sizeof(tkn2), token + od_control.user_screenwidth - 7, 80);
                 strcat_s(wrappedMsg, sizeof(wrappedMsg), tkn1);
                 strcat_s(wrappedMsg, sizeof(wrappedMsg), "\r\n");
                 strcat_s(wrappedMsg, sizeof(wrappedMsg), tkn2);
@@ -1646,6 +1657,14 @@ void* handleIncomingMessages(void* lpArg) {
 
                         sendCmdPacket(&mrcSock, "USERLIST", "");
                     }
+
+                    // should display SERVER messages to NOTME, if they're to or from the same room
+                    if (strcmp(toUser, "NOTME") == 0) {
+                        if ((_stricmp(fromRoom, gRoom) == 0 || strlen(fromRoom) == 0) &&
+                            (_stricmp(toRoom, gRoom) == 0 || strlen(toRoom) == 0)) {
+                            queueIncomingMessage(body, false);
+                        }
+                    }
                 }                
                 else if (strcmp(toRoom, CTCP_ROOM) == 0 && strcmp(fromRoom, CTCP_ROOM) == 0) {
                     processCtcpCommand(body, toUser, fromUser);
@@ -1688,6 +1707,7 @@ void* handleIncomingMessages(void* lpArg) {
                         queueIncomingMessage(body, mentioned);
                     }
                 }
+
                 od_sleep(0);
             }
         }
