@@ -85,7 +85,7 @@ struct messageQueue {
 struct messageQueue mc;
 
 
-#define DEFAULT_BRACKETS_COUNT 15
+#define DEFAULT_BRACKETS_COUNT 20
 const char* DEFAULT_BRACKETS[DEFAULT_BRACKETS_COUNT] = {
     "<>",
     "{}",
@@ -101,7 +101,12 @@ const char* DEFAULT_BRACKETS[DEFAULT_BRACKETS_COUNT] = {
     "%%",
     "^^",
     "##",
-    "$$"
+    "$$",
+    "**",
+    "..",
+    "][",
+    ">>",
+    "&}"
 };
 
 const char* ACTIVITY[4] = {
@@ -123,7 +128,6 @@ SOCKET mrcSock = INVALID_SOCKET;
 char* getTimestamp() {
     char timeStamp[10] = "";
     time_t rawtime;
-
     time(&rawtime);
 #if defined(WIN32) || defined(_MSC_VER)  
     struct tm timeinfo;
@@ -132,7 +136,6 @@ char* getTimestamp() {
     struct tm *timeinfo; 
     timeinfo = localtime(&rawtime);
 #endif
-
     _snprintf_s(timeStamp, 10, -1, "%02d:%02d",
 #if defined(WIN32) || defined(_MSC_VER)  
         timeinfo.tm_hour,
@@ -141,7 +144,6 @@ char* getTimestamp() {
         timeinfo->tm_hour,
         timeinfo->tm_min);
 #endif
-
     return _strdup(timeStamp);
 }
 
@@ -151,7 +153,6 @@ char* getTimestamp() {
 char* getCtcpDatetime() {
     char dtStr[30] = "";
     time_t rawtime;
-
     time(&rawtime);
 #if defined(WIN32) || defined(_MSC_VER)  
     struct tm timeinfo;
@@ -160,7 +161,6 @@ char* getCtcpDatetime() {
     struct tm *timeinfo; 
     timeinfo = localtime(&rawtime);
 #endif
-
     _snprintf_s(dtStr, 30, -1, "%02d/%02d/%02d %02d:%02d",
 #if defined(WIN32) || defined(_MSC_VER)  
         timeinfo.tm_mon + 1,
@@ -175,7 +175,6 @@ char* getCtcpDatetime() {
         timeinfo->tm_hour,
         timeinfo->tm_min);
 #endif
-
     return _strdup(dtStr);
 }
 
@@ -193,8 +192,8 @@ void doPause() {
 bool strContainsStrI(char* str, char* contains) {
     char s[512] = "";
     char c[512] = "";
-    strcpy_s(s, 512, str);
-    strcpy_s(c, 512, contains);
+    strcpy_s(s, sizeof(s), str);
+    strcpy_s(c, sizeof(c), contains);
     lstr(c);
     lstr(s);
     return strstr(s, c) != NULL;
@@ -301,7 +300,7 @@ void defaultDisplayName() {
     char defaultSuf[30] = "|08|16.";
     srand(clock());
     user.chatterNameFgColor = (rand() % 11) + 2;
-    strncpy_s(brackets, 3, DEFAULT_BRACKETS[rand() % DEFAULT_BRACKETS_COUNT], 3);
+    strncpy_s(brackets, sizeof(brackets), DEFAULT_BRACKETS[rand() % DEFAULT_BRACKETS_COUNT], 3);
     do { 
         user.chatterNamePrefixFgColor = (rand() % 11) + 2;
     } while (user.chatterNamePrefixFgColor == user.chatterNameFgColor);
@@ -688,7 +687,7 @@ void enterChatterSettings() {
             od_printf("Enter a new default room (suggestions: `bright green`lobby, `bright magenta` ddial``)\r\n\r\n`bright white`> ");
             getInputString(user.defaultRoom, 30, 32, 127);
             if (strlen(user.defaultRoom) == 0) {
-                strcpy_s(user.defaultRoom, 30, DEFAULT_ROOM);
+                strcpy_s(user.defaultRoom, sizeof(user.defaultRoom), DEFAULT_ROOM);
             }
             stripPipeCodes(user.defaultRoom);
             changesMade = true;
@@ -737,7 +736,7 @@ void enterChatterSettings() {
         case '7':
             od_clr_scr();
             pickTheme(pickedTheme);
-            strcpy_s(user.theme, 20, pickedTheme);
+            strcpy_s(user.theme, sizeof(user.theme), pickedTheme);
             changesMade = true;
             loadTheme();
             break;
@@ -1038,24 +1037,36 @@ void displayMessage(char* msg, bool mention) {
         char* context = NULL;
         token = strtok_s(msg, " ", &context);
         while (token != NULL) {
-            bool insertExtraCrLf = false;
+            bool breakUpLongToken = false;
+            int lastTokenLen = tokenLen;
             tokenLen = strLenWithoutPipecodes(token);
             if (tokenLen > od_control.user_screenwidth - 7) { // Insert an additional scrollLen if a single 
-                insertExtraCrLf = true;                       // word is longer than the terminal width.
+                breakUpLongToken = true;                       // word is longer than the terminal width.
             }
             linelen = linelen + tokenLen + 1;
-            if (linelen > (od_control.user_screenwidth  - 7)) {
+            if (!breakUpLongToken && (linelen > (od_control.user_screenwidth  - 7))) {
                 strcat_s(wrappedMsg, sizeof(wrappedMsg), "\r\n      \300");
                 linelen = 3 + (tokenLen + 1);
             }
-            if (insertExtraCrLf) { // an extra CRLF is needed in wrappedMsg for the long token.
+            if (breakUpLongToken) { // an extra CRLF is needed in wrappedMsg for the long token.
                 char tkn1[100] = "", tkn2[100] = "";
-                strncpy_s(tkn1, sizeof(tkn1), token, od_control.user_screenwidth - 7);
-                strncpy_s(tkn2, sizeof(tkn2), token + od_control.user_screenwidth - 7, 80);
+                int breakPoint = od_control.user_screenwidth - 5 - lastTokenLen;
+                strncpy_s(tkn1, sizeof(tkn1), token, breakPoint);
+                strcpy_s(tkn2, sizeof(tkn2), token + breakPoint);
+                strcat_s(wrappedMsg, sizeof(wrappedMsg), " ");
                 strcat_s(wrappedMsg, sizeof(wrappedMsg), tkn1);
-                strcat_s(wrappedMsg, sizeof(wrappedMsg), "\r\n");
-                strcat_s(wrappedMsg, sizeof(wrappedMsg), tkn2);
-                strcat_s(wrappedMsg, sizeof(wrappedMsg), "\r\n");
+                strcat_s(wrappedMsg, sizeof(wrappedMsg), "\r\n      \300 ");
+                if ((int)strlen(tkn2) > od_control.user_screenwidth -9) {
+                    char tkn3[50]="";
+                    strcpy_s(tkn3, sizeof(tkn3), tkn2 + od_control.user_screenwidth -9);
+                    tkn2[od_control.user_screenwidth - 9] = '\0';
+                    strcat_s(wrappedMsg, sizeof(wrappedMsg), tkn2);
+                    strcat_s(wrappedMsg, sizeof(wrappedMsg), "\r\n      \300 ");
+                    strcat_s(wrappedMsg, sizeof(wrappedMsg), tkn3);
+                }
+                else {
+                    strcat_s(wrappedMsg, sizeof(wrappedMsg), tkn2);
+                }
             }
             else {
                 if (tokencnt>0) {
@@ -1078,7 +1089,7 @@ void displayMessage(char* msg, bool mention) {
         addToScrollBack(dispMsg, 1);
     }
     if (!isChatPaused) {
-        od_scroll(1, 1, od_control.user_screenwidth, od_control.user_screen_length - 3, countOfChars(dispMsg, '\n') +1  , 0);
+        od_scroll(1, 1, od_control.user_screenwidth, od_control.user_screen_length - 3, countOfChars(dispMsg, '\n') +1, 0);
         od_set_cursor(od_control.user_screen_length - (2 + countOfChars(dispMsg, '\n') +1), 1);
         od_disp_emu(pipeToAnsi(dispMsg), TRUE);
     }
@@ -1290,14 +1301,14 @@ void processUserCommand(char* cmd, char* params) {
     }
     else if (_stricmp(cmd, "join") == 0 || _stricmp(cmd, "j") == 0) {
         char newRoom[20] = "";
-        strcpy_s(newRoom, 20, strReplace(params, "#", ""));  // no #
-        strcpy_s(newRoom, 20, strReplace(newRoom, " ", "_")); // Single word
+        strcpy_s(newRoom, sizeof(newRoom), strReplace(params, "#", ""));  // no #
+        strcpy_s(newRoom, sizeof(newRoom), strReplace(newRoom, " ", "_")); // Single word
         stripPipeCodes(newRoom); // No pipe codes
 
         char newRoomCmd[30] = "";
         _snprintf_s(newRoomCmd, 30, -1, "NEWROOM:%s:", gRoom); // include the OLD room as the first parameter...
         sendCmdPacket(&mrcSock, newRoomCmd, newRoom); // the NEW room will be included as the second parameter...
-        strcpy_s(gRoom, 30, newRoom); 
+        strcpy_s(gRoom, sizeof(gRoom), newRoom); 
         sendCmdPacket(&mrcSock, "USERLIST", ""); // Need a new user list after joining a different room
     }
     else if (_stricmp(cmd, "topic") == 0) {              
@@ -1494,7 +1505,7 @@ void processServerMessage(char* body, char* toUser) {
     else if (strcmp(cmd, "USERROOM") == 0) {
         // USERROOM: Server confirm the room user is in, usually sent after NEWROOM but may be the result of other reasons.[NEW in 1.3]
         // Client must enforce or routing will break
-        strcpy_s(gRoom, 30, params);
+        strcpy_s(gRoom, sizeof(gRoom), params);
         gRoomTopicChanged = true;
     }
     else if (strcmp(cmd, "USERNICK") == 0) {
@@ -1502,11 +1513,11 @@ void processServerMessage(char* body, char* toUser) {
         // Client must enforce or routing will break.
         // This will be used to avoid delivery conflict in case 2 users with the same nick on 2 different BBSes are connected.
         // The server will append a number to the original nick to resolve the conflict.
-        strcpy_s(user.chatterName, 30, params);
-        _snprintf_s(gDisplayChatterName, 80, -1, "|%02d|%02d%c|%02d|%02d%s%s|16", user.chatterNamePrefixFgColor, user.chatterNamePrefixBgColor, user.chatterNamePrefix, user.chatterNameFgColor, user.chatterNameBgColor, user.chatterName, user.chatterNameSuffix);
+        strcpy_s(user.chatterName, sizeof(user.chatterName), params);
+        _snprintf_s(gDisplayChatterName, sizeof(gDisplayChatterName), -1, "|%02d|%02d%c|%02d|%02d%s%s|16", user.chatterNamePrefixFgColor, user.chatterNamePrefixBgColor, user.chatterNamePrefix, user.chatterNameFgColor, user.chatterNameBgColor, user.chatterName, user.chatterNameSuffix);
         // inform the user of the change...
         char nicknotice[140] = "";
-        _snprintf_s(nicknotice, 140, -1, "|15* |08(|14Notice|08) |07The MRC server has updated your name to |15%s|07.", user.chatterName);
+        _snprintf_s(nicknotice, sizeof(nicknotice), -1, "|15* |08(|14Notice|08) |07The MRC server has updated your name to |15%s|07.", user.chatterName);
         queueIncomingMessage(nicknotice, true);
         stripPipeCodes(nicknotice);
         writeToLog(nicknotice, PROGRAM, od_control.user_handle);
@@ -1689,7 +1700,7 @@ void* handleIncomingMessages(void* lpArg) {
                     // Direct message (DirectMsg) ...? 
                     else if (strlen(toUser) != 0 && strlen(fromUser) != 0) {
                         queueIncomingMessage(body, false);
-                        strcpy_s(gLastDirectMsgFrom, 36, fromUser);
+                        strcpy_s(gLastDirectMsgFrom, sizeof(gLastDirectMsgFrom), fromUser);
                     }
 
                     // Standard message
@@ -1786,7 +1797,7 @@ void doChatRoutines(char* input) {
         bool updateInput = false;
         char pcol[4] = "";
         int endOfInput = 0;
-        char tabResult[30] = "";
+        char tabResult[31] = "";
 
         if (InputEvent.EventType == EVENT_EXTENDED_KEY) {
             int overfill = 0;
@@ -1904,7 +1915,7 @@ void doChatRoutines(char* input) {
 
                 for (int i = 0; i < gChatterCount; i++) {
                     if (_strnicmp(tabSearch, gChattersInRoom[i], strlen(tabSearch)) == 0 && _stricmp(gChattersInRoom[i], user.chatterName) != 0) {
-                        strcpy_s(tabResult, 30, gChattersInRoom[i]);
+                        strcpy_s(tabResult, sizeof(tabResult), gChattersInRoom[i]);
                         strncpy_s(input, MSG_LEN, input, strlen(input) - strlen(tabSearch));
 #if defined(WIN32) || defined(_MSC_VER) 
                         _snprintf_s(input, MSG_LEN, -1, "%s%s", input, tabResult);
@@ -2191,7 +2202,7 @@ bool enterChat() {
                 getSubStr(input, params, spcidx+1, strlen(input));
             }
             else {
-                strcpy_s(cmd, 15, input + 1);
+                strcpy_s(cmd, sizeof(cmd), input + 1);
             }
             processUserCommand(cmd, params);
         }
@@ -2255,9 +2266,9 @@ int main(int argc, char** argv)
     od_control.od_page_pausing = false;
     od_control.od_disable |= DIS_NAME_PROMPT; // Disable the local user name prompt; it doesn't work.. always results in "Sysop"
     od_control.od_time_msg_func = displayTimeWarning;
-    strcpy_s(od_control.od_prog_name, 40, TITLE);
-    _snprintf_s(od_control.od_prog_version, 40, -1, "v%s", UMRC_VERSION);
-    strcpy_s(od_control.od_prog_copyright, 40, YEAR_AND_AUTHOR);
+    strcpy_s(od_control.od_prog_name, sizeof(od_control.od_prog_name), TITLE);
+    _snprintf_s(od_control.od_prog_version, sizeof(od_control.od_prog_version), -1, "v%s", UMRC_VERSION);
+    strcpy_s(od_control.od_prog_copyright, sizeof(od_control.od_prog_copyright), YEAR_AND_AUTHOR);
 
 #if defined(WIN32) || defined(_MSC_VER)
     HICON hIcon = (HICON)LoadImage(NULL, "icon.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED);
@@ -2284,13 +2295,13 @@ int main(int argc, char** argv)
     userNumber = od_control.user_num;
     if (0 == userNumber && strcmp(od_control.user_name, "Sysop") == 0) {
         od_printf("`bright yellow`***`bright white`LOCAL MODE`bright yellow`***``\r\n\r\n");
-        strcpy_s(user.chatterName, 36, od_control.user_name);
+        strcpy_s(user.chatterName, sizeof(user.chatterName), od_control.user_name);
     }
     else {
-        strcpy_s(user.chatterName, 36, strlen(od_control.user_handle) > 0 ? od_control.user_handle : od_control.user_name);
+        strcpy_s(user.chatterName, sizeof(user.chatterName), strlen(od_control.user_handle) > 0 ? od_control.user_handle : od_control.user_name);
     }
-    strcpy_s(user.chatterName, 36, strReplace(user.chatterName, " ", "_")); // spaces are disallowed; replace with underscores
-    strcpy_s(user.chatterName, 36, strReplace(user.chatterName, "~", ""));  // tildes are disallowed; strip them out
+    strcpy_s(user.chatterName, sizeof(user.chatterName), strReplace(user.chatterName, " ", "_")); // spaces are disallowed; replace with underscores
+    strcpy_s(user.chatterName, sizeof(user.chatterName), strReplace(user.chatterName, "~", ""));  // tildes are disallowed; strip them out
     strcpy_s(gFromSite, sizeof(gFromSite), strReplace(cfg.name, "~", ""));
     stripPipeCodes(gFromSite);
     if (strlen(gFromSite) > 30) gFromSite[30] = '\0';
@@ -2332,7 +2343,7 @@ int main(int argc, char** argv)
         user.chatterNamePrefixBgColor = 16;
         user.chatterNameFgColor = 7;
         user.chatterNameBgColor = 16;
-        strcpy_s(user.defaultRoom, 30, DEFAULT_ROOM);
+        strcpy_s(user.defaultRoom, sizeof(user.defaultRoom), DEFAULT_ROOM);
         stripPipeCodes(user.defaultRoom);
 
         // Reserved words
@@ -2356,8 +2367,8 @@ int main(int argc, char** argv)
             do {
                 getInputString(newchatname, 36, 32, 127);
                 if (strchr(newchatname, ' ') != NULL || strchr(newchatname, '~') != NULL) {
-                    strcpy_s(newchatname, 36, strReplace(newchatname, " ", "_"));
-                    strcpy_s(newchatname, 36, strReplace(newchatname, "~", ""));
+                    strcpy_s(newchatname, sizeof(newchatname), strReplace(newchatname, " ", "_"));
+                    strcpy_s(newchatname, sizeof(newchatname), strReplace(newchatname, "~", ""));
                 }
 
                 if (strstr(newchatname, "|") != NULL) {
@@ -2378,7 +2389,7 @@ int main(int argc, char** argv)
 
             } while (!namevalid);
 
-            strcpy_s(user.chatterName, 36, newchatname);
+            strcpy_s(user.chatterName, sizeof(user.chatterName), newchatname);
             od_printf("`bright white`\r\n\r\nOK, you will be known as `bright green`%s`bright white` while in chat!``\r\n\r\n", user.chatterName);
         }
         else {
@@ -2387,8 +2398,8 @@ int main(int argc, char** argv)
 
         od_printf("``If you ever change your mind, your sysop will need to `bright white`reset`` \r\nyour uMRC settings.`` \r\n\r\n");
         defaultDisplayName();
-        _snprintf_s(user.joinMessage, 50, -1, DEFAULT_JOIN_MSG, user.chatterName);
-        _snprintf_s(user.exitMessage, 50, -1, DEFAULT_EXIT_MSG, user.chatterName);
+        _snprintf_s(user.joinMessage, sizeof(user.joinMessage), -1, DEFAULT_JOIN_MSG, user.chatterName);
+        _snprintf_s(user.exitMessage, sizeof(user.exitMessage), -1, DEFAULT_EXIT_MSG, user.chatterName);
 
         if (saveUser(&user, gUserDataFile) != -1) {
 
@@ -2450,9 +2461,9 @@ int main(int argc, char** argv)
         if (stat(MRC_STATS_FILE, &file_stat) == 0) {
 #if defined(WIN32) || defined(_MSC_VER)  
             ctime_s(mrcStTm, 30, &file_stat.st_mtime);
-            strcpy_s(mrcStTm, 30, strReplace(mrcStTm, "\n", ""));
+            strcpy_s(mrcStTm, sizeof(mrcStTm), strReplace(mrcStTm, "\n", ""));
 #else
-            strcpy_s(mrcStTm, 30, strReplace(ctime(&file_stat.st_mtime), "\n", ""));
+            strcpy_s(mrcStTm, sizeof(mrcStTm), strReplace(ctime(&file_stat.st_mtime), "\n", ""));
 #endif
         }
 

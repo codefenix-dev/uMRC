@@ -26,7 +26,7 @@ HANDLE hCon; // needed for setting console colors and clearing screen
 #include <errno.h>
 
 #define strcpy_s(dest, count, source)                         strncpy((dest), (source), (count))
-#define strncpy_s(dest, max, source, count)                   strncpy((dest), (source), (max))
+#define strncpy_s(dest, sizeofDest, source, max)              strncpy((dest), (source), (max))
 #define strcat_s(dest, max, source)                           strcat((dest), (source))
 #define _snprintf_s(buffer, sizeofBuffer, count, format, ...) snprintf((buffer), (sizeofBuffer), (format), ##__VA_ARGS__)
 #define _strdup(s)                                            strdup((s))

@@ -148,20 +148,20 @@ void enterInfo(struct settings info, bool enter_new) {
 		
 	clearScreen(); 
 
-	strcpy_s(info.host, 80, textPrompt("|07Enter the |15MRC host address|08:|07", 70, 0, enter_new ? DEFAULT_HOST : info.host, false));
+	strcpy_s(info.host, sizeof(info.host), textPrompt("|07Enter the |15MRC host address|08:|07", 70, 0, enter_new ? DEFAULT_HOST : info.host, false));
 	lstr(info.host);
 	puts("");
 	info.ssl = charPrompt("|07Use |15SSL|08 (|15Y|07/|15N|08)|07:", "YN", (enter_new ? 'Y' : (info.ssl ? 'Y' : 'N'))) == 'Y';
 
 	puts(""); 
-	strcpy_s(info.port, 6, textPrompt("|07Enter the |15MRC host port number|08:|07", 6, 0, enter_new ? (info.ssl ? DEFAULT_SSL_PORT : DEFAULT_PORT) : info.port, false));
+	strcpy_s(info.port, sizeof(info.port), textPrompt("|07Enter the |15MRC host port number|08:|07", 6, 0, enter_new ? (info.ssl ? DEFAULT_SSL_PORT : DEFAULT_PORT) : info.port, false));
 
 	// BBS info
 	clearScreen(); 
-	strcpy_s(info.name, 140, textPrompt("|07Enter your |15BBS name|08:|07", 70, 60, enter_new ? "" : info.name, true));
+	strcpy_s(info.name, sizeof(info.name), textPrompt("|07Enter your |15BBS name|08:|07", 70, 60, enter_new ? "" : info.name, true));
 
 	clearScreen(); 
-	strcpy_s(info.soft, 140, listPrompt("|07Choose your |15BBS software|08:|07", BBS_TYPES, BBS_TYPE_COUNT, "|07Enter your |15BBS software|08:|07", 30));
+	strcpy_s(info.soft, sizeof(info.soft), listPrompt("|07Choose your |15BBS software|08:|07", BBS_TYPES, BBS_TYPE_COUNT, "|07Enter your |15BBS software|08:|07", 30));
 	ustr(info.soft);
 	for (int i = 0; info.soft[i] != '\0'; i++) { // replace forward slash with underscore in the BBS type (e.g.: Oblivion/2)
 		if (info.soft[i]=='/') {
@@ -170,19 +170,19 @@ void enterInfo(struct settings info, bool enter_new) {
 	}
     
 	clearScreen(); 
-	strcpy_s(info.web, 140, textPrompt("|07If your BBS has a |15website|07, enter it here |08(include either |07http:// |08or |07https://|08):|07", 70, 60, enter_new ? "NONE" : info.web, true));
+	strcpy_s(info.web, sizeof(info.web), textPrompt("|07If your BBS has a |15website|07, enter it here |08(include either |07http:// |08or |07https://|08):|07", 70, 60, enter_new ? "NONE" : info.web, true));
 	
 	clearScreen(); 
-    strcpy_s(info.tel, 140, textPrompt("|07Enter your BBS |15telnet address|07 (and port number)|08:|07", 70, 60, enter_new ? "" : info.tel, true));
+    strcpy_s(info.tel, sizeof(info.tel), textPrompt("|07Enter your BBS |15telnet address|07 (and port number)|08:|07", 70, 60, enter_new ? "" : info.tel, true));
 	
 	clearScreen(); 
-    strcpy_s(info.ssh, 140, textPrompt("|07Enter your BBS |15SSH address|07 (and port number)|08:|07", 70, 60, enter_new ? "NONE" : info.ssh, true));
+    strcpy_s(info.ssh, sizeof(info.ssh), textPrompt("|07Enter your BBS |15SSH address|07 (and port number)|08:|07", 70, 60, enter_new ? "NONE" : info.ssh, true));
 	
 	clearScreen(); 
-    strcpy_s(info.sys, 140, textPrompt("|07Enter your |15sysop name|08:|07", 70, 60, enter_new ? "" : info.sys, true));
+    strcpy_s(info.sys, sizeof(info.sys), textPrompt("|07Enter your |15sysop name|08:|07", 70, 60, enter_new ? "" : info.sys, true));
 	
 	clearScreen(); 
-    strcpy_s(info.dsc, 140, textPrompt("|07Enter a |15description for your BBS|08:|07", 70, 60, enter_new ? "" : info.dsc, true));
+    strcpy_s(info.dsc, sizeof(info.dsc), textPrompt("|07Enter a |15description for your BBS|08:|07", 70, 60, enter_new ? "" : info.dsc, true));
 
 	if (saveData(&info, CONFIG_FILE) != -1) {		
 		printPipeCodeString("\r\n\r\n|07 BBS info saved |15successfully|07!\r\n\r\nPress any key...");

@@ -176,9 +176,9 @@ bool sendCmdPacket(const char* cmd, const char* cmdArg) {
         _snprintf_s(cmdstr, MSG_LEN, -1, cmd, cmdArg);
     }
     else {
-        strncpy_s(cmdstr, MSG_LEN, cmd, -1);
+        strcpy_s(cmdstr, MSG_LEN, cmd);
     }
-    strncpy_s(packet, PACKET_LEN, createPacket("CLIENT", "", "", "SERVER", "", "", cmdstr), -1);
+    strcpy_s(packet, PACKET_LEN, createPacket("CLIENT", "", "", "SERVER", "", "", cmdstr));
 
     if (gVerboseLogging) {
         char logstring[1024] = "";
@@ -220,7 +220,7 @@ bool sendCmdPacket(const char* cmd, const char* cmdArg) {
 bool sendMsgPacket(char* fromUser, char* fromSite, char* fromRoom, char* toUser, char* msgExt, char* toRoom, char* body) {
     int iResult;
     char packet[PACKET_LEN] = "";
-    strncpy_s(packet, PACKET_LEN, createPacket(fromUser, fromSite, fromRoom, toUser, msgExt, toRoom, body), -1);
+    strcpy_s(packet, PACKET_LEN, createPacket(fromUser, fromSite, fromRoom, toUser, msgExt, toRoom, body));
     
     if (gVerboseLogging) {
         char logstring[1024] = "";
@@ -372,7 +372,7 @@ void* clientProcess(void* lpArg) {
                 int fieldCount = split(clientPacket, '~', &field);
 
                 if (fieldCount >= 7) {
-                    strncpy_s(thisUser, 30, field[0], -1);
+                    strcpy_s(thisUser, sizeof(thisUser), field[0]);
                     printDateTimeStamp();
 
                     char logstring[100] = "";
@@ -846,7 +846,7 @@ void mrcHostProcess(struct settings cfg) {
                     else if (strncmp(body, "STATS:", 6) == 0) {
                         int act = 0;
                         char stats[30] = "";
-                        strncpy_s(stats, sizeof(stats), body + 6, -1);
+                        strcpy_s(stats, sizeof(stats), body + 6);
                         char* bbses, * rooms, * users, * activity;
                         parseStats(stats, &bbses, &rooms, &users, &activity);
                         act = atoi(activity);

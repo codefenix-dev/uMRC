@@ -356,8 +356,8 @@ size_t saveUser(struct userdata* data, char* filename) {
  */
 void printPipeCodeString(char* str) {
 
-    char fg = 7;
-    char bg = 0;
+    int fg = 7;
+    int bg = 0;
 
     for (int i = 0; i < (int)strlen(str); i++) {
 
@@ -368,7 +368,7 @@ void printPipeCodeString(char* str) {
                 int pcci = 0;
                 char pcc[3] = "";
                 char cmd[10] = "";
-                strncpy_s(pcc, 3, str + i + 1, 2);
+                strncpy_s(pcc, sizeof(pcc), str + i + 1, 2);
                 pcci = atoi(pcc);
 
                 if (pcci >= 0 && pcci <= 15) {
