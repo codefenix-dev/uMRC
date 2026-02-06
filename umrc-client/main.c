@@ -125,7 +125,7 @@ const char* CURSOR_COLORS[16] = {
     "bright red",
     "bright magenta",
     "bright yellow",
-    "white"
+    "bright white"
 };
 
 const char* ACTIVITY[4] = {

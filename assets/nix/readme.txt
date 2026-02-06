@@ -1,5 +1,5 @@
  uMRC  ┌──── ▄█▀▀▀▀▀█▄ ───┬───┬───┬─┐
- v100┌──── ▄██ ▄███ ▀▀█▄ ·────────┐ ┤
+ v101┌──── ▄██ ▄███ ▀▀█▄ ·────────┐ ┤
    ┌──── ▄█▀▀ ▐█▀ ▀ █ ██  ▄ ▄ ▄ · │ │
  ┌──── ▄█▀ ▄██▄▀█▄▄██ ██  █████ · │ ┤
 ┌─── ▄█▀ ▐██▀▀█▌ ▀▀▀ ▄█▀  ▐▄█▄▌   │ │
@@ -151,7 +151,8 @@ connections from the same BBS.
    successful.
 
    umrc-bridge takes an optional -V command line switch, which enables
-   verbose logging. This can be used for troubleshooting purposes.
+   verbose logging. This logs all packets passed through the bridge to 
+   umrc.log, which can be useful for troubleshooting purposes.
 
    umrc-bridge makes automatic reconnect attempts in the event the
    connection to the MRC host is lost, up to 10 times by default. This

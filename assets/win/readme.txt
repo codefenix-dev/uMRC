@@ -1,5 +1,5 @@
  uMRC  ┌──── ▄█▀▀▀▀▀█▄ ───┬───┬───┬─┐
- v100┌──── ▄██ ▄███ ▀▀█▄ ·────────┐ ┤
+ v101┌──── ▄██ ▄███ ▀▀█▄ ·────────┐ ┤
    ┌──── ▄█▀▀ ▐█▀ ▀ █ ██  ▄ ▄ ▄ · │ │
  ┌──── ▄█▀ ▄██▄▀█▄▄██ ██  █████ · │ ┤
 ┌─── ▄█▀ ▐██▀▀█▌ ▀▀▀ ▄█▀  ▐▄█▄▌   │ │
@@ -33,7 +33,7 @@ Synchronet, Mystic, and possibly others. It runs on Windows 7 and later.
 
 If you use NetFoss to start up your DOS-based BBS, then the NFU utility
 bundled with NetFoss should run the uMRC Client. As of this writing, Renegade
-has been confirmed to run it.
+has been confirmed.
 
 
 Features:
@@ -152,7 +152,8 @@ connections from the same BBS.
    successful.
 
    umrc-bridge takes an optional -V command line switch, which enables
-   verbose logging. This can be used for troubleshooting purposes.
+   verbose logging. This logs all packets passed through the bridge to 
+   umrc.log, which can be useful for troubleshooting purposes.
 
    umrc-bridge makes automatic reconnect attempts in the event the
    connection to the MRC host is lost, up to 10 times by default. This
