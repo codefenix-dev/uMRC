@@ -7,6 +7,8 @@ v101 - TBA:
   - Added a pipe color code guide to all text entry fields where pipe
     color codes are allowed.
   - Improved wrapping of long, unbroken chat text.
+  - User's chat text color is now indicated by the color of the blinking
+    input cursor.
 
 v100 - January 27, 2026:
 

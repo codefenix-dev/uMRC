@@ -44,7 +44,7 @@
 #define DEFAULT_JOIN_MSG "|07- |11%s |03has arrived."
 #define DEFAULT_EXIT_MSG "|07- |12%s |04has left chat."
 #define CTCP_ROOM "ctcp_echo_channel"
-#define CHAT_CURSOR "`flashing white`\262`bright black`\372``"
+#define CHAT_CURSOR "`flashing %s`\262`bright black`\372``"
 
 
 bool gRoomTopicChanged = false;
@@ -107,6 +107,25 @@ const char* DEFAULT_BRACKETS[DEFAULT_BRACKETS_COUNT] = {
     "][",
     ">>",
     "&}"
+};
+
+const char* CURSOR_COLORS[16] = {
+    "black",
+    "blue",
+    "green",
+    "cyan",
+    "red",
+    "magenta",
+    "brown",
+    "grey",
+    "bright black",
+    "bright blue",
+    "bright green",
+    "bright cyan",
+    "bright red",
+    "bright magenta",
+    "bright yellow",
+    "white"
 };
 
 const char* ACTIVITY[4] = {
@@ -989,7 +1008,7 @@ void enterScrollBack(int initialScroll, int mode) {
     isChatPaused = false;
     drawStatusBar();
     resetInputLine();
-    od_printf(CHAT_CURSOR);
+    od_printf(CHAT_CURSOR, CURSOR_COLORS[user.textColor]);
 }
 
 /**
@@ -1386,7 +1405,7 @@ void processUserCommand(char* cmd, char* params) {
         isChatPaused = false;
         drawStatusBar();
         resetInputLine();
-        od_printf(CHAT_CURSOR);
+        od_printf(CHAT_CURSOR, CURSOR_COLORS[user.textColor]);
     }
     else if (_stricmp(cmd, "twit") == 0) {
         char action[10] = "";
@@ -1823,6 +1842,7 @@ void doChatRoutines(char* input) {
                 else {
                     od_disp_str(input);
                 }
+                od_printf(CHAT_CURSOR, CURSOR_COLORS[user.textColor]);
                 break;
 
             case OD_KEY_RIGHT:
@@ -1845,6 +1865,7 @@ void doChatRoutines(char* input) {
                 else {
                     od_disp_str(input);
                 }
+                od_printf(CHAT_CURSOR, CURSOR_COLORS[user.textColor]);
                 break;
 
             case OD_KEY_DELETE: 
@@ -1860,7 +1881,7 @@ void doChatRoutines(char* input) {
             case OD_KEY_END:
                 strcpy_s(input, sizeof(input), "");
                 resetInputLine();
-                od_printf(CHAT_CURSOR);
+                od_printf(CHAT_CURSOR, CURSOR_COLORS[user.textColor]);
                 break;
 
             case '\x0e':
@@ -1990,7 +2011,7 @@ void doChatRoutines(char* input) {
                     od_putch(key);
                 }
             }
-            od_printf(CHAT_CURSOR);
+            od_printf(CHAT_CURSOR, CURSOR_COLORS[user.textColor]);
             updateBuffer(strlen(input));
         }
     }
@@ -2184,7 +2205,7 @@ bool enterChat() {
         char input[MSG_LEN] = "";
         updateBuffer(0);
         resetInputLine();
-        od_printf(CHAT_CURSOR);
+        od_printf(CHAT_CURSOR, CURSOR_COLORS[user.textColor]);
 
         doChatRoutines(input); // capture user input and keep chat display updated
 
