@@ -40,7 +40,7 @@ char* textPrompt(char* promptText, int maxLen, int displayableLen, char* default
 		printPipeCodeString(promptText);
 		if (displayableLen > 0) {
 			char limitdisp[140] = "";
-			_snprintf_s(limitdisp, 140, -1, "\r\n(max length: %d, displayable length: %d)", maxLen, displayableLen);
+			_snprintf_s(limitdisp, sizeof(limitdisp), -1, "\r\n(max length: %d, displayable length: %d)", maxLen, displayableLen);
 			printPipeCodeString(limitdisp);
 		}
 		if (convertPipeCodes == true) {
@@ -48,7 +48,7 @@ char* textPrompt(char* promptText, int maxLen, int displayableLen, char* default
 		}
 		if (strlen(defaultValue) > 0) {
 			char defdisp[140] = "";
-			_snprintf_s(defdisp, 140, -1, "\r\n |08(Press ENTER for: |15\"%s\"|08)|07", defaultValue);
+			_snprintf_s(defdisp, sizeof(defdisp), -1, "\r\n |08(Press ENTER for: |15\"%s\"|08)|07", defaultValue);
 			printPipeCodeString(defdisp);
 		}
 		printPipeCodeString("\r\n\r\n> |17 ");
@@ -86,7 +86,7 @@ char charPrompt(char* promptText, char allowedChars[], char defaultChar) {
 		printPipeCodeString(promptText);
 		if (defaultChar != '\0') {
 			char defdisp[140] = "";
-			_snprintf_s(defdisp, 140, -1, "\r\n |08(Press ENTER for: |15\"%c\"|08)|07", defaultChar);
+			_snprintf_s(defdisp, sizeof(defdisp), -1, "\r\n |08(Press ENTER for: |15\"%c\"|08)|07", defaultChar);
 			printPipeCodeString(defdisp);
 		}
 		printPipeCodeString("\r\n\r\n> |17  \b");
@@ -118,12 +118,12 @@ char* listPrompt(char* promptText, const char* choices[], int choiceCount, char*
 	int iIpt = 0;
 	for (int i = 0; i < choiceCount; i++) {
 		char dispOpt[80] = "";
-		_snprintf_s(dispOpt, 80, -1, "%2d: %s\r\n", i + 1, choices[i]);
+		_snprintf_s(dispOpt, sizeof(dispOpt), -1, "%2d: %s\r\n", i + 1, choices[i]);
 		printPipeCodeString(dispOpt);
 	}
 	while (iIpt < 1 || iIpt > choiceCount) {
 		char dispPrmpt[80] = "";
-		_snprintf_s(dispPrmpt, 80, -1,"\r\nMake a selection (%d-%d): |17   \b\b", 1, choiceCount);
+		_snprintf_s(dispPrmpt, sizeof(dispPrmpt), -1, "\r\nMake a selection (%d-%d): |17   \b\b", 1, choiceCount);
 		printPipeCodeString(dispPrmpt);
 		fgets(buffer, size, stdin);
 		iIpt = atoi(buffer);
@@ -133,12 +133,12 @@ char* listPrompt(char* promptText, const char* choices[], int choiceCount, char*
 	char fdbk[50] = "";
 	if (strcmp(choices[iIpt-1], NOT_LISTED)==0) { // if option isn't listed, let them type in whatever
 		char* rEntered = textPrompt(freeTextPrompt, size, 0, "", false);		
-		_snprintf_s(fdbk,50, -1,"|15%s|07 entered.\r\n\r\n",  rEntered);
+		_snprintf_s(fdbk, sizeof(fdbk), -1, "|15%s|07 entered.\r\n\r\n", rEntered);
 		printPipeCodeString(fdbk);
 		return rEntered;
 	} else {
 		char* rPicked = (char*)choices[iIpt - 1];
-		_snprintf_s(fdbk, 50,-1,"|15%s|07 selected.\r\n\r\n", rPicked);
+		_snprintf_s(fdbk, sizeof(fdbk), -1, "|15%s|07 selected.\r\n\r\n", rPicked);
 		printPipeCodeString(fdbk);
 		return rPicked;
 	}
@@ -205,7 +205,7 @@ int main()
 		clearScreen();
 		
 		char dispStr[140] = "";
-		_snprintf_s(dispStr, 140,-1,"|13 uMRC for %s Setup|07\r\n", PLATFORM);
+		_snprintf_s(dispStr, sizeof(dispStr), -1, "|13 uMRC for %s Setup|07\r\n", PLATFORM);
 		printPipeCodeString(dispStr);
 		printPipeCodeString("|01 ==========================================================================|07\r\n");
 		puts("");
@@ -213,30 +213,30 @@ int main()
 						
 			printPipeCodeString("|10 MRC SERVER INFO|07:\r\n");
 
-			_snprintf_s(dispStr, 140,-1,"|08         Host|07: |09%s|07\r\n", info.host);
+			_snprintf_s(dispStr, sizeof(dispStr),-1,"|08         Host|07: |09%s|07\r\n", info.host);
 			printPipeCodeString(dispStr);
-			_snprintf_s(dispStr, 140, -1, "|08         Port|07: |09%s|07\r\n", info.port);
+			_snprintf_s(dispStr, sizeof(dispStr), -1, "|08         Port|07: |09%s|07\r\n", info.port);
 			printPipeCodeString(dispStr);
-			_snprintf_s(dispStr, 140, -1, "|08          SSL|07: |09%s|07\r\n", (info.ssl == true ? "|10Yes" : "No"));
+			_snprintf_s(dispStr, sizeof(dispStr), -1, "|08          SSL|07: |09%s|07\r\n", (info.ssl == true ? "|10Yes" : "No"));
 			printPipeCodeString(dispStr);
 
 
 			puts("");
 			printPipeCodeString("|10 BBS INFO|07 - |02This is how your BBS appears in the MRC BBS list|07:\r\n");
 
-			_snprintf_s(dispStr, 140, -1, "|08     BBS Name|07: |07%s|07\r\n", info.name);
+			_snprintf_s(dispStr, sizeof(dispStr), -1, "|08     BBS Name|07: |07%s|07\r\n", info.name);
 			printPipeCodeString(dispStr);
-			_snprintf_s(dispStr, 140, -1, "|08     Platform|07: |07%s / %s.%s / %s.%s|07\r\n", info.soft, PLATFORM, ARC, PROTOCOL_VERSION, UMRC_VERSION);
+			_snprintf_s(dispStr, sizeof(dispStr), -1, "|08     Platform|07: |07%s / %s.%s / %s.%s|07\r\n", info.soft, PLATFORM, ARC, PROTOCOL_VERSION, UMRC_VERSION);
 			printPipeCodeString(dispStr);
-			_snprintf_s(dispStr, 140, -1, "|08          Web|07: |07%s|07\r\n", info.web);
+			_snprintf_s(dispStr, sizeof(dispStr), -1, "|08          Web|07: |07%s|07\r\n", info.web);
 			printPipeCodeString(dispStr);
-			_snprintf_s(dispStr, 140, -1, "|08       Telnet|07: |07%s|07\r\n", info.tel);
+			_snprintf_s(dispStr, sizeof(dispStr), -1, "|08       Telnet|07: |07%s|07\r\n", info.tel);
 			printPipeCodeString(dispStr);
-			_snprintf_s(dispStr, 140, -1, "|08          SSH|07: |07%s|07\r\n", info.ssh);
+			_snprintf_s(dispStr, sizeof(dispStr), -1, "|08          SSH|07: |07%s|07\r\n", info.ssh);
 			printPipeCodeString(dispStr);
-			_snprintf_s(dispStr, 140, -1, "|08        Sysop|07: |07%s|07\r\n", info.sys);
+			_snprintf_s(dispStr, sizeof(dispStr), -1, "|08        Sysop|07: |07%s|07\r\n", info.sys);
 			printPipeCodeString(dispStr);
-			_snprintf_s(dispStr, 140, -1, "|08  Description|07: |07%s|07\r\n", info.dsc);
+			_snprintf_s(dispStr, sizeof(dispStr), -1, "|08  Description|07: |07%s|07\r\n", info.dsc);
 			printPipeCodeString(dispStr);
 
 			puts("");

@@ -118,7 +118,7 @@ char* getDateTimeStamp() {
     timeinfo = localtime(&rawtime);
 #endif
 
-    _snprintf_s(tm_str, 41, -1, "|07[|10%d/%02d/%02d %02d:%02d:%02d|07] ",
+    _snprintf_s(tm_str, sizeof(tm_str), -1, "|07[|10%d/%02d/%02d %02d:%02d:%02d|07] ",
 #if defined(WIN32) || defined(_MSC_VER)  
         timeinfo.tm_year + 1900,
         timeinfo.tm_mon + 1,
@@ -797,7 +797,7 @@ void mrcHostProcess(struct settings cfg) {
                     if (lt[i].packetSum == packetSum(packet) || lt[i].isServerCmd && strcmp(fromUser, "SERVER")==0) {
                         gLatency = currentTimeMillis() - lt[i].timeSent;      
                         char ltccmd[20] = "";
-                        _snprintf_s(ltccmd, 20, -1, "LATENCY:%.0f", gLatency);
+                        _snprintf_s(ltccmd, sizeof(ltccmd), -1, "LATENCY:%.0f", gLatency);
                         sendToLocalClients(createPacket("SERVER", "", "", "CLIENT", "", "", ltccmd));
                         initializeLt();
                         break;
@@ -828,7 +828,7 @@ void mrcHostProcess(struct settings cfg) {
                         sendCmdPacket("INFODSC:%s", cfg.dsc);
                         sendCmdPacket("IMALIVE:%s", cfg.name);
                         char capStr[20] = "";
-                        _snprintf_s(capStr, 20, -1, "%s%s%s", "MCI", (cfg.ssl ? " SSL" : ""), " CTCP");
+                        _snprintf_s(capStr, sizeof(capStr), -1, "%s%s%s", "MCI", (cfg.ssl ? " SSL" : ""), " CTCP");
                         sendCmdPacket("CAPABILITIES: %s", capStr);    
                         Sleep(20);
 

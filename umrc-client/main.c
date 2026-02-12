@@ -155,7 +155,7 @@ char* getTimestamp() {
     struct tm *timeinfo; 
     timeinfo = localtime(&rawtime);
 #endif
-    _snprintf_s(timeStamp, 10, -1, "%02d:%02d",
+    _snprintf_s(timeStamp, sizeof(timeStamp), -1, "%02d:%02d",
 #if defined(WIN32) || defined(_MSC_VER)  
         timeinfo.tm_hour,
         timeinfo.tm_min);
@@ -180,7 +180,7 @@ char* getCtcpDatetime() {
     struct tm *timeinfo; 
     timeinfo = localtime(&rawtime);
 #endif
-    _snprintf_s(dtStr, 30, -1, "%02d/%02d/%02d %02d:%02d",
+    _snprintf_s(dtStr, sizeof(dtStr), -1, "%02d/%02d/%02d %02d:%02d",
 #if defined(WIN32) || defined(_MSC_VER)  
         timeinfo.tm_mon + 1,
         timeinfo.tm_mday,
@@ -289,7 +289,7 @@ void getInputString(char* input, INT nMaxLength, unsigned char chMin, unsigned c
                 // Add the keystroke to the input string...            
                 if ((int)strlen(input) < nMaxLength-1) {
                     char tmpipt[80] = "";
-                    _snprintf_s(tmpipt, 80, -1, "%s%c", input, key);
+                    _snprintf_s(tmpipt, sizeof(tmpipt), -1, "%s%c", input, key);
                     strcpy_s(input, nMaxLength, tmpipt);
                     updateInput = true;
                 }
@@ -346,7 +346,7 @@ void defaultDisplayName() {
     //}
     //_snprintf_s(user.chatterNameSuffix, 33, -1, "%s|%02d%c", defaultSuf, user.chatterNamePrefixFgColor, brackets[1]);
     
-    _snprintf_s(user.chatterNameSuffix, 33, -1, "|%02d%c|16", user.chatterNamePrefixFgColor, brackets[1]);
+    _snprintf_s(user.chatterNameSuffix, sizeof(user.chatterNameSuffix), -1, "|%02d%c|16", user.chatterNamePrefixFgColor, brackets[1]);
 }
 
 /** 
@@ -375,7 +375,7 @@ void stripPipeCodes(char* str) {
 void showPipeColors(int lo, int hi) {
     for (int i = lo; i <= hi; i++) {
         char c[15] = "";
-        _snprintf_s(c, 15, -1, i < 17 ? "|%02d%02d " : "|00|%02d%02d ", i, i);
+        _snprintf_s(c, sizeof(c), -1, i < 17 ? "|%02d%02d " : "|00|%02d%02d ", i, i);
         od_disp_emu(pipeToAnsi(c), TRUE);
     }
 }
@@ -547,15 +547,12 @@ void pickTheme(char* pickedTheme) {
 
 void loadTheme() {
     char themePath[30] = "";
-#if defined(WIN32) || defined(_MSC_VER)
-    _snprintf_s(themePath, 30, -1, "themes\\%s", user.theme);
-#else
-    _snprintf_s(themePath, 30, -1, "themes/%s", user.theme);
-#endif
     FILE* extFile;
 #if defined(WIN32) || defined(_MSC_VER)
+    _snprintf_s(themePath, sizeof(themePath), -1, "themes\\%s", user.theme);
     fopen_s(&extFile, themePath, "r");
 #else
+    _snprintf_s(themePath, sizeof(themePath), -1, "themes/%s", user.theme);
     extFile = fopen(themePath, "r");
 #endif
     int lineCount = 0;
@@ -625,7 +622,7 @@ void updateBuffer(int typed) {
 
 void drawStatusBar() {
     char themeLines[1024] = "";
-    _snprintf_s(themeLines, 1024, -1, "%s\r\n%s", gStatusThemeLine1, gStatusThemeLine2);
+    _snprintf_s(themeLines, sizeof(themeLines), -1, "%s\r\n%s", gStatusThemeLine1, gStatusThemeLine2);
     od_set_cursor(od_control.user_screen_length - 2, 1);
     od_disp_emu(themeLines, TRUE);
 
@@ -673,7 +670,7 @@ void enterChatterSettings() {
 
         od_printf(" `bright magenta`3`bright white`) `white`Text color:    ");
         char sampletext[80] = "";
-        _snprintf_s(sampletext, 80, -1, "|%02dSample text using color #%d...", user.textColor, user.textColor);
+        _snprintf_s(sampletext, sizeof(sampletext), -1, "|%02dSample text using color #%d...", user.textColor, user.textColor);
         od_disp_emu(pipeToAnsi(sampletext), TRUE);
         od_printf("``\r\n");
 
@@ -734,7 +731,7 @@ void enterChatterSettings() {
             od_printf("\r\n\r\n`bright white`> ");
             getInputString(user.joinMessage, 50, 32, 127);
             if (strlen(user.joinMessage) == 0) {
-                _snprintf_s(user.joinMessage, 50, -1, DEFAULT_JOIN_MSG, user.chatterName);
+                _snprintf_s(user.joinMessage, sizeof(user.joinMessage), -1, DEFAULT_JOIN_MSG, user.chatterName);
             }
             changesMade = true;
             break;
@@ -747,7 +744,7 @@ void enterChatterSettings() {
             od_printf("\r\n\r\n`bright white`> ");
             getInputString(user.exitMessage, 50, 32, 127);
             if (strlen(user.exitMessage) == 0) {
-                _snprintf_s(user.exitMessage, 50, -1, DEFAULT_EXIT_MSG, user.chatterName);
+                _snprintf_s(user.exitMessage, sizeof(user.exitMessage), -1, DEFAULT_EXIT_MSG, user.chatterName);
             }
             changesMade = true;
             break;
@@ -1035,7 +1032,7 @@ void addToScrollBack(char* msg, int mode) {
 
 void displayMessage(char* msg, bool mention) {
     char timeStamp[30] = "";
-    _snprintf_s(timeStamp, 30, -1, (mention ? "|00|23%s|26\x1b[5m\376\x1b[0m|07" : "|08%s|07 "), getTimestamp());
+    _snprintf_s(timeStamp, sizeof(timeStamp), -1, (mention ? "|00|23%s|26\x1b[5m\376\x1b[0m|07" : "|08%s|07 "), getTimestamp());
 
     if (strLenWithoutPipecodes(msg) >= (od_control.user_screenwidth - 7)) {
 
@@ -1100,7 +1097,7 @@ void displayMessage(char* msg, bool mention) {
     }
 
     char dispMsg[512]="";
-    _snprintf_s(dispMsg, 512, -1, "%s%s\x1b[0m", timeStamp, msg);        
+    _snprintf_s(dispMsg, sizeof(dispMsg), -1, "%s%s\x1b[0m", timeStamp, msg);
 
     // Save this message to the chat scrollback buffer
     addToScrollBack(dispMsg, 0);
@@ -1177,7 +1174,7 @@ void addTwit(char* twit) {
         loadTwits();
         if (checkTwit(twit)) {
             char result[140] = "";
-            _snprintf_s(result, 140, -1, "|15* |14%s |07added to twit list.", twit);
+            _snprintf_s(result, sizeof(result), -1, "|15* |14%s |07added to twit list.", twit);
             displayMessage(result, false);
         }
     }
@@ -1210,7 +1207,7 @@ void removeTwit(char* twit) {
     loadTwits();
     if (!checkTwit(twit) && wasInList) {
         char result[140] = "";
-        _snprintf_s(result, 140, -1, "|15* |14%s |07removed from twit list.", twit);
+        _snprintf_s(result, sizeof(result), -1, "|15* |14%s |07removed from twit list.", twit);
         displayMessage(result, false);
     }
 }
@@ -1325,7 +1322,7 @@ void processUserCommand(char* cmd, char* params) {
         stripPipeCodes(newRoom); // No pipe codes
 
         char newRoomCmd[30] = "";
-        _snprintf_s(newRoomCmd, 30, -1, "NEWROOM:%s:", gRoom); // include the OLD room as the first parameter...
+        _snprintf_s(newRoomCmd, sizeof(newRoomCmd), -1, "NEWROOM:%s:", gRoom); // include the OLD room as the first parameter...
         sendCmdPacket(&mrcSock, newRoomCmd, newRoom); // the NEW room will be included as the second parameter...
         strcpy_s(gRoom, sizeof(gRoom), newRoom); 
         sendCmdPacket(&mrcSock, "USERLIST", ""); // Need a new user list after joining a different room
@@ -1333,7 +1330,7 @@ void processUserCommand(char* cmd, char* params) {
     else if (_stricmp(cmd, "topic") == 0) {              
         stripPipeCodes(params);  // No pipe codes
         char newTopicCmd[30] = "";
-        _snprintf_s(newTopicCmd, 30, -1, "NEWTOPIC:%s:", gRoom);
+        _snprintf_s(newTopicCmd, sizeof(newTopicCmd), -1, "NEWTOPIC:%s:", gRoom);
         sendCmdPacket(&mrcSock, newTopicCmd, params);
     }
     else if (strcmp(cmd, "?") == 0) {
@@ -1384,7 +1381,7 @@ void processUserCommand(char* cmd, char* params) {
         if (nextspcidx > 0) {
             getSubStr(params, target, 0, nextspcidx);
             ustr(params);
-            _snprintf_s(ctcp_data, 50, -1, "%s %s", target, params + nextspcidx+1);
+            _snprintf_s(ctcp_data, sizeof(ctcp_data), -1, "%s %s", target, params + nextspcidx + 1);
             sendCtcpPacket(&mrcSock, (strcmp(target, "*") == 0 || target[0] == '#') ? "" : target, "[CTCP]", ctcp_data);
         }
     }
@@ -1431,7 +1428,7 @@ void processUserCommand(char* cmd, char* params) {
     else if (_stricmp(cmd, "help") == 0) {
         if (strlen(params) > 0) {
             char topic[30] = "";
-            _snprintf_s(topic, 30, -1, "screens\\help%s.txt", params);
+            _snprintf_s(topic, sizeof(topic), -1, "screens\\help%s.txt", params);
 #if defined(WIN32) || defined(_MSC_VER)  
             displayPipeFileInChat(topic);
         }
@@ -1465,7 +1462,7 @@ void processUserCommand(char* cmd, char* params) {
             listThemesInChat();
         }
         else {
-            _snprintf_s(user.theme, 20, -1, "%s.ans", params);
+            _snprintf_s(user.theme, sizeof(user.theme), -1, "%s.ans", params);
             loadTheme();
             drawStatusBar();
         }
@@ -1486,6 +1483,13 @@ void processUserCommand(char* cmd, char* params) {
 }
 
 void processServerMessage(char* body, char* toUser) {
+        
+    if (body == NULL) { // don't process if there's nothing to send..
+        return;
+    }
+    if (strlen(body) == 0) {
+        return;
+    }
 
     // Parse the body for command strings
     char cmd[141] = "";
@@ -1667,6 +1671,10 @@ void* handleIncomingMessages(void* lpArg) {
                 char* fromUser = "", * fromSite = "", * fromRoom = "", * toUser = "", * msgExt = "", * toRoom = "", * body = "";
                 processPacket(packet, &fromUser, &fromSite, &fromRoom, &toUser, &msgExt, &toRoom, &body);
 
+                //if (body == NULL) { // don't sent a NULL body downstream
+                //    continue;
+                //}
+
                 if (strcmp(fromUser, "SERVER") == 0 && (strcmp(toRoom, gRoom) == 0 || strlen(toRoom) == 0)) {
 
                     processServerMessage(body, toUser);
@@ -1749,9 +1757,9 @@ void* handleIncomingMessages(void* lpArg) {
         else {
             char errstr[50] = "";
 #if defined(WIN32) || defined(_MSC_VER) 
-            _snprintf_s(errstr, 50, -1, "|12* |14recv failed with error: %d", WSAGetLastError());
+            _snprintf_s(errstr, sizeof(errstr), -1, "|12* |14recv failed with error: %d", WSAGetLastError());
 #else
-            _snprintf_s(errstr, 50, -1, "|12* |14recv failed with error: %d", errno);
+            _snprintf_s(errstr, sizeof(errstr), -1, "|12* |14recv failed with error: %d", errno);
 #endif      
             displayMessage(errstr, true);
             stripPipeCodes(errstr);
@@ -1831,7 +1839,7 @@ void doChatRoutines(char* input) {
                 if ((int)strlen(input) >= (int)od_control.user_screenwidth - 3) {
                     overfill = strlen(input) - (od_control.user_screenwidth - 4);
                 }
-                _snprintf_s(pcol, 4, -1, "|%02d", user.textColor);
+                _snprintf_s(pcol, sizeof(pcol), -1, "|%02d", user.textColor);
 
                 // Scroll the input string display if it's longer than the terminal width
                 od_set_cursor(od_control.user_screen_length, 1);
@@ -1854,7 +1862,7 @@ void doChatRoutines(char* input) {
                 if ((int)strlen(input) >= (int)od_control.user_screenwidth - 3) {
                     overfill = strlen(input) - (od_control.user_screenwidth - 4);
                 }
-                _snprintf_s(pcol, 4, -1, "|%02d", user.textColor);
+                _snprintf_s(pcol, sizeof(pcol), -1, "|%02d", user.textColor);
 
                 // Scroll the input string display if it's longer than the terminal width
                 od_set_cursor(od_control.user_screen_length, 1);
@@ -1973,7 +1981,7 @@ void doChatRoutines(char* input) {
                 overfill = strlen(input) - (od_control.user_screenwidth - 4);
                 endOfInput = od_control.user_screenwidth - 1 + (key == 8 ? -1 : -2) - (strlen(tabResult) > 0 ? strlen(tabResult)-1: 0);
             }
-            _snprintf_s(pcol, 4, -1, "|%02d", user.textColor);
+            _snprintf_s(pcol, sizeof(pcol), -1, "|%02d", user.textColor);
 
             // Scroll the input string display if it's longer than the terminal width
             if (overfill > 0) {
@@ -2317,6 +2325,7 @@ int main(int argc, char** argv)
     if (0 == userNumber && strcmp(od_control.user_name, "Sysop") == 0) {
         od_printf("`bright yellow`***`bright white`LOCAL MODE`bright yellow`***``\r\n\r\n");
         strcpy_s(user.chatterName, sizeof(user.chatterName), od_control.user_name);
+        od_control.user_timelimit = 1000;
     }
     else {
         strcpy_s(user.chatterName, sizeof(user.chatterName), strlen(od_control.user_handle) > 0 ? od_control.user_handle : od_control.user_name);
@@ -2428,12 +2437,12 @@ int main(int argc, char** argv)
             od_printf(DIVIDER);
             doPause();
 
-            _snprintf_s(gDisplayChatterName, 80, -1, "|%02d|%02d%c|%02d|%02d%s%s", user.chatterNamePrefixFgColor, user.chatterNamePrefixBgColor, user.chatterNamePrefix, user.chatterNameFgColor, user.chatterNameBgColor, user.chatterName, user.chatterNameSuffix);
+            _snprintf_s(gDisplayChatterName, sizeof(gDisplayChatterName), -1, "|%02d|%02d%c|%02d|%02d%s%s", user.chatterNamePrefixFgColor, user.chatterNamePrefixBgColor, user.chatterNamePrefix, user.chatterNameFgColor, user.chatterNameBgColor, user.chatterName, user.chatterNameSuffix);
             enterChatterSettings();
         }
     }
     else {
-        _snprintf_s(gDisplayChatterName, 80, -1, "|%02d|%02d%c|%02d|%02d%s%s", user.chatterNamePrefixFgColor, user.chatterNamePrefixBgColor, user.chatterNamePrefix, user.chatterNameFgColor, user.chatterNameBgColor, user.chatterName, user.chatterNameSuffix);
+        _snprintf_s(gDisplayChatterName, sizeof(gDisplayChatterName), -1, "|%02d|%02d%c|%02d|%02d%s%s", user.chatterNamePrefixFgColor, user.chatterNamePrefixBgColor, user.chatterNamePrefix, user.chatterNameFgColor, user.chatterNameBgColor, user.chatterName, user.chatterNameSuffix);
         od_printf("Existing user data LOADED.\r\n\r\n");
     }
 
