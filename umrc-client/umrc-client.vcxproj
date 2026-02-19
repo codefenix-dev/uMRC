@@ -152,9 +152,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\common\common.c" />
+    <ClCompile Include="func.c" />
     <ClCompile Include="main.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="func.h" />
     <ClInclude Include="OpenDoor.h" />
   </ItemGroup>
   <ItemGroup>

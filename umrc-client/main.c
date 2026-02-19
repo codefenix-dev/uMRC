@@ -37,6 +37,7 @@
 
 #include "OpenDoor.h"
 #include "../common/common.h"
+#include "func.h"
 
 #define PROGRAM "umrc-client"
 #define DIVIDER "`bright blue`___________________________________________________________________________\r\n``"
@@ -142,92 +143,11 @@ SOCKET mrcSock = INVALID_SOCKET;
 
 
 /**
- *  Returns a time string (HH:MM) to place in front of all chat messages.
- */
-char* getTimestamp() {
-    char timeStamp[10] = "";
-    time_t rawtime;
-    time(&rawtime);
-#if defined(WIN32) || defined(_MSC_VER)  
-    struct tm timeinfo;
-    localtime_s(&timeinfo, &rawtime);
-#else
-    struct tm *timeinfo; 
-    timeinfo = localtime(&rawtime);
-#endif
-    _snprintf_s(timeStamp, sizeof(timeStamp), -1, "%02d:%02d",
-#if defined(WIN32) || defined(_MSC_VER)  
-        timeinfo.tm_hour,
-        timeinfo.tm_min);
-#else
-        timeinfo->tm_hour,
-        timeinfo->tm_min);
-#endif
-    return _strdup(timeStamp);
-}
-
-/**
- *  Returns a date/time string for CTCP responses, formatted as MM/DD/YY HH:MM.
- */
-char* getCtcpDatetime() {
-    char dtStr[30] = "";
-    time_t rawtime;
-    time(&rawtime);
-#if defined(WIN32) || defined(_MSC_VER)  
-    struct tm timeinfo;
-    localtime_s(&timeinfo, &rawtime);
-#else
-    struct tm *timeinfo; 
-    timeinfo = localtime(&rawtime);
-#endif
-    _snprintf_s(dtStr, sizeof(dtStr), -1, "%02d/%02d/%02d %02d:%02d",
-#if defined(WIN32) || defined(_MSC_VER)  
-        timeinfo.tm_mon + 1,
-        timeinfo.tm_mday,
-        timeinfo.tm_year - 100, // + 1900,
-        timeinfo.tm_hour,
-        timeinfo.tm_min);
-#else
-        timeinfo->tm_mon + 1,
-        timeinfo->tm_mday,
-        timeinfo->tm_year - 100, // + 1900,
-        timeinfo->tm_hour,
-        timeinfo->tm_min);
-#endif
-    return _strdup(dtStr);
-}
-
-/**
  *  Pauses and waits for any key input from the user.
  */
 void doPause() {
     od_printf("\r\n `bright white`[`cyan`Press any key to continue`bright white`]`white` ");
     od_get_key(TRUE);
-}
-
-/**
- * Checks if a string contains another string. Case-insensitive.
- */
-bool strContainsStrI(char* str, char* contains) {
-    char s[512] = "";
-    char c[512] = "";
-    strcpy_s(s, sizeof(s), str);
-    strcpy_s(c, sizeof(c), contains);
-    lstr(c);
-    lstr(s);
-    return strstr(s, c) != NULL;
-}
-
-/**
- * Gets a substring from a string. Result stored in: ss
- */
-void getSubStr(char* s, char* ss, int pos, int len) {
-    int i = 0;
-    s += pos; // Move pointer to starting position
-    while (len--) {
-        *ss++ = *s++;
-    }
-    *ss = '\0'; // Null terminate
 }
 
 /**
@@ -349,29 +269,6 @@ void defaultDisplayName() {
     _snprintf_s(user.chatterNameSuffix, sizeof(user.chatterNameSuffix), -1, "|%02d%c|16", user.chatterNamePrefixFgColor, brackets[1]);
 }
 
-/** 
- *  Removes pipe color code sequences (0-24) from a string.
- */
-void stripPipeCodes(char* str) {
-    int len = 0;
-    for (int i = 0; i < (int)strlen(str); i++) {
-        if (str[i] == '|' && i < ((int)strlen(str) - 2)) { // check the next 2 characters for digits
-            if (isdigit(str[i + 1]) && isdigit(str[i + 2])) {
-                i = i + 2; // skip if it's a pipe code
-            }
-            else {
-				str[len] = str[i];
-                len = len + 1;
-            }
-        }
-        else {
-			str[len] = str[i];
-            len = len + 1;
-        }
-    }	
-	str[len] = '\0';
-}
-
 void showPipeColors(int lo, int hi) {
     for (int i = lo; i <= hi; i++) {
         char c[15] = "";
@@ -379,7 +276,6 @@ void showPipeColors(int lo, int hi) {
         od_disp_emu(pipeToAnsi(c), TRUE);
     }
 }
-
 
 /**
  *  Prompts the user to select a color within a range. 
@@ -488,7 +384,7 @@ void pickTheme(char* pickedTheme) {
     HANDLE hFind = NULL;
 
     if ((hFind = FindFirstFile("themes\\*.ans", &fdFile)) == INVALID_HANDLE_VALUE) {
-        printf("Path not found: [%s]\r\n", "themes");
+        od_printf("Path not found: [%s]\r\n", "themes");
         doPause();
         return;
     }
@@ -522,7 +418,7 @@ void pickTheme(char* pickedTheme) {
             count = count + 1;
         }
     } else {
-        printf("Path not found: [%s]\r\n", "themes");
+        od_printf("Path not found: [%s]\r\n", "themes");
         doPause();
         return;
 	}
@@ -769,8 +665,14 @@ void enterChatterSettings() {
     }
 }
 
+#if !defined(WIN32) && !defined(_MSC_VER)
+int WSAGetLastError() {
+    return errno;
+}
+#endif
+
 /**
- *  Sends a command packet to the MRC host
+ *  Sends a command packet over the bridge
  */
 bool sendCmdPacket(SOCKET* sock, char* cmd, char* cmdArg) {
     int iResult;
@@ -786,18 +688,14 @@ bool sendCmdPacket(SOCKET* sock, char* cmd, char* cmdArg) {
     iResult = send(*sock, packet, (int)strlen(packet), 0);
     if (iResult == SOCKET_ERROR) {
         char logstring[1024] = "";
-#if defined(WIN32) || defined(_MSC_VER)  
         _snprintf_s(logstring, sizeof(logstring), -1, "sendCmdPacket failed with error: %d", WSAGetLastError());
-#else
-        _snprintf_s(logstring, sizeof(logstring), -1, "sendCmdPacket failed with error: %d", errno);
-#endif
         writeToLog(logstring, PROGRAM, od_control.user_handle);
     }
     return (iResult != SOCKET_ERROR);
 }
 
 /**
- *  Sends a CTCP command to the MRC host
+ *  Sends a CTCP command over the bridge
  */
 bool sendCtcpPacket(SOCKET* sock, char* target, char* p, char* data) {
     int iResult;
@@ -808,18 +706,14 @@ bool sendCtcpPacket(SOCKET* sock, char* target, char* p, char* data) {
     iResult = send(*sock, packet, (int)strlen(packet), 0);
     if (iResult == SOCKET_ERROR) {
         char logstring[1024] = "";
-#if defined(WIN32) || defined(_MSC_VER)  
         _snprintf_s(logstring, sizeof(logstring), -1, "sendCtcpPacket failed with error: %d", WSAGetLastError());
-#else
-        _snprintf_s(logstring, sizeof(logstring), -1, "sendCtcpPacket failed with error: %d", errno);
-#endif
         writeToLog(logstring, PROGRAM, od_control.user_handle);
     }
     return (iResult != SOCKET_ERROR);
 }
 
 /**
- *  Sends a Message packet to the MRC host
+ *  Sends a Message packet over the bridge
  */
 bool sendMsgPacket(SOCKET* sock, char* toUser, char* msgExt, char* toRoom, char* body) {
     int iResult;
@@ -828,35 +722,10 @@ bool sendMsgPacket(SOCKET* sock, char* toUser, char* msgExt, char* toRoom, char*
     iResult = send(*sock, packet, (int)strlen(packet), 0);
     if (iResult == SOCKET_ERROR) {
         char logstring[1024] = "";
-#if defined(WIN32) || defined(_MSC_VER)  
         _snprintf_s(logstring, sizeof(logstring), -1, "sendMsgPacket failed with error: %d", WSAGetLastError());
-#else
-        _snprintf_s(logstring, sizeof(logstring), -1, "sendMsgPacket failed with error: %d", errno);
-#endif
         writeToLog(logstring, PROGRAM, od_control.user_handle);
     }
     return (iResult != SOCKET_ERROR);
-}
-
-/**
- *  Returns the length of a string without pipe color codes.
- */
-int strLenWithoutPipecodes(char* str) {
-    int len = 0;
-    for (int i = 0; i < (int)strlen(str); i++) {
-        if (str[i] == '|' && i < ((int)strlen(str) - 2)) { // check the next 2 characters for digits
-            if (isdigit(str[i + 1]) && isdigit(str[i + 2])) {
-                i = i + 2; // skip if it's a pipe code
-            }
-            else {
-                len = len + 1;
-            }
-        }
-        else {
-            len = len + 1;
-        }
-    }
-    return len;
 }
 
 void resetInputLine() {
@@ -1054,28 +923,30 @@ void displayMessage(char* msg, bool mention) {
         token = strtok_s(msg, " ", &context);
         while (token != NULL) {
             bool breakUpLongToken = false;
-            int lastTokenLen = tokenLen;
             tokenLen = strLenWithoutPipecodes(token);
-            if (tokenLen > od_control.user_screenwidth - 7) { // Insert an additional scrollLen if a single 
-                breakUpLongToken = true;                       // word is longer than the terminal width.
+            if (tokenLen > od_control.user_screenwidth - 8) { // single word is longer than the terminal width
+                breakUpLongToken = true;                      // so it needs broken up down below.
             }
-            linelen = linelen + tokenLen + 1;
-            if (!breakUpLongToken && (linelen > (od_control.user_screenwidth  - 7))) {
+            else {
+                linelen = linelen + tokenLen + 1;
+            }
+            if (!breakUpLongToken && (linelen > (od_control.user_screenwidth - 8))) {
                 strcat_s(wrappedMsg, sizeof(wrappedMsg), "\r\n      \300");
                 linelen = 3 + (tokenLen + 1);
             }
-            if (breakUpLongToken) { // an extra CRLF is needed in wrappedMsg for the long token.
+            if (breakUpLongToken) { 
                 char tkn1[100] = "", tkn2[100] = "";
-                int breakPoint = od_control.user_screenwidth - 5 - lastTokenLen;
+                int breakPoint = (od_control.user_screenwidth - linelen - 7);
                 strncpy_s(tkn1, sizeof(tkn1), token, breakPoint);
                 strcpy_s(tkn2, sizeof(tkn2), token + breakPoint);
                 strcat_s(wrappedMsg, sizeof(wrappedMsg), " ");
                 strcat_s(wrappedMsg, sizeof(wrappedMsg), tkn1);
                 strcat_s(wrappedMsg, sizeof(wrappedMsg), "\r\n      \300 ");
-                if ((int)strlen(tkn2) > od_control.user_screenwidth -9) {
-                    char tkn3[50]="";
-                    strcpy_s(tkn3, sizeof(tkn3), tkn2 + od_control.user_screenwidth -9);
-                    tkn2[od_control.user_screenwidth - 9] = '\0';
+                if (strLenWithoutPipecodes(tkn2) > od_control.user_screenwidth) {
+                    char tkn3[100]="";
+                    breakPoint = (od_control.user_screenwidth - 9);
+                    strcpy_s(tkn3, sizeof(tkn3), tkn2 + breakPoint);
+                    tkn2[breakPoint] = '\0';
                     strcat_s(wrappedMsg, sizeof(wrappedMsg), tkn2);
                     strcat_s(wrappedMsg, sizeof(wrappedMsg), "\r\n      \300 ");
                     strcat_s(wrappedMsg, sizeof(wrappedMsg), tkn3);
@@ -1085,7 +956,7 @@ void displayMessage(char* msg, bool mention) {
                 }
             }
             else {
-                if (tokencnt>0) {
+                if (tokencnt > 0) {
                     strcat_s(wrappedMsg, sizeof(wrappedMsg), " ");
                 }
                 strcat_s(wrappedMsg, sizeof(wrappedMsg), token);
@@ -1211,7 +1082,6 @@ void removeTwit(char* twit) {
         displayMessage(result, false);
     }
 }
-
 
 /**
  *  This function takes an incoming message string,
@@ -1635,11 +1505,7 @@ void* handleIncomingMessages(void* lpArg) {
 
         while ((iResult = recv(mrcSock, inboundData, DATA_LEN, 0)) != 0 && gIsInChat) { // continue till disconnected       
             if (iResult == -1) {
-#if defined(WIN32) || defined(_MSC_VER)  
                 if (WSAGetLastError() == WSAEMSGSIZE) { // server has more data to send than the buffer can get in one call                   
-#else
-                if (errno == EMSGSIZE) {
-#endif
                     continue; // iterate again to get more data
                 }
                 else {
@@ -1670,10 +1536,6 @@ void* handleIncomingMessages(void* lpArg) {
 
                 char* fromUser = "", * fromSite = "", * fromRoom = "", * toUser = "", * msgExt = "", * toRoom = "", * body = "";
                 processPacket(packet, &fromUser, &fromSite, &fromRoom, &toUser, &msgExt, &toRoom, &body);
-
-                //if (body == NULL) { // don't sent a NULL body downstream
-                //    continue;
-                //}
 
                 if (strcmp(fromUser, "SERVER") == 0 && (strcmp(toRoom, gRoom) == 0 || strlen(toRoom) == 0)) {
 
@@ -1756,11 +1618,7 @@ void* handleIncomingMessages(void* lpArg) {
         }
         else {
             char errstr[50] = "";
-#if defined(WIN32) || defined(_MSC_VER) 
             _snprintf_s(errstr, sizeof(errstr), -1, "|12* |14recv failed with error: %d", WSAGetLastError());
-#else
-            _snprintf_s(errstr, sizeof(errstr), -1, "|12* |14recv failed with error: %d", errno);
-#endif      
             displayMessage(errstr, true);
             stripPipeCodes(errstr);
             writeToLog(errstr, PROGRAM, od_control.user_handle);
@@ -2024,52 +1882,6 @@ void doChatRoutines(char* input) {
         }
     }
 }
- 
-void removeNonAlphanumeric(char *str) {
-    int readPos = 0, writePos = 0;
-    while (str[readPos] != '\0') {
-        if (isalnum(str[readPos])) {
-            str[writePos++] = str[readPos];
-        }
-        readPos++;
-    }
-    str[writePos] = '\0';
-}
- 
-/**
- * Removes illegal characters/strings from strings
- * to be used as filenames.
- */
-void cleanUpFilename(char *str) {
-    int readPos = 0, writePos = 0;
-    while (str[readPos] != '\0') {
-        if (str[readPos] == '<' || // .... Disallowed characters
-            str[readPos] == '>' || 
-            str[readPos] == ':' || 
-            str[readPos] == '"' || 
-            str[readPos] == '/' || 
-            str[readPos] == '\\' || 
-            str[readPos] == '|' || 
-            str[readPos] == '?' || 
-            str[readPos] == '|' || 
-            str[readPos] == '*') {
-            str[writePos++] = '_';
-        } else {            
-            str[writePos++] = str[readPos];
-        }
-        readPos++;
-    }
-    str[writePos] = '\0';
-
-    if (_stricmp(str, "CON") == 0 || // .... Disallowed filenames
-        _stricmp(str, "PRN") == 0 ||
-        _stricmp(str, "AUX") == 0 ||
-        _stricmp(str, "NUL") == 0 ||
-        (_strnicmp(str, "COM", 3) == 0 && isdigit(str[3]) ) ||
-        (_strnicmp(str, "LPT", 3) == 0 && isdigit(str[3]) )) {
-        strcat_s(str, 36, "_"); // append a character to make it allowed
-    }
-} 
 
 bool enterChat() {
         
@@ -2139,11 +1951,7 @@ bool enterChat() {
         }
         iResult = connect(mrcSock, ptrMh->ai_addr, (int)ptrMh->ai_addrlen);
         if (iResult == SOCKET_ERROR) {
-#if defined(WIN32) || defined(_MSC_VER)  
             closesocket(mrcSock);
-#else
-            close(mrcSock);
-#endif
             mrcSock = INVALID_SOCKET;
             continue;
         }
@@ -2244,13 +2052,10 @@ bool enterChat() {
     displayMessage("Exiting...", false);
 
     // cleanup
-#if defined(WIN32) || defined(_MSC_VER)  
     shutdown(mrcSock, SD_SEND);
     closesocket(mrcSock);
+#if defined(WIN32) || defined(_MSC_VER)  
     WSACleanup();
-#else 
-    shutdown(mrcSock, SHUT_WR);
-    close(mrcSock);
 #endif
 
     free(gScrollBack);
@@ -2347,11 +2152,6 @@ int main(int argc, char** argv)
 #endif
 
 #if defined(WIN32) || defined(_MSC_VER)  
-#else
-#endif
-
-
-#if defined(WIN32) || defined(_MSC_VER)  
     DWORD attributes = GetFileAttributesA(USER_DATA_DIR);
     if (!(attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_DIRECTORY))) {
         CreateDirectory(USER_DATA_DIR,NULL);
@@ -2382,7 +2182,7 @@ int main(int argc, char** argv)
         if (_stricmp(user.chatterName, "SERVER") == 0 ||
             _stricmp(user.chatterName, "CLIENT") == 0 ||
             _stricmp(user.chatterName, "NOTME") == 0) {
-            // replace it with a generic name
+            // replace it with a generic SAFE name
             _snprintf_s(user.chatterName, sizeof(user.chatterName), -1, "User_%d", user.userNumber);
         }
 

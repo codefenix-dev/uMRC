@@ -34,7 +34,7 @@ cd ..
 
 echo -n "Building umrc-client..."
 cd umrc-client
-gcc main.c ../common/common.c -o umrc-client -L ../lib -lODoors -fcompare-debug-second -Wno-format-truncation
+gcc main.c func.c ../common/common.c -o umrc-client -L ../lib -lODoors -fcompare-debug-second -Wno-format-truncation
 if [ $? -eq 0 ]; then
     echo -e "\033[32;1mOK\033[0m"
 else

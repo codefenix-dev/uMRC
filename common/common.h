@@ -33,9 +33,12 @@ HANDLE hCon; // needed for setting console colors and clearing screen
 #define _stricmp(s1, s2)                                      strcasecmp((s1), (s2))
 #define _strnicmp(s1, s2, n)                                  strncasecmp((s1), (s2), (n))             
 #define strtok_s(s, d, context)                               strtok_r((s), (d), (context))
+#define closesocket(handle)                                   close((handle))
 
 #define INVALID_SOCKET   ~0
 #define SOCKET_ERROR     -1
+#define SD_SEND          SHUT_WR
+#define WSAEMSGSIZE      EMSGSIZE
 
 typedef int       SOCKET;    
 typedef void*     HANDLE;      
@@ -75,7 +78,7 @@ void Sleep(int ms);
 #define UMRC_VERSION "102"
 #define YEAR_AND_AUTHOR "2026 Craig Hendricks (aka Codefenix)"
 #define AUTHOR_INITIALS "cf" // alias initials
-#define COMPILE_DATE "2026-02-11"
+#define COMPILE_DATE "2026-02-19"
 
 // These defaults should remain the same, and
 // not be changed without a good reason.

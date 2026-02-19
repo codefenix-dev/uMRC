@@ -92,7 +92,6 @@ struct latencyTracker lt[MAX_LATENCIES];
 
 #pragma endregion
 
-
 #if defined(WIN32) || defined(_MSC_VER)  
 clock_t currentTimeMillis() {
     return clock();
@@ -165,6 +164,12 @@ void initializeLt() {
     }
 }
 
+#if !defined(WIN32) && !defined(_MSC_VER)
+int WSAGetLastError() {
+    return errno;
+}
+#endif
+
 /**
  * Sends SERVER command to the MRC host.
  */ 
@@ -192,11 +197,7 @@ bool sendCmdPacket(const char* cmd, const char* cmdArg) {
 
     if (iResult == SOCKET_ERROR) {
         char logstring[1024] = "";
-#if defined(WIN32) || defined(_MSC_VER)  
         _snprintf_s(logstring, sizeof(logstring), -1, "sendCmdPacket failed with error: %d", usingSSL ? SSL_get_error(mrcHostSsl, iResult) : WSAGetLastError());
-#else
-        _snprintf_s(logstring, sizeof(logstring), -1, "sendCmdPacket failed with error: %d", usingSSL ? SSL_get_error(mrcHostSsl, iResult) : errno);
-#endif
         printDateTimeStamp();        
         puts(logstring);
         writeToLog(logstring, PROGRAM, "");
@@ -234,11 +235,7 @@ bool sendMsgPacket(char* fromUser, char* fromSite, char* fromRoom, char* toUser,
 
     if (iResult == SOCKET_ERROR) {
         char logstring[1024] = "";
-#if defined(WIN32) || defined(_MSC_VER)  
         _snprintf_s(logstring, sizeof(logstring), -1, "sendMsgPacket failed with error: %d", usingSSL ? SSL_get_error(mrcHostSsl, iResult) : WSAGetLastError());
-#else
-        _snprintf_s(logstring, sizeof(logstring), -1, "sendMsgPacket failed with error: %d", usingSSL ? SSL_get_error(mrcHostSsl, iResult) : errno);
-#endif
         printDateTimeStamp();
         puts(logstring);
         writeToLog(logstring, PROGRAM, "");
@@ -273,11 +270,7 @@ bool sendHostPacket(const char* packet) {
 
     if (iResult == SOCKET_ERROR) {
         char logstring[1024] = "";
-#if defined(WIN32) || defined(_MSC_VER)  
         _snprintf_s(logstring, sizeof(logstring), -1, "sendHostPacket failed with error: %d", usingSSL ? SSL_get_error(mrcHostSsl, iResult) : WSAGetLastError());
-#else        
-        _snprintf_s(logstring, sizeof(logstring), -1, "sendHostPacket failed with error: %d", usingSSL ? SSL_get_error(mrcHostSsl, iResult) : errno);
-#endif
         printDateTimeStamp();
         puts(logstring);
         writeToLog(logstring, PROGRAM, "");
@@ -313,11 +306,7 @@ bool sendClientPacket(SOCKET* sock, char* packet) {
 
     if (iResult == SOCKET_ERROR) {
         char logstring[1024] = "";
-#if defined(WIN32) || defined(_MSC_VER) 
         _snprintf_s(logstring, sizeof(logstring), -1, "sendClientPacket to client #%d failed with error: %d", (int)*sock, WSAGetLastError());
-#else        
-        _snprintf_s(logstring, sizeof(logstring), -1, "sendClientPacket to client #%d failed with error: %d", *sock, errno);
-#endif
         printDateTimeStamp();
         puts(logstring);
         writeToLog(logstring, PROGRAM, "");
@@ -470,11 +459,7 @@ void* waitProcess(void* lpArg) {
 
     listenSock = socket(liResult->ai_family, liResult->ai_socktype, liResult->ai_protocol);
     if (listenSock == INVALID_SOCKET) {
-#if defined(WIN32) || defined(_MSC_VER)  
-        printf("client socket failed with error: %ld\n", WSAGetLastError());
-#else
-        printf("client socket failed with error: %d\n", errno);
-#endif
+        printf("client socket failed with error: %d\n", WSAGetLastError());
         freeaddrinfo(liResult);
 #if defined(WIN32) || defined(_MSC_VER)  
         WSACleanup();
@@ -485,17 +470,11 @@ void* waitProcess(void* lpArg) {
     }
 
     iResult = bind(listenSock, liResult->ai_addr, (int)liResult->ai_addrlen);
-    if (iResult == SOCKET_ERROR) {       
-
+    if (iResult == SOCKET_ERROR) {
         char logstring[50] = "";
-#if defined(WIN32) || defined(_MSC_VER)  
         _snprintf_s(logstring, sizeof(logstring), -1, "client bind failed with error: %d", WSAGetLastError());
-#else
-        _snprintf_s(logstring, sizeof(logstring), -1, "client bind failed with error: %d", errno);
-#endif        
         puts(logstring);
         writeToLog(logstring, PROGRAM, "");
-
         freeaddrinfo(liResult);
 #if defined(WIN32) || defined(_MSC_VER)    
         closesocket(listenSock);
@@ -634,11 +613,7 @@ void mrcHostProcess(struct settings cfg) {
         mrcHostSock = socket(ptrMh->ai_family, ptrMh->ai_socktype, ptrMh->ai_protocol);
         if (mrcHostSock == INVALID_SOCKET) {            
             char logstring[50] = "";
-#if defined(WIN32) || defined(_MSC_VER)  
             _snprintf_s(logstring, sizeof(logstring), -1, "socket failed with error: %d", WSAGetLastError());
-#else
-            _snprintf_s(logstring, sizeof(logstring), -1, "socket failed with error: %d", errno);
-#endif            
             puts(logstring);
             writeToLog(logstring, PROGRAM, "");
 #if defined(WIN32) || defined(_MSC_VER)    
@@ -650,13 +625,8 @@ void mrcHostProcess(struct settings cfg) {
         iResult = connect(mrcHostSock, ptrMh->ai_addr, (int)ptrMh->ai_addrlen);
         if (iResult == SOCKET_ERROR) {            
             char logstring[50] = "";
-#if defined(WIN32) || defined(_MSC_VER)  
             closesocket(mrcHostSock);
             _snprintf_s(logstring, sizeof(logstring), -1, "connect failed with error: %d. ", WSAGetLastError());
-#else
-            close(mrcHostSock);
-            _snprintf_s(logstring, sizeof(logstring), -1, "connect failed with error: %d. ", errno);
-#endif            
             puts(logstring);
             writeToLog(logstring, PROGRAM, "");
             mrcHostSock = INVALID_SOCKET;
@@ -707,13 +677,8 @@ void mrcHostProcess(struct settings cfg) {
     
     if (iResult == SOCKET_ERROR) {
         char logstring[50] = "";
-#if defined(WIN32) || defined(_MSC_VER)  
         closesocket(mrcHostSock);
         _snprintf_s(logstring, sizeof(logstring), -1, "send failed with error: %d\r\n", usingSSL ? SSL_get_error(mrcHostSsl, iResult) : WSAGetLastError());
-#else        
-        close(mrcHostSock);
-        _snprintf_s(logstring, sizeof(logstring), -1, "send failed with error: %d\r\n", usingSSL ? SSL_get_error(mrcHostSsl, iResult) : errno);
-#endif        
         puts(logstring);
         writeToLog(logstring, PROGRAM, "");
 #if defined(WIN32) || defined(_MSC_VER)    
@@ -874,11 +839,7 @@ void mrcHostProcess(struct settings cfg) {
             }
         }
         else if (iResult == 0) {
-#if defined(WIN32) || defined(_MSC_VER)  
             int errcode = usingSSL ? SSL_get_error(mrcHostSsl, iResult) : WSAGetLastError();            
-#else
-            int errcode = usingSSL ? SSL_get_error(mrcHostSsl, iResult) : errno;            
-#endif
             printDateTimeStamp();
             char logstring[50] = "";
             _snprintf_s(logstring, sizeof(logstring), -1, "Connection closed with error: %d", errcode);
@@ -894,11 +855,7 @@ void mrcHostProcess(struct settings cfg) {
 			}
         }
         else {
-#if defined(WIN32) || defined(_MSC_VER)  
             int errcode = usingSSL ? SSL_get_error(mrcHostSsl, iResult) : WSAGetLastError();            
-#else
-            int errcode = usingSSL ? SSL_get_error(mrcHostSsl, iResult) : errno;            
-#endif
             printDateTimeStamp();
             char logstring[50] = "";
             _snprintf_s(logstring, sizeof(logstring), -1, "recv failed with error: %d", errcode);
@@ -922,14 +879,11 @@ void mrcHostProcess(struct settings cfg) {
     gConnectionIsDown = true;
 
     // cleanup
-#if defined(WIN32) || defined(_MSC_VER)    
     shutdown(mrcHostSock, SD_SEND);
     closesocket(mrcHostSock);
+#if defined(WIN32) || defined(_MSC_VER)
     WSACleanup();
-#else
-    shutdown(mrcHostSock, SHUT_WR);
-    close(mrcHostSock);
-#endif    
+#endif
     if (usingSSL) {
         EVP_cleanup();
         SSL_shutdown(mrcHostSsl);
