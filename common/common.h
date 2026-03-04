@@ -8,6 +8,7 @@
 #if defined(WIN32) || defined(_MSC_VER)
 
 #define PLATFORM "Windows"
+#define PATH_SEP '\\'
 #include <windows.h>
 #include <conio.h>
 HANDLE hCon; // needed for setting console colors and clearing screen
@@ -19,6 +20,7 @@ HANDLE hCon; // needed for setting console colors and clearing screen
 #else
 #define PLATFORM "Linux"
 #endif
+#define PATH_SEP '/'
 
 #include <unistd.h>
 #include <termios.h>
@@ -78,7 +80,7 @@ void Sleep(int ms);
 #define UMRC_VERSION "102"
 #define YEAR_AND_AUTHOR "2026 Craig Hendricks (aka Codefenix)"
 #define AUTHOR_INITIALS "cf" // alias initials
-#define COMPILE_DATE "2026-02-19"
+#define COMPILE_DATE "2026-03-04"
 
 // These defaults should remain the same, and
 // not be changed without a good reason.

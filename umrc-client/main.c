@@ -444,11 +444,10 @@ void pickTheme(char* pickedTheme) {
 void loadTheme() {
     char themePath[30] = "";
     FILE* extFile;
+    _snprintf_s(themePath, sizeof(themePath), -1, "themes%c%s", PATH_SEP, user.theme);
 #if defined(WIN32) || defined(_MSC_VER)
-    _snprintf_s(themePath, sizeof(themePath), -1, "themes\\%s", user.theme);
     fopen_s(&extFile, themePath, "r");
 #else
-    _snprintf_s(themePath, sizeof(themePath), -1, "themes/%s", user.theme);
     extFile = fopen(themePath, "r");
 #endif
     int lineCount = 0;
@@ -942,7 +941,7 @@ void displayMessage(char* msg, bool mention) {
                 strcat_s(wrappedMsg, sizeof(wrappedMsg), " ");
                 strcat_s(wrappedMsg, sizeof(wrappedMsg), tkn1);
                 strcat_s(wrappedMsg, sizeof(wrappedMsg), "\r\n      \300 ");
-                if (strLenWithoutPipecodes(tkn2) > od_control.user_screenwidth) {
+                if (strLenWithoutPipecodes(tkn2) > od_control.user_screenwidth - 8) {
                     char tkn3[100]="";
                     breakPoint = (od_control.user_screenwidth - 9);
                     strcpy_s(tkn3, sizeof(tkn3), tkn2 + breakPoint);
@@ -1024,7 +1023,7 @@ bool checkTwit(char* twit) {
 }
 
 /**
- * This should be easy... add the new twit to the file, and then read the file into the gTwits array...
+ * Add the new twit to the file, and then read the file into the gTwits array...
  *
  */
 void addTwit(char* twit) {
@@ -1296,21 +1295,9 @@ void processUserCommand(char* cmd, char* params) {
         }
     }
     else if (_stricmp(cmd, "help") == 0) {
-        if (strlen(params) > 0) {
-            char topic[30] = "";
-            _snprintf_s(topic, sizeof(topic), -1, "screens\\help%s.txt", params);
-#if defined(WIN32) || defined(_MSC_VER)  
-            displayPipeFileInChat(topic);
-        }
-        else {
-            displayPipeFileInChat("screens\\help.txt");
-#else
-            displayPipeFileInChat(topic);
-        }
-        else {
-            displayPipeFileInChat("screens/help.txt");
-#endif
-        }
+        char helpfile[30] = "";
+        _snprintf_s(helpfile, sizeof(helpfile), -1, "screens%chelp%s.txt", PATH_SEP, strlen(params) > 0 ? params : "");
+        displayPipeFileInChat(helpfile);
     }
     else if (_stricmp(cmd, "quote") == 0) {
         sendCmdPacket(&mrcSock, params, "");
@@ -2143,13 +2130,8 @@ int main(int argc, char** argv)
     char userFileName[36] = "";
     strcpy_s(userFileName, sizeof(userFileName), user.chatterName);
     cleanUpFilename(userFileName); 
-#if defined(WIN32) || defined(_MSC_VER)  
-    _snprintf_s(gUserDataFile, sizeof(gUserDataFile), -1, "%s\\%s.dat", USER_DATA_DIR, userFileName);
-    _snprintf_s(gTwitFile, sizeof(gTwitFile), -1, "%s\\%s.twit", USER_DATA_DIR, userFileName);
-#else
-    _snprintf_s(gUserDataFile, sizeof(gUserDataFile), -1, "%s/%s.dat", USER_DATA_DIR, userFileName);
-    _snprintf_s(gTwitFile, sizeof(gTwitFile), -1, "%s/%s.twit", USER_DATA_DIR, userFileName);
-#endif
+    _snprintf_s(gUserDataFile, sizeof(gUserDataFile), -1, "%s%c%s.dat", USER_DATA_DIR, PATH_SEP, userFileName);
+    _snprintf_s(gTwitFile, sizeof(gTwitFile), -1, "%s%c%s.twit", USER_DATA_DIR, PATH_SEP, userFileName);
 
 #if defined(WIN32) || defined(_MSC_VER)  
     DWORD attributes = GetFileAttributesA(USER_DATA_DIR);

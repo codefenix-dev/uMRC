@@ -17,9 +17,11 @@
 #include "../common/common.h"
 
 #define NOT_LISTED "Something Else..."
-#define BBS_TYPE_COUNT 10
+#define BBS_TYPE_COUNT 12
 const char* BBS_TYPES[BBS_TYPE_COUNT] = {
 	"EleBBS",
+	"Major BBS",
+	"MBSE",
 	"Mystic",
 	"Oblivion/2",
 	"PCBoard",

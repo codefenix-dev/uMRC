@@ -6,7 +6,7 @@ v102 - TBA:
     potential crashes.
   - Default max minutes in local sysop mode raised from 60 to 1000.
   - Fixed some flawed wrapping logic for long words. Hopefully for
-    the last time
+    the last time.
 
 
 v101 - February 6, 2026:

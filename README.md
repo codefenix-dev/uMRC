@@ -302,8 +302,8 @@ The stats are separated by spaces and follow this order:
 1. BBSES
 2. Rooms
 3. Users
-4. Activity (0=NONE, 1=LOW, 2=MED, 3, HI)
-5. Latency (as calculated by the client)
+4. Activity (0=NONE, 1=LOW, 2=MED, 3=HI)
+5. Latency (as calculated by the bridge)
     
     
 ### Basic Chat Usage:
@@ -359,7 +359,7 @@ Type `/meetups` in chat for a current list of meetups.
 
 - At the time of this writing, when using the `!ddial` command, the MRC
   host returns extraneous packets missing the BODY field. uMRC treats
-  these as invalid, since they contain fewer than 6 tildes (~). 
+  these as invalid, since they contain fewer than 6 tildes (~). The
   Syncrhonet mrc-connector service logs similar warnings for `!ddial`.
 
 
@@ -375,7 +375,7 @@ future changes to the MRC protocol, but that's about it.
 ## Technical Notes:
 
 uMRC is written in C, and was developed and compiled on Windows using 
-Microsoft Visual Studio Community 2022. The Linux build was compiled on 
+Microsoft Visual Studio Community 2022. The Linux binaries were compiled on 
 Ubuntu 22.04 using gcc.
 
 uMRC makes extensive use of threading, both in umrc-bridge and umrc-client.
