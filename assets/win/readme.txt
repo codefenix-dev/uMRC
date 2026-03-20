@@ -341,9 +341,6 @@ automatically detect the terminal's height and width.
 The font size of the local window cannot be adjusted. This seems to be
 an internal limitation of the OpenDoors kit.
 
-Masked input becomes unmasked when changing text colors with left and
-right arrows.
-
 At the time of this writing, when using the !ddial command, the MRC
 host returns extraneous packets missing the BODY field. uMRC treats
 these as invalid, since they contain fewer than 6 tildes (~). The

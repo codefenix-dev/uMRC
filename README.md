@@ -3,21 +3,17 @@
 
 ## What is uMRC?
 
-uMRC lets you run Multi-Relay Chat on your BBS without having to install and
-maintain a Mystic BBS instance and Python. As long as your BBS is capable of
-running 32-bit doors, then you and your users can participate in MRC.
+uMRC is a full-featured Multi-Relay Chat client for Windows and Linux BBSes. It runs as a native door on your system, letting you access Multi-Relay Chat without having to install and maintain a Mystic BBS instance with Python. In other words, as long as your BBS is capable of running 32-bit doors, then you and your users can participate in MRC.
 
 
 <img width="949" height="694" alt="sschat" src="https://github.com/user-attachments/assets/e41b12b9-9383-49f5-b46e-d94b68159bec" />
 
 
-It should be compatible with any DOOR32.SYS capable BBS such as EleBBS, WWIV, 
-Synchronet, Mystic, and possibly others. It runs on Windows 7 and later. 
-The Linux build has been tested on Ubuntu 22.04 and should run on similar.
+It should be compatible with any DOOR32.SYS capable BBS such as EleBBS, WWIV, Synchronet, Mystic, and others. It runs on Windows 7 and later.
 
-If you use NetFoss to start up your DOS-based BBS, then the NFU utility 
-bundled with NetFoss should run the uMRC Client. As of this writing, Renegade 
-has been confirmed.
+If you use NetFoss to start up your DOS-based BBS, then the NFU utility bundled with NetFoss should run the uMRC Client. As of this writing, Renegade and Oblivion/2 have been confirmed.
+
+Pre-compiled Linux binaries are also available, or may be compiled from source using the Install Instructions below.
 
 
 
@@ -345,9 +341,6 @@ Type `/meetups` in chat for a current list of meetups.
 
     
 ## Known Issues & Limitations:
-
-- Masked input becomes unmasked when changing text colors with left and 
-  right arrows. 
 
 - Height and width are limited to 80 columns by 24 rows. OpenDoors has
   a default maximum row limit of 23, but umrc-client is hard-coded with

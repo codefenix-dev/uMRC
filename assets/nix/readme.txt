@@ -336,9 +336,6 @@ a default maximum row limit of 23, but umrc-client is hard-coded with
 this setting adjusted to 24. As far as I know, OpenDoors cannot
 automatically detect the terminal's height and width.
 
-Masked input becomes unmasked when changing text colors with left and
-right arrows.
-
 At the time of this writing, when using the !ddial command, the MRC
 host returns extraneous packets missing the BODY field. uMRC treats
 these as invalid, since they contain fewer than 6 tildes (~). The

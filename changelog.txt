@@ -7,6 +7,13 @@ v102 - TBA:
   - Default max minutes in local sysop mode raised from 60 to 1000.
   - Fixed some flawed wrapping logic for long words. Hopefully for
     the last time.
+  - Added a platform identifier in parentheses next to uMRC in CTCP
+    VERSION responses (w = Windows, l = Linux, m = macOS).
+  - Input color cycling is disabled anytime input text is masked,
+    to prevent masked text becoming unmasked if inadvertently pressing
+    an arrow key.
+  - Fixed a crash that could occur while using TAB username autocompletion
+    on macOS.
 
 
 v101 - February 6, 2026:

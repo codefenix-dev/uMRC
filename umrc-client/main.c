@@ -1358,7 +1358,7 @@ void processServerMessage(char* body, char* toUser) {
         getSubStr(body, params, cmdsep+1, strlen(body));
     }
     else {
-        strcpy_s(cmd, sizeof(cmd), body);
+        strncpy_s(cmd, sizeof(cmd), body, 140);
     }
 
     // Implemented SERVER commands - notes provided from the MRC developer wiki on how each is handled:
@@ -1446,7 +1446,7 @@ void processCtcpCommand(char* body, char* toUser, char* fromUser) {
         strcpy_s(cmdStr, sizeof(cmdStr), body + 7 + strlen(fromUser) + (strlen(toUser) == 0 ? 1 : strlen(toUser)) + 2);
 
         if (_strnicmp(cmdStr, "VERSION", 7) == 0) {
-            _snprintf_s(repStr, sizeof(repStr), -1, "VERSION %s v%s.%s %s [%s]", TITLE, PROTOCOL_VERSION, UMRC_VERSION, COMPILE_DATE, AUTHOR_INITIALS);
+            _snprintf_s(repStr, sizeof(repStr), -1, "VERSION %s(%c) v%s.%s %s [%s]", TITLE, tolower(PLATFORM[0]), PROTOCOL_VERSION, UMRC_VERSION, COMPILE_DATE, AUTHOR_INITIALS);
         }
         else if (_strnicmp(cmdStr, "TIME", 4) == 0) {
             _snprintf_s(repStr, sizeof(repStr), -1, "TIME %s ", getCtcpDatetime());
@@ -1570,7 +1570,8 @@ void* handleIncomingMessages(void* lpArg) {
                         (strlen(toRoom) == 0 && strlen(toUser) == 0)) {
 
                     if (checkTwit(fromUser)) {
-                        queueIncomingMessage("|15* |08Incoming message filtered.", false);
+                        //queueIncomingMessage("|15* |08Incoming message filtered.", false);
+                        continue;
                     }
 
                     // Direct message (DirectMsg) ...? 
@@ -1623,6 +1624,7 @@ void* handleIncomingMessages(void* lpArg) {
  */
 void doChatRoutines(char* input) {
 
+    bool masking = false;
     char key = ' ';
     tODInputEvent InputEvent;
 
@@ -1677,6 +1679,10 @@ void doChatRoutines(char* input) {
             {
 
             case OD_KEY_LEFT:
+                if (masking) {
+                    break;
+                }
+
                 user.textColor = user.textColor - 1;
                 if (user.textColor < 1) {
                     user.textColor = 15;
@@ -1699,6 +1705,9 @@ void doChatRoutines(char* input) {
                 break;
 
             case OD_KEY_RIGHT:
+                if (masking) {
+                    break;
+                }
                 user.textColor = user.textColor + 1;
                 if (user.textColor > 15) {
                     user.textColor = 1;
@@ -1756,6 +1765,7 @@ void doChatRoutines(char* input) {
             // Add the keystroke to the input string...            
             if (key == 13 || key == 10) {
                 resetInputLine();
+                masking = false;
                 break;
             }
             else if (key >= 32 && key <= 125) { // allowed characters
@@ -1790,15 +1800,8 @@ void doChatRoutines(char* input) {
                 for (int i = 0; i < gChatterCount; i++) {
                     if (_strnicmp(tabSearch, gChattersInRoom[i], strlen(tabSearch)) == 0 && _stricmp(gChattersInRoom[i], user.chatterName) != 0) {
                         strcpy_s(tabResult, sizeof(tabResult), gChattersInRoom[i]);
-                        strncpy_s(input, MSG_LEN, input, strlen(input) - strlen(tabSearch));
-#if defined(WIN32) || defined(_MSC_VER) 
-                        _snprintf_s(input, MSG_LEN, -1, "%s%s", input, tabResult);
-#else
-                        for (int ii = 0; ii < strlen(tabSearch); ii++) {
-                            input[strlen(input) - 1] = '\0';
-                        }
+                        input[strlen(input) - strlen(tabSearch)] = '\0';
                         strcat_s(input, MSG_LEN, tabResult);
-#endif
                         endOfInput = endOfInput + 1;
                         break;
                     }
@@ -1812,10 +1815,8 @@ void doChatRoutines(char* input) {
             }
         } // Done capturing input...
 
-        if (updateInput) {
-            // 
-            // Below updates the input display...
-            // 
+        if (updateInput) { // Update the input display...
+
             int overfill = 0;
             if ((int)strlen(input) < (int)od_control.user_screenwidth - 3) {
                 endOfInput += strlen(input) - strlen(tabResult);
@@ -1857,10 +1858,11 @@ void doChatRoutines(char* input) {
                        _strnicmp(input, "/update password ", 17) == 0 ||
                        _strnicmp(input, "/roomconfig password ", 21) == 0)) ||
                       (_strnicmp(input, "/register ", 10) == 0 && countOfChars(input, ' ') < 2)) && key != 32) {
-
+                    masking = true;
                     od_putch('*'); 
                 }
                 else {            // Any other character simply gets displayed as typed...
+                    masking = false;
                     od_putch(key);
                 }
             }
@@ -2026,7 +2028,7 @@ bool enterChat() {
                 getSubStr(input, params, spcidx+1, strlen(input));
             }
             else {
-                strcpy_s(cmd, sizeof(cmd), input + 1);
+                strncpy_s(cmd, sizeof(cmd), input + 1, 14);
             }
             processUserCommand(cmd, params);
         }
