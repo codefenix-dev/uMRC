@@ -814,7 +814,9 @@ void mrcHostProcess(struct settings cfg) {
                         strcpy_s(stats, sizeof(stats), body + 6);
                         char* bbses, * rooms, * users, * activity;
                         parseStats(stats, &bbses, &rooms, &users, &activity);
-                        act = atoi(activity);
+                        if (activity != NULL) {
+                            act = atoi(activity);
+                        }
 
                         FILE* mrcstats;
 #if defined(WIN32) || defined(_MSC_VER)
