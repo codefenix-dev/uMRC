@@ -899,10 +899,15 @@ void addToScrollBack(char* msg, int mode) {
 }
 
 void displayMessage(char* msg, bool mention) {
-    char timeStamp[30] = "";
+    // A size of 512 allows for the standard 140 char message, plus line wraps, pipe codes, and the timestamp.
+    char copyMsg[512] = ""; // This holds a copy of the source message while we're processing it.
+    char dispMsg[512] = ""; // This will be the final message after adding line wraps.
+    char timeStamp[30] = ""; // This holds the message timestamp.
+
+    strcpy_s(copyMsg, sizeof(copyMsg), msg);
     _snprintf_s(timeStamp, sizeof(timeStamp), -1, (mention ? "|00|23%s|26\x1b[5m\376\x1b[0m|07" : "|08%s|07 "), getTimestamp());
 
-    if (strLenWithoutPipecodes(msg) >= (od_control.user_screenwidth - 7)) {
+    if (strLenWithoutPipecodes(copyMsg) >= (od_control.user_screenwidth - 7)) {
 
         // This code wraps the text neatly if it's too long for the terminal width,
         // by breaking it apart word by word and building a new string, calculating 
@@ -916,10 +921,10 @@ void displayMessage(char* msg, bool mention) {
         int linelen = 0;
         int tokencnt = 0;
         int tokenLen = 0;
-        char wrappedMsg[512] = "";
+        char wrappedMsg[512] = ""; 
         char* token;
         char* context = NULL;
-        token = strtok_s(msg, " ", &context);
+        token = strtok_s(copyMsg, " ", &context);
         while (token != NULL) {
             bool breakUpLongToken = false;
             tokenLen = strLenWithoutPipecodes(token);
@@ -963,11 +968,10 @@ void displayMessage(char* msg, bool mention) {
             tokencnt = tokencnt + 1;
             token = strtok_s(NULL, " ", &context);
         }
-        strcpy_s(msg, sizeof(wrappedMsg), wrappedMsg);
+        strcpy_s(copyMsg, sizeof(copyMsg), wrappedMsg);
     }
 
-    char dispMsg[512]="";
-    _snprintf_s(dispMsg, sizeof(dispMsg), -1, "%s%s\x1b[0m", timeStamp, msg);
+    _snprintf_s(dispMsg, sizeof(dispMsg), -1, "%s%s\x1b[0m", timeStamp, copyMsg);
 
     // Save this message to the chat scrollback buffer
     addToScrollBack(dispMsg, 0);
@@ -1438,7 +1442,7 @@ void processCtcpCommand(char* body, char* toUser, char* fromUser) {
 
     // TODO: - This works, but could be written better.. 
 
-    if (strncmp(body, "[CTCP] ", 7) == 0 && (_stricmp(toUser, user.chatterName) == 0 || strlen(toUser) == 0 /* || strcmp(toUser, "*") == 0) || (toUser[0] == '#' && _stricmp(toUser + 1, gRoom) == 0*/))
+    if (strncmp(body, "[CTCP] ", 7) == 0 && (_stricmp(toUser, user.chatterName) == 0 || strlen(toUser) == 0))
     {
         char cmdStr[80] = "";
         char repStr[80] = "";
@@ -1463,8 +1467,13 @@ void processCtcpCommand(char* body, char* toUser, char* fromUser) {
         sendCtcpPacket(&mrcSock, fromUser, "[CTCP-REPLY]", repStr);
     }
     else if (strncmp(body, "[CTCP-REPLY] ", 13) == 0 && _stricmp(toUser, user.chatterName) == 0) {
-        char resp[MSG_LEN] = "";
-        _snprintf_s(resp, MSG_LEN, -1, "* |14[CTCP-REPLY] |10%s |15%s", fromUser, body + 13 + strlen(fromUser) + 1);
+        char resp[100] = "";
+        strcat_s(resp, sizeof(resp), "* |14[CTCP-REPLY] |10");
+        strcat_s(resp, sizeof(resp), fromUser);
+        strcat_s(resp, sizeof(resp), " |15");
+        strcat_s(resp, sizeof(resp), body + (14 + strlen(fromUser)));
+
+        //_snprintf_s(resp, MSG_LEN, -1, "* |14[CTCP-REPLY] |10%s |15%s", fromUser, body + 13 + strlen(fromUser) + 1);
         queueIncomingMessage(resp, false);
         od_sleep(20);
     }
@@ -1574,7 +1583,7 @@ void* handleIncomingMessages(void* lpArg) {
                         continue;
                     }
 
-                    // Direct message (DirectMsg) ...? 
+                    // Direct message (DirectMsg)
                     else if (strlen(toUser) != 0 && strlen(fromUser) != 0) {
                         queueIncomingMessage(body, false);
                         strcpy_s(gLastDirectMsgFrom, sizeof(gLastDirectMsgFrom), fromUser);
@@ -1613,9 +1622,9 @@ void* handleIncomingMessages(void* lpArg) {
             gIsInChat = false;
         }
     }
-#if defined(WIN32) || defined(_MSC_VER)  
+//#if defined(WIN32) || defined(_MSC_VER)  
     return 0;
-#endif
+//#endif
 }
 
 /**
@@ -1741,7 +1750,7 @@ void doChatRoutines(char* input) {
                 break;
 
             case OD_KEY_END:
-                strcpy_s(input, sizeof(input), "");
+                strcpy_s(input, MSG_LEN, "");
                 resetInputLine();
                 od_printf(CHAT_CURSOR, CURSOR_COLORS[user.textColor]);
                 break;

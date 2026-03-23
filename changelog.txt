@@ -14,6 +14,16 @@ v102 - TBA:
     an arrow key.
   - Fixed a crash that could occur while using TAB username autocompletion
     on macOS.
+  - umrc-bridge now makes unlimited reconnection attempts by default, 
+    instead of 10 in previous versions. This may still be changed to 
+    a finite value if the sysop wishes with the -r option. At least one
+    successful connection must be established, otherwise umrc-bridge 
+    will fail after 10 tries. This is in case the MRC host is offline, 
+    or the URL is wrong, etc.
+  - The number of seconds to wait before umrc-bridge retries the 
+    connection can now be specified with the -w option (e.g.: -w10 to 
+    wait 10 seconds before making another connection attempt). Default
+    is 5 seconds if omitted or a zero or negative value.
 
 
 v101 - February 6, 2026:
