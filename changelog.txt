@@ -24,6 +24,16 @@ v102 - TBA:
     connection can now be specified with the -w option (e.g.: -w10 to 
     wait 10 seconds before making another connection attempt). Default
     is 5 seconds if omitted or a zero or negative value.
+  - umrc-client now takes an OPTIONAL -IP parameter, so that sysops
+    may include the user's IP address (if the BBS is capable). If used,
+    umrc-client reports the user IP to the host, which grants the host
+    greater control over banning users without banning an entire BBS.
+    Usage: -IPxxx.xxx.xxx.xxx (no space between "IP" and the actual IP)
+           On Synchronet, %i specifies the user's IP: -IP%i
+           On Mystic, %4 specifies the user's IP: -IP%4
+           Check your BBS's documentation.
+  - Improved BANNER and NOTIF display, now that banners are sent a 
+    little more frequently from the host.
 
 
 v101 - February 6, 2026:

@@ -17,9 +17,11 @@
 #define WIN32_LEAN_AND_MEAN
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include <shellapi.h>
 #pragma comment (lib, "Ws2_32.lib")
 #pragma comment (lib, "Mswsock.lib")
 #pragma comment (lib, "AdvApi32.lib")
+#pragma comment (lib, "shell32.lib")
 
 #else
 
@@ -67,6 +69,7 @@ char gFromSite[140] = "";
 char gLastDirectMsgFrom[36] = "";
 char gUserDataFile[260] = "";
 char gTwitFile[260] = "";
+char gUserIP[30] = "";
 
 char* gScrollBack;
 char* gMentions;
@@ -1368,14 +1371,14 @@ void processServerMessage(char* body, char* toUser) {
     // Implemented SERVER commands - notes provided from the MRC developer wiki on how each is handled:
     //
     if (strcmp(cmd, "BANNER") == 0 || strcmp(cmd, "NOTIFY") == 0) {
-        // BANNERS are seldom sent from the host, so this client doesn't
-        // bother making special use of them. If a banner is ever sent,
-        // simply display it in chat.
+        // This client doesn't currently make special use of banners.
+        // If a banner is ever sent, we simply display it in chat.
         //
-        // NOTIFY: notification messages are seldom used as well, and 
-        // have the same structure as a BANNER packet, so handle it
-        // the same way.
-        queueIncomingMessage(params, true);
+        // Notification messages have the same structure as a 
+        // BANNER packet, so we handle it the same way.
+        char banner[256] = { 0 };
+        _snprintf_s(banner, sizeof(banner), -1, (strcmp(cmd, "BANNER") == 0 ? "|14* |13<|15#|13> |15%s" : "|14* |14<|15!|14> |15%s"), params); //"|14* |11<|15#|11> |17|15%s|16" : "|14* |09<|15!|09> |23|00%s|16"
+        queueIncomingMessage(banner, false);
     }
     else if (strcmp(cmd, "ROOMTOPIC") == 0) {
         // ROOMTOPIC : Server will send new topic when changed
@@ -1400,7 +1403,7 @@ void processServerMessage(char* body, char* toUser) {
         strcpy_s(user.chatterName, sizeof(user.chatterName), params);
         _snprintf_s(gDisplayChatterName, sizeof(gDisplayChatterName), -1, "|%02d|%02d%c|%02d|%02d%s%s|16", user.chatterNamePrefixFgColor, user.chatterNamePrefixBgColor, user.chatterNamePrefix, user.chatterNameFgColor, user.chatterNameBgColor, user.chatterName, user.chatterNameSuffix);
         // inform the user of the change...
-        char nicknotice[140] = "";
+        char nicknotice[140] = { 0 };
         _snprintf_s(nicknotice, sizeof(nicknotice), -1, "|15* |08(|14Notice|08) |07The MRC server has updated your name to |15%s|07.", user.chatterName);
         queueIncomingMessage(nicknotice, true);
         stripPipeCodes(nicknotice);
@@ -1472,8 +1475,6 @@ void processCtcpCommand(char* body, char* toUser, char* fromUser) {
         strcat_s(resp, sizeof(resp), fromUser);
         strcat_s(resp, sizeof(resp), " |15");
         strcat_s(resp, sizeof(resp), body + (14 + strlen(fromUser)));
-
-        //_snprintf_s(resp, MSG_LEN, -1, "* |14[CTCP-REPLY] |10%s |15%s", fromUser, body + 13 + strlen(fromUser) + 1);
         queueIncomingMessage(resp, false);
         od_sleep(20);
     }
@@ -2002,7 +2003,10 @@ bool enterChat() {
         od_sleep(20);
     }
 
-    // TODO: User IP (USERIP)? ... maybe make IP an optional custom param passed by the BBS, assuming the BBS software is capable of detecting it...
+    if (strlen(gUserIP) > 0 && strcmp(gUserIP, "127.0.0.1") != 0) {
+        sendCmdPacket(&mrcSock, "USERIP:", gUserIP);
+        od_sleep(20);
+    }
 
     // Announce user and place user into room after initial packets
     //
@@ -2081,6 +2085,8 @@ void displayTimeWarning(char* str) {
 #if defined(WIN32) || defined(_MSC_VER)
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int nCmdShow)
 {
+    char** argv;
+    int argc = split(lpszCmdLine, ' ', &argv);
 #else
 int main(int argc, char** argv)
 {
@@ -2094,7 +2100,13 @@ int main(int argc, char** argv)
 #else
     od_parse_cmd_line(argc, argv);
 #endif
-       
+
+    for (int i = 0; i < argc; i++) {
+        if (_strnicmp(argv[i], "-IP", 3) == 0) {
+            strcpy_s(gUserIP, sizeof(gUserIP), argv[i] + 3);
+        }
+    }
+
     od_control.od_page_pausing = false;
     od_control.od_disable |= DIS_NAME_PROMPT; // Disable the local user name prompt; it doesn't work.. always results in "Sysop"
     od_control.od_time_msg_func = displayTimeWarning;
@@ -2356,21 +2368,23 @@ int main(int argc, char** argv)
         case 'T':
             od_clr_scr();
             od_printf(DIVIDER);
-            od_printf("`` ChatterName:        `bright white`%s``", user.chatterName);
-            od_printf("\r\n`` DisplayChatterName: "); od_disp_emu(pipeToAnsi(gDisplayChatterName), true);
-            od_printf("\r\n`` FromSite:           `bright white`%s``", gFromSite);
-            od_printf("\r\n`` user_num:           `bright white`%d``", od_control.user_num);
-            od_printf("\r\n`` user_name:          `bright white`%s``", od_control.user_name);
-            od_printf("\r\n`` user_handle:        `bright white`%s``", od_control.user_handle);
-            od_printf("\r\n`` user_security:      `bright white`%d``", od_control.user_security);
-            od_printf("\r\n`` user_timelimit:     `bright white`%d``", od_control.user_timelimit);
-            od_printf("\r\n`` user_ansi:          `bright white`%d``", od_control.user_ansi);
-            od_printf("\r\n`` user_screen_length: `bright white`%d``", od_control.user_screen_length);
-            od_printf("\r\n`` user_screenwidth:   `bright white`%d``", od_control.user_screenwidth);
-            od_printf("\r\n`` sysop_name:         `bright white`%s``", od_control.sysop_name);
-            od_printf("\r\n`` system_name:        `bright white`%s``", od_control.system_name);
-            od_printf("\r\n`` od_maxtime:         `bright white`%d``", od_control.od_maxtime);
-            od_printf("\r\n`` od_inactivity:      `bright white`%d``", od_control.od_inactivity);
+            od_printf("`` ChatterName:         `bright white`%s``", user.chatterName);
+            od_printf("\r\n`` DisplayChatterName:  "); od_disp_emu(pipeToAnsi(gDisplayChatterName), true);
+            od_printf("\r\n`` FromSite:            `bright white`%s``", gFromSite);
+            od_printf("\r\n`` user_num:            `bright white`%d``", od_control.user_num);
+            od_printf("\r\n`` user_name:           `bright white`%s``", od_control.user_name);
+            od_printf("\r\n`` UserIP:              `bright white`%s``", gUserIP);
+            od_printf("\r\n`` user_handle:         `bright white`%s``", od_control.user_handle);
+            od_printf("\r\n`` user_security:       `bright white`%d``", od_control.user_security);
+            od_printf("\r\n`` user_timelimit:      `bright white`%d``", od_control.user_timelimit);
+            od_printf("\r\n`` user_ansi:           `bright white`%d``", od_control.user_ansi);
+            od_printf("\r\n`` user_screen_length:  `bright white`%d``", od_control.user_screen_length);
+            od_printf("\r\n`` user_screenwidth:    `bright white`%d``", od_control.user_screenwidth);
+            od_printf("\r\n`` sysop_name:          `bright white`%s``", od_control.sysop_name);
+            od_printf("\r\n`` sysop_name (clensed):`bright white`%s``", od_control.sysop_name);
+            od_printf("\r\n`` system_name:         `bright white`%s``", od_control.system_name);
+            od_printf("\r\n`` od_maxtime:          `bright white`%d``", od_control.od_maxtime);
+            od_printf("\r\n`` od_inactivity:       `bright white`%d``", od_control.od_inactivity);
 
             od_printf("\r\n");
             od_printf(DIVIDER);
