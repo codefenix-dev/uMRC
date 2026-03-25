@@ -372,6 +372,9 @@ void* clientProcess(void* lpArg) {
                     if (gVerboseLogging) {
                         writeToLog(logstring, PROGRAM, "");
                     }
+                    char ltccmd[20] = "";
+                    _snprintf_s(ltccmd, sizeof(ltccmd), -1, "LATENCY:%.0f", gLatency);
+                    sendClientPacket(&pSock, createPacket("SERVER", "", "", "CLIENT", "", "", ltccmd));
                 }
             }
                     
@@ -579,7 +582,7 @@ void mrcHostProcess(struct settings cfg) {
     puts("Starting up...");
 
 #if defined(WIN32) || defined(_MSC_VER)    
-   iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+    iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
     if (iResult != 0) {
         printDateTimeStamp();
         char logstring[50] = "";
@@ -787,6 +790,15 @@ void mrcHostProcess(struct settings cfg) {
                 }                 
 
                 if (strcmp(fromUser, "SERVER") == 0) {
+
+                    if (gVerboseLogging) {
+                        char logstring[1024] = "";
+                        _snprintf_s(logstring, sizeof(logstring), -1, "received \"%s\" from host", packet);
+                        printDateTimeStamp();
+                        puts(logstring);
+                        writeToLog(logstring, PROGRAM, "");
+                    }
+
                     // Server acknowledged our connection, so send the INFO packets.
                     if (strcmp(body, "HELLO") == 0) { 
                         sendCmdPacket("INFOWEB:%s", cfg.web);
@@ -828,7 +840,7 @@ void mrcHostProcess(struct settings cfg) {
                         mrcstats=fopen(MRC_STATS_FILE, "w+");
 #endif
                         if (mrcstats != NULL) {
-                            fprintf(mrcstats, "%s %.0f", stats, gLatency);
+                            fprintf(mrcstats, "%s", stats);
                             fclose(mrcstats);
                         }
                     }
@@ -856,6 +868,7 @@ void mrcHostProcess(struct settings cfg) {
                 ERR_error_string_n(err_code, err_msg, sizeof(err_msg));
                 printDateTimeStamp();
                 puts(err_msg);
+                writeToLog(err_msg, PROGRAM, "");
 				ERR_clear_error();
 			}
         }
@@ -871,7 +884,8 @@ void mrcHostProcess(struct settings cfg) {
 				char err_msg[256];
                 ERR_error_string_n(err_code, err_msg, sizeof(err_msg));
 				printDateTimeStamp();
-				puts(err_msg);				
+				puts(err_msg);
+                writeToLog(err_msg, PROGRAM, "");
 				ERR_clear_error();
 			}
         }

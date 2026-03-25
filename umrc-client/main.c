@@ -425,7 +425,6 @@ void pickTheme(char* pickedTheme) {
         doPause();
         return;
 	}
-
 #endif
 
     char** themeList;
@@ -543,7 +542,7 @@ void enterChatterSettings() {
     char pickedTheme[20] = "";
 
     // failsafe in case a user hasn't picked a theme
-    if (user.theme == NULL || strlen(user.theme) == 0) {
+    if (/*user.theme == NULL ||*/ strlen(user.theme) == 0) {
         strcpy_s(user.theme, sizeof(user.theme), "default.ans");
     } 
     loadTheme();
@@ -1357,7 +1356,7 @@ void processServerMessage(char* body, char* toUser) {
 
     // Parse the body for command strings
     char cmd[141] = "";
-    char params[512] = "";
+    char params[512] = ""; // needs to be large enough to hold long lists of data, e.g.: USERLISTs
     int cmdsep = indexOfChar(body, ':');
 
     if (cmdsep > 0) {
@@ -1376,16 +1375,15 @@ void processServerMessage(char* body, char* toUser) {
         //
         // Notification messages have the same structure as a 
         // BANNER packet, so we handle it the same way.
-        char banner[256] = { 0 };
+        char banner[512] = { 0 };
         _snprintf_s(banner, sizeof(banner), -1, (strcmp(cmd, "BANNER") == 0 ? "|14* |13<|15#|13> |15%s" : "|14* |14<|15!|14> |15%s"), params); //"|14* |11<|15#|11> |17|15%s|16" : "|14* |09<|15!|09> |23|00%s|16"
         queueIncomingMessage(banner, false);
     }
     else if (strcmp(cmd, "ROOMTOPIC") == 0) {
         // ROOMTOPIC : Server will send new topic when changed
-        //
-        // No pipe codes
-        // Room name cannot contain spaces
-        // Topic can contain spaces
+        // - No pipe codes
+        // - Room name cannot contain spaces
+        // - Topic can contain spaces
         strcpy_s(gTopic, sizeof(gTopic), params + strlen(gRoom) + 1);
         gRoomTopicChanged = true;
     }
@@ -1403,7 +1401,7 @@ void processServerMessage(char* body, char* toUser) {
         strcpy_s(user.chatterName, sizeof(user.chatterName), params);
         _snprintf_s(gDisplayChatterName, sizeof(gDisplayChatterName), -1, "|%02d|%02d%c|%02d|%02d%s%s|16", user.chatterNamePrefixFgColor, user.chatterNamePrefixBgColor, user.chatterNamePrefix, user.chatterNameFgColor, user.chatterNameBgColor, user.chatterName, user.chatterNameSuffix);
         // inform the user of the change...
-        char nicknotice[140] = { 0 };
+        char nicknotice[512] = { 0 };
         _snprintf_s(nicknotice, sizeof(nicknotice), -1, "|15* |08(|14Notice|08) |07The MRC server has updated your name to |15%s|07.", user.chatterName);
         queueIncomingMessage(nicknotice, true);
         stripPipeCodes(nicknotice);
@@ -1545,7 +1543,7 @@ void* handleIncomingMessages(void* lpArg) {
                     }
                                         
                     // refresh the user list when the SERVER announces joins and exits
-                    if (strstr(body, "Joining") != NULL ||
+                    /*if (strstr(body, "Joining") != NULL ||
                         strstr(body, "Leaving") != NULL ||
                         strstr(body, "Timeout") != NULL ||
                         strstr(body, "Rename") != NULL || 
@@ -1553,7 +1551,7 @@ void* handleIncomingMessages(void* lpArg) {
                         strstr(body, "Unlink") != NULL) {
 
                         sendCmdPacket(&mrcSock, "USERLIST", "");
-                    }
+                    }*/
 
                     // should display SERVER messages to NOTME, if they're to or from the same room
                     if (strcmp(toUser, "NOTME") == 0) {
@@ -1570,7 +1568,7 @@ void* handleIncomingMessages(void* lpArg) {
                     if ((_stricmp(fromRoom, gRoom) == 0 || strlen(fromRoom) == 0) && 
                         (_stricmp(toRoom, gRoom) == 0 || strlen(toRoom) == 0)) {
                         queueIncomingMessage(body, false);
-                        sendCmdPacket(&mrcSock, "USERLIST", "");
+                        //sendCmdPacket(&mrcSock, "USERLIST", "");
                     }
                 }
                 else if (
@@ -1884,7 +1882,7 @@ void doChatRoutines(char* input) {
 
 bool enterChat() {
         
-    if (user.theme == NULL || strlen(user.theme) == 0) {
+    if (/*user.theme == NULL ||*/ strlen(user.theme) == 0) {
         strcpy_s(user.theme, sizeof(user.theme), "default.ans");
     }
     loadTheme();  
@@ -2251,7 +2249,7 @@ int main(int argc, char** argv)
         od_printf("Existing user data LOADED.\r\n\r\n");
     }
 
-    if (user.theme == NULL || strlen(user.theme) == 0) {    
+    if (/*user.theme == NULL ||*/ strlen(user.theme) == 0) {
         strcpy_s(user.theme, sizeof(user.theme), "default.ans");
     }
     loadTheme();    
@@ -2286,7 +2284,6 @@ int main(int argc, char** argv)
                 rooms = stat[1];
                 users = stat[2];
                 activity = stat[3];
-                strcpy_s(gLatency, sizeof(gLatency), stat[4]);
             }
             act = atoi(activity);
             fclose(mrcstats);
@@ -2330,8 +2327,6 @@ int main(int argc, char** argv)
         od_printf("`white`MRC Stats as of `bright green`%s`white`:", mrcStTm);
         od_set_cursor(20, 30);
         od_printf("`bright black`State``: `bright white`%s", curtime - file_stat.st_mtime <= 60 ? "`bright green`ONLINE``" : "`gray`OFFLINE``");
-        od_set_cursor(20, 45);
-        od_printf("`bright black` Latency``: `bright white`%s", gLatency);
         od_set_cursor(21, 30);
         od_printf("`bright black`BBSes``: `bright white`%s", bbses);
         od_set_cursor(22, 30);
