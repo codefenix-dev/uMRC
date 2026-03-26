@@ -34,6 +34,14 @@ v102 - TBA:
            Check your BBS's documentation.
   - Improved BANNER and NOTIF display, now that banners are sent a 
     little more frequently from the host.
+  - Latency values greater than 999 are now displayed as ">999".
+  - Latency values are now color-coded. Greater than 200 is yellow, and
+    greater than 400 is red. Any other color is white.
+  - Latency stat has been removed from the title screen, since it's not 
+    helpful information out of chat, and potentially problematic to 
+    include in the external stats file (mrcstats.dat).
+  - Buffer display turns red when length is over 135, to warn when
+    reaching the maximum input length.
 
 
 v101 - February 6, 2026:

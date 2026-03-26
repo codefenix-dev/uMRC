@@ -497,8 +497,16 @@ void updateUserCount() {
  *  Updates the Latency in the second line of the status bar.
  */
 void updateLatency() {
+    int ltcy = atoi(gLatency);
+    if (ltcy > 999) {
+        strcpy_s(gLatency, sizeof(gLatency), ">999");
+    }
     od_set_cursor(od_control.user_screen_length - 1, 31);
-    od_printf("`bright white`%-4s``", gLatency);
+    od_printf(
+        ltcy > 400 ? "`bright red`%-4s``" : (
+        ltcy > 200 ? "`bright yellow`%-4s``" : (
+        "`bright white`%-4s``")
+        ), gLatency);
 }
 
 /**
@@ -514,7 +522,7 @@ void updateMentions() {
  */
 void updateBuffer(int typed) {
     od_set_cursor(od_control.user_screen_length - 1, 68);
-    od_printf(typed > 120 ? "`bright yellow`%03d`white`/`bright white`%03d``" : "`bright white`%03d`white`/`bright white`%03d``", typed, MSG_LEN - 1);
+    od_printf(typed > 135 ? "`bright red`%03d`white`/`bright yellow`%03d``" : (typed > 120 ? "`bright yellow`%03d`white`/`bright white`%03d``" : "`bright white`%03d`white`/`bright white`%03d``"), typed, MSG_LEN - 1);
 }
 
 void drawStatusBar() {
@@ -1240,7 +1248,7 @@ void processUserCommand(char* cmd, char* params) {
     }
     else if (_stricmp(cmd, "b") == 0) {
         char bcast[PACKET_LEN] = "";
-        _snprintf_s(bcast, PACKET_LEN, -1, "|15* |08(|15%s|08/|14Broadcast|08) |07%s", gDisplayChatterName, params);
+        _snprintf_s(bcast, PACKET_LEN, -1, "|15* |08(|15%s|08/|14Broadcast|08) |07%s", user.chatterName, params);
         sendMsgPacket(&mrcSock, "", "", "", bcast);
     }
     else if (_stricmp(cmd, "sound") == 0) {
@@ -1543,7 +1551,7 @@ void* handleIncomingMessages(void* lpArg) {
                     }
                                         
                     // refresh the user list when the SERVER announces joins and exits
-                    /*if (strstr(body, "Joining") != NULL ||
+                    if (strstr(body, "Joining") != NULL ||
                         strstr(body, "Leaving") != NULL ||
                         strstr(body, "Timeout") != NULL ||
                         strstr(body, "Rename") != NULL || 
@@ -1551,7 +1559,7 @@ void* handleIncomingMessages(void* lpArg) {
                         strstr(body, "Unlink") != NULL) {
 
                         sendCmdPacket(&mrcSock, "USERLIST", "");
-                    }*/
+                    }
 
                     // should display SERVER messages to NOTME, if they're to or from the same room
                     if (strcmp(toUser, "NOTME") == 0) {
@@ -1568,7 +1576,7 @@ void* handleIncomingMessages(void* lpArg) {
                     if ((_stricmp(fromRoom, gRoom) == 0 || strlen(fromRoom) == 0) && 
                         (_stricmp(toRoom, gRoom) == 0 || strlen(toRoom) == 0)) {
                         queueIncomingMessage(body, false);
-                        //sendCmdPacket(&mrcSock, "USERLIST", "");
+                        sendCmdPacket(&mrcSock, "USERLIST", "");
                     }
                 }
                 else if (
