@@ -1001,7 +1001,9 @@ int main(int argc, char** argv)
     pthread_create(&hClient, NULL, waitProcess, (void*)clientport);
 #endif
     
-    while (maxRetries > 0 ? gRetry < maxRetries : true) {
+    // If we've connected successfully at least once, then the "maxRetries" takes effect,
+    // otherwise give up after 10 attempts.
+    while (gHasConnected ? (maxRetries > 0 ? (gRetry < maxRetries) : true) : (gRetry <10)) {
         mrcHostProcess(cfg);    
         Sleep(retryWaitSeconds * 1000);
         gRetry = gRetry + 1;

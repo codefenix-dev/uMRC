@@ -478,4 +478,23 @@ void Sleep(int ms) {
     usleep(ms * 1000);
 }
 
+int _snprintf_s(char* buffer, size_t sizeOfBuffer, size_t count, const char* format, ...) {
+    int retval;
+    va_list ap;
+
+    if ((count != -1) && (count < sizeOfBuffer)) {
+        sizeOfBuffer = count;
+    }
+
+    va_start(ap, format);
+    retval = vsnprintf(buffer, sizeOfBuffer, format, ap);
+    va_end(ap);
+
+    if ((0 <= retval) && (sizeOfBuffer <= (size_t)retval)) {
+        retval = -1;
+    }
+
+    return retval;
+}
+
 #endif

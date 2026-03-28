@@ -1,5 +1,5 @@
  uMRC  ┌──── ▄█▀▀▀▀▀█▄ ───┬───┬───┬─┐
- v101┌──── ▄██ ▄███ ▀▀█▄ ·────────┐ ┤
+ v102┌──── ▄██ ▄███ ▀▀█▄ ·────────┐ ┤
    ┌──── ▄█▀▀ ▐█▀ ▀ █ ██  ▄ ▄ ▄ · │ │
  ┌──── ▄█▀ ▄██▄▀█▄▄██ ██  █████ · │ ┤
 ┌─── ▄█▀ ▐██▀▀█▌ ▀▀▀ ▄█▀  ▐▄█▄▌   │ │
@@ -14,8 +14,6 @@
  ▀█▄█▀ .││|│││││ ■ SSL capable      │
  └ ▀ ──┴─┴─┴─┴─┴────────────────────
 
-uMRC
-
 by Craig Hendricks
 codefenix@conchaos.synchro.net
   https://conchaos.synchro.net/umrc/
@@ -24,13 +22,15 @@ codefenix@conchaos.synchro.net
 
 What is uMRC?
 
-uMRC lets you run Multi-Relay Chat on your BBS without having to install Mystic
-BBS and Python. As long as your BBS is capable of running 32-bit doors, then 
-you and your users can participate in MRC.
+uMRC is a full-featured, cross-platform Multi-Relay Chat client for BBSes. It 
+runs as a native door on your system, letting you access Multi-Relay Chat 
+without having to install and maintain a Mystic BBS instance with Python. In 
+other words, as long as your BBS is capable of running 32-bit doors, then you 
+and your users can participate in MRC.
 
 It should be compatible with any DOOR32.SYS capable BBS such as EleBBS, WWIV,
-Synchronet, Mystic, and possibly others. The Linux build has been tested on 
-Ubuntu 22.04 and should run on similar or later.
+Synchronet, Mystic, and possibly others. Linux builds has been tested on several
+distros, including Ubuntu, Fedora, and openSUSE.
 
 
 Features:
@@ -154,11 +154,13 @@ connections from the same BBS.
    verbose logging. This logs all packets passed through the bridge to 
    umrc.log, which can be useful for troubleshooting purposes.
 
-   umrc-bridge makes automatic reconnect attempts in the event the
-   connection to the MRC host is lost, up to 10 times by default. This
-   can be changed by starting umrc-bridge with the -Rx option, where
-   "x" is the number of retries (e.g.: -R30 for 30 retries). To make
-   infinite reconnection attempts, specify -R0.   
+   After making a successfully connection to the MRC host, umrc-bridge
+   makes unlimited automatic reconnect attempts in the event the connection  
+   is lost. This can be changed by starting umrc-bridge with the -Rx option, 
+   where "x" is the number of retries (e.g.: -R30 for 30 retries).
+ 
+   The -W option can be used to specify the wait time between retries
+   (e.g.: -W10 for 10 seconds). The default is 5 seconds.
 
 4. Set up a menu item to launch a 32-bit door on your BBS.
 
@@ -174,19 +176,38 @@ connections from the same BBS.
    needs to be included.
 
    If you get an error saying, "Invalid config. Run setup", it means you either
-   did not run Setup, or you're not launching umrc-client from the directory
-   it's located in. On some BBSes (like Mystic) it will be necessary to use
-   a batch file or bash script to launch the door. Something like the below ought
+   did not run Setup, or you're not launching umrc-client from its own 
+   directory. On some BBSes (like Mystic) it is necessary to use a batch 
+   file or bash script to launch the door. Something like the below ought
    to do the trick:
 
    
-   #bash
-   # call this file "launch.sh" and pass the node number (%N) to it
-   cd /path_to/umrc
-   ./umrc-client -D /path_to/temp$1/door.sys
+     #bash
+     # call this file "launch.sh" and pass the node number (%N) to it
+     cd /path_to/umrc
+     ./umrc-client -D /path_to/temp$1/door.sys
 
 
-   You can test it locally from the command line as well:
+   umrc-client takes an OPTIONAL -IP parameter, so that sysops may include the
+   user's IP address. If used, umrc-client reports the user IP to the host,
+   which grants the host greater control over banning users without banning an 
+   entire BBS.
+	
+   Usage: -IPxxx.xxx.xxx.xxx (no space between "IP" and the actual IP)
+   
+	   On Synchronet, %i specifies the user's IP:
+
+		 umrc-client -D c:\path\to\DOOR32.SYS -IP%i
+	   
+	   On Mystic, %4 specifies the user's IP:
+
+		 umrc-client -D c:\path\to\DOOR32.SYS -IP%4
+   
+   The -IP should only be used if the BBS is capable of knowing a user's IP
+   and passing it to the door. Check your BBS documentation.
+
+
+   To run the client locally from the command line, use the -L option:
 
      ./umrc-client -L
 
@@ -275,8 +296,6 @@ Q Quit:             Exits back to the BBS.
 MRC Stats, as reported by umrc-bridge:
 
 State:    ONLINE or OFFLINE. 60 seconds or less since last ping = ONLINE
-Latency:  Elapsed milliseconds between the last client message and the
-          server's response.
 BBSes:    Number of BBSes currently connected to the MRC host.
 Rooms:    Current number of chat rooms.
 Users:    Total number of users in all chat room.
@@ -290,7 +309,6 @@ The stats are separated by spaces and follow this order:
    2 - Rooms
    3 - Users
    4 - Activity (0=NONE, 1=LOW, 2=MED, 3, HI)
-   5 - Latency (as calculated by the bridge)
 
 
 Basic Chat Usage:

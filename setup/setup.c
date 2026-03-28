@@ -107,7 +107,7 @@ char charPrompt(char* promptText, char allowedChars[], char defaultChar) {
 		}
 		printPipeCodeString("|07|16");
 	}
-	printPipeCodeString("|07");
+	printPipeCodeString("|07|16");
 	return input;
 }
 

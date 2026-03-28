@@ -26,11 +26,11 @@ HANDLE hCon; // needed for setting console colors and clearing screen
 #include <termios.h>
 #include <sys/types.h>
 #include <errno.h>
+#include <stdarg.h>
 
 #define strcpy_s(dest, count, source)                         strncpy((dest), (source), (count))
 #define strncpy_s(dest, sizeofDest, source, max)              strncpy((dest), (source), (max))
 #define strcat_s(dest, max, source)                           strcat((dest), (source))
-#define _snprintf_s(buffer, sizeofBuffer, count, format, ...) snprintf((buffer), (sizeofBuffer), (format), ##__VA_ARGS__)
 #define _strdup(s)                                            strdup((s))
 #define _stricmp(s1, s2)                                      strcasecmp((s1), (s2))
 #define _strnicmp(s1, s2, n)                                  strncasecmp((s1), (s2), (n))             
@@ -50,6 +50,7 @@ void initTermios(int echo);
 void resetTermios(void);
 char _getch();
 void Sleep(int ms);
+int _snprintf_s(char* buffer, size_t sizeOfBuffer, size_t count, const char* format, ...);
 
 #endif
 
@@ -80,7 +81,7 @@ void Sleep(int ms);
 #define UMRC_VERSION "102"
 #define YEAR_AND_AUTHOR "2026 Craig Hendricks (aka Codefenix)"
 #define AUTHOR_INITIALS "cf" // alias initials
-#define COMPILE_DATE "2026-03-26"
+#define COMPILE_DATE "2026-03-28"
 
 // These defaults should remain the same, and
 // not be changed without a good reason.

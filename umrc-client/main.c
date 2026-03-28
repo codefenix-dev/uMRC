@@ -83,10 +83,10 @@ char gStatusThemeLine2[400] = "\324\315\315[ users:     ]\315\315[ latency:     
 
 
 struct messageQueue {
-    char* message;
+    char message[512];
     bool isMention;
 };
-struct messageQueue mc;
+struct messageQueue mq;
 
 
 #define DEFAULT_BRACKETS_COUNT 20
@@ -1114,11 +1114,11 @@ void queueIncomingMessage(char* msg, bool mention) {
         displayMessage(msg, mention);
     }
     else {
-        while (mc.message != NULL) {
+        while (strlen(mq.message) > 0) {
             od_sleep(1);
         }
-        mc.message = msg;
-        mc.isMention = mention;
+        strcpy_s(mq.message, sizeof(mq.message), msg);
+        mq.isMention = mention;
     }
 }
 
@@ -1383,7 +1383,7 @@ void processServerMessage(char* body, char* toUser) {
         //
         // Notification messages have the same structure as a 
         // BANNER packet, so we handle it the same way.
-        char banner[512] = { 0 };
+        char banner[512] = "";// { 0 };
         _snprintf_s(banner, sizeof(banner), -1, (strcmp(cmd, "BANNER") == 0 ? "|14* |13<|15#|13> |15%s" : "|14* |14<|15!|14> |15%s"), params); //"|14* |11<|15#|11> |17|15%s|16" : "|14* |09<|15!|09> |23|00%s|16"
         queueIncomingMessage(banner, false);
     }
@@ -1409,7 +1409,7 @@ void processServerMessage(char* body, char* toUser) {
         strcpy_s(user.chatterName, sizeof(user.chatterName), params);
         _snprintf_s(gDisplayChatterName, sizeof(gDisplayChatterName), -1, "|%02d|%02d%c|%02d|%02d%s%s|16", user.chatterNamePrefixFgColor, user.chatterNamePrefixBgColor, user.chatterNamePrefix, user.chatterNameFgColor, user.chatterNameBgColor, user.chatterName, user.chatterNameSuffix);
         // inform the user of the change...
-        char nicknotice[512] = { 0 };
+        char nicknotice[512] = "";// { 0 };
         _snprintf_s(nicknotice, sizeof(nicknotice), -1, "|15* |08(|14Notice|08) |07The MRC server has updated your name to |15%s|07.", user.chatterName);
         queueIncomingMessage(nicknotice, true);
         stripPipeCodes(nicknotice);
@@ -1443,8 +1443,8 @@ void processServerMessage(char* body, char* toUser) {
     // since it's most likely an informational message from the SERVER.
     else if (strlen(toUser) == 0 || _stricmp(toUser, user.chatterName) == 0) {
         queueIncomingMessage(body, false);
-        od_sleep(5);
     }
+    od_sleep(5);
 }
 
 void processCtcpCommand(char* body, char* toUser, char* fromUser) {
@@ -1652,10 +1652,10 @@ void doChatRoutines(char* input) {
         
         Sleep(0);
 
-        if (mc.message != NULL) {
-            displayMessage(mc.message, mc.isMention);
-            mc.message = NULL;
-            mc.isMention = false;
+        if (strlen(mq.message) > 0) {
+            displayMessage(mq.message, mq.isMention);
+            mq.message[0] = '\0';
+            mq.isMention = false;
         }
         if (gRoomTopicChanged) {
             drawStatusBar();
@@ -2371,23 +2371,23 @@ int main(int argc, char** argv)
         case 'T':
             od_clr_scr();
             od_printf(DIVIDER);
-            od_printf("`` ChatterName:         `bright white`%s``", user.chatterName);
-            od_printf("\r\n`` DisplayChatterName:  "); od_disp_emu(pipeToAnsi(gDisplayChatterName), true);
-            od_printf("\r\n`` FromSite:            `bright white`%s``", gFromSite);
-            od_printf("\r\n`` user_num:            `bright white`%d``", od_control.user_num);
-            od_printf("\r\n`` user_name:           `bright white`%s``", od_control.user_name);
-            od_printf("\r\n`` UserIP:              `bright white`%s``", gUserIP);
-            od_printf("\r\n`` user_handle:         `bright white`%s``", od_control.user_handle);
-            od_printf("\r\n`` user_security:       `bright white`%d``", od_control.user_security);
-            od_printf("\r\n`` user_timelimit:      `bright white`%d``", od_control.user_timelimit);
-            od_printf("\r\n`` user_ansi:           `bright white`%d``", od_control.user_ansi);
-            od_printf("\r\n`` user_screen_length:  `bright white`%d``", od_control.user_screen_length);
-            od_printf("\r\n`` user_screenwidth:    `bright white`%d``", od_control.user_screenwidth);
-            od_printf("\r\n`` sysop_name:          `bright white`%s``", od_control.sysop_name);
-            od_printf("\r\n`` sysop_name (clensed):`bright white`%s``", od_control.sysop_name);
-            od_printf("\r\n`` system_name:         `bright white`%s``", od_control.system_name);
-            od_printf("\r\n`` od_maxtime:          `bright white`%d``", od_control.od_maxtime);
-            od_printf("\r\n`` od_inactivity:       `bright white`%d``", od_control.od_inactivity);
+            od_printf("`` ChatterName:          `bright white`%s``", user.chatterName);
+            od_printf("\r\n`` DisplayChatterName:   "); od_disp_emu(pipeToAnsi(gDisplayChatterName), true);
+            od_printf("\r\n`` FromSite:             `bright white`%s``", gFromSite);
+            od_printf("\r\n`` user_num:             `bright white`%d``", od_control.user_num);
+            od_printf("\r\n`` user_name:            `bright white`%s``", od_control.user_name);
+            od_printf("\r\n`` UserIP:               `bright white`%s``", gUserIP);
+            od_printf("\r\n`` user_handle:          `bright white`%s``", od_control.user_handle);
+            od_printf("\r\n`` user_security:        `bright white`%d``", od_control.user_security);
+            od_printf("\r\n`` user_timelimit:       `bright white`%d``", od_control.user_timelimit);
+            od_printf("\r\n`` user_ansi:            `bright white`%d``", od_control.user_ansi);
+            od_printf("\r\n`` user_screen_length:   `bright white`%d``", od_control.user_screen_length);
+            od_printf("\r\n`` user_screenwidth:     `bright white`%d``", od_control.user_screenwidth);
+            od_printf("\r\n`` sysop_name:           `bright white`%s``", od_control.sysop_name);
+            od_printf("\r\n`` sysop_name (cleansed):`bright white`%s``", od_control.sysop_name);
+            od_printf("\r\n`` system_name:          `bright white`%s``", od_control.system_name);
+            od_printf("\r\n`` od_maxtime:           `bright white`%d``", od_control.od_maxtime);
+            od_printf("\r\n`` od_inactivity:        `bright white`%d``", od_control.od_inactivity);
 
             od_printf("\r\n");
             od_printf(DIVIDER);

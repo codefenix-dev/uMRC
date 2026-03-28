@@ -6,7 +6,7 @@ mkdir -p bin/themes
 
 echo -n "Building setup..."
 cd setup
-gcc setup.c ../common/common.c -o setup -fcompare-debug-second -Wno-format-truncation
+gcc setup.c ../common/common.c -o setup
 if [ $? -eq 0 ]; then
     echo -e "\033[32;1mOK\033[0m"
 else
@@ -20,7 +20,7 @@ cd ..
 
 echo -n "Building umrc-bridge..."
 cd umrc-bridge
-gcc bridge.c ../common/common.c -o umrc-bridge -lssl -lcrypto -fcompare-debug-second -Wno-format-truncation
+gcc bridge.c ../common/common.c -o umrc-bridge -lssl -lcrypto
 if [ $? -eq 0 ]; then
     echo -e "\033[32;1mOK\033[0m"
 else
@@ -34,7 +34,7 @@ cd ..
 
 echo -n "Building umrc-client..."
 cd umrc-client
-gcc main.c func.c ../common/common.c -o umrc-client -L ../lib/odoors/nix -lODoors -fcompare-debug-second -Wno-format-truncation
+gcc main.c func.c ../common/common.c -o umrc-client -L ../lib/odoors/nix -lODoors
 if [ $? -eq 0 ]; then
     echo -e "\033[32;1mOK\033[0m"
 else

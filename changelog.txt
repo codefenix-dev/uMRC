@@ -42,6 +42,8 @@ v102 - TBA:
     include in the external stats file (mrcstats.dat).
   - Buffer display turns red when length is over 135, to warn when
     reaching the maximum input length.
+  - Fixed an issue in setup where the background color wouldn't reset to
+    black after the SSL Y/N prompt on Linux and macOS.
 
 
 v101 - February 6, 2026:
