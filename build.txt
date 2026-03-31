@@ -1,0 +1,124 @@
+** Building uMRC from Source **
+
+
+Linux (x64):
+
+  Follow these steps to compile Linux x64 binaries:
+
+  1. First make sure gcc is installed on the system.
+  
+     On Debian systems like Ubuntu, open a Terminal and run:
+	 
+	   sudo apt install gcc
+
+
+  2. Next make sure LibreSSL is installed on your system:
+  
+       sudo apt install libssl-dev
+
+  (Refer to your distro's documentation on installing gcc and LibreSSL.)
+	   
+ 
+  3. Make the build.sh script executable:
+  
+       chmod +x build.sh
+	   
+
+  4. Finally, run the build.sh script:
+  
+       ./build.sh
+	 
+	 
+  When done, you will find the compiled binaries and other necessary files
+  in a subdirectory named "bin".
+  
+  Compiling for Linux arm64 requires having a precompiled OpenDoors library 
+  for arm64. This precompiled library is currently not included in the uMRC 
+  project. Until such time, you may compile your own from source using the 
+  files available from:
+  
+    https://github.com/SynchronetBBS/sbbs/tree/master/src/odoors
+  
+
+
+
+macOS (arm64):
+
+  The same build.sh script that compiles binaries for Linux also compiles
+  binaries for macOS for arm64.
+  
+  You will need to have LibreSSL installed. There are a coule different ways
+  to go about installing on macOS. Installing via Homebrew may be the simplest
+  method:
+  
+    https://formulae.brew.sh/formula/libressl
+ 
+  Alternatively, you may download the latest source from libressl.org and
+  follow the "Build steps using configure" directions included.
+  
+  When done, you should be able to run the build.sh script to make your own
+  macOS binaries.
+  
+  1. First, make the build.sh script executable:
+  
+       chmod +x build.sh
+	   
+
+  2. Finally, run the build.sh script:
+  
+       ./build.sh
+	 
+	 
+  When done, you will find the compiled binaries and other necessary files
+  in a subdirectory named "bin".
+  
+  
+
+
+Windows (x86 & x64):
+
+  Follow these steps to compile Windows x86 executables:
+
+  1. Download and install Visual Studio Community:
+
+     https://visualstudio.microsoft.com/vs/community/
+   
+     I use Visual Studio Community 2022 at the time of this writing.
+   
+
+  2. After Visual Studio is installed, start it and select the option
+     to "Open a project or solution". Browse to "umrc.sln", and click Open.
+   
+     Alternatively, simply double-click on the umrc.sln solution file in
+     Windows, and Visual Studio should open it automatically.
+   
+   
+  3. In the "Solution Explorer" panel that opens, right click on 
+     "Solution 'umrc' (3 or 3 projects)" and select "Build Solution".
+   
+
+  When done, you will find the compiled EXEs, DLLs, and other necessary files
+  in a subfolder named "Release" within the solution folder.
+  
+  [Release]:
+  - [screens]
+  - [themes]
+  - crypto-57.dll
+  - ssl-60.dll
+  - ODoors62.dll
+  - setup.exe
+  - umrc-bridge.exe
+  - umrc-client.exe
+   
+  Optional:
+  
+  If you wish to compile Windows x64 executables of setup and umrc-bridge,
+  change "x86" to "x64" in the Solution Platforms dropdown near the top of
+  the Visual Studio window. Right click the "setup" project under 
+  "Solution 'umrc'" in the Solution Explorer panel and select "Build". Do the
+  same for "umrc-bridge" (umrc-client will not build for x64 at this time). 
+  You will find the compiled EXEs and DLLs in a subfolder named "x64\Release" 
+  within the solution folder. You may replace the x86 EXEs and DLLs with these.
+  
+    
+  

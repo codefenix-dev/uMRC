@@ -112,6 +112,11 @@
       <AdditionalLibraryDirectories>..\lib\odoors\win-x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>ODoorW.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>copy ..\lib\odoors\win-x86\*.dll ..\Release /Y
+xcopy ..\assets\screens ..\Release\screens /E /I /Y
+xcopy ..\assets\themes ..\Release\themes /E /I /Y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>

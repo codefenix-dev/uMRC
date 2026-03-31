@@ -53,17 +53,12 @@ This is a **condensed** set of basic install steps. For more detailed info,
 check the **readme.txt** file included in the ZIP archive for your 
 platform.
 
+If you wish to build your own binaries, refer to the build.txt file for
+basic instructions.
+
 > ⚠️ If you have any existing MRC process currently running, stop it at 
 > this time. The MRC host generally does not play well with concurrent 
 > connections from the same BBS.
-
-If you're on Windows, skip this paragraph and proceed to step #1.
-On Debian-based systems like Ubuntu, run the build.sh script to compile from source.
-First run `sudo apt install gcc` if you don't already have gcc installed,
-then run `sudo apt install libssl-dev` since the bridge makes use
-of LibreSSL, then `./build.sh` should complete successfully. It should 
-create a subdirectory named "bin" and place the compiled binaries into it
-along with all other necessary asset subdirectories and files.
 
 1. Place all files to their own directory, keeping the structure 
    the same as shown above in the list of files included.      
