@@ -9,7 +9,7 @@
 ▄▀  ██▄▀██ ▀ ▄█▀   Multi-Relay Chat
 ▀ ▐█▄▀██ ▀ ▄█▀       Client Door
 ▐█▄▀██▄▀ ▄█▀ .│┌────────────────────┐
- ▀███▀ ▄█▀ .││|│ ■ Linux            │
+ ▀███▀ ▄█▀ .││|│ ■ macOS ARM64      │
 █▄ ▀ ▄█▀ .││|│││ ■ DOOR32.SYS       │
  ▀█▄█▀ .││|│││││ ■ SSL capable      │
  └ ▀ ──┴─┴─┴─┴─┴────────────────────
@@ -28,9 +28,7 @@ without having to install and maintain a Mystic BBS instance with Python. In
 other words, as long as your BBS is capable of running 32-bit doors, then you 
 and your users can participate in MRC.
 
-It should be compatible with any DOOR32.SYS capable BBS such as EleBBS, WWIV,
-Synchronet, Mystic, and possibly others. Linux builds has been tested on several
-distros, including Ubuntu, Fedora, and openSUSE.
+It should be compatible with any DOOR32.SYS capable BBS.
 
 
 Features:
@@ -197,11 +195,11 @@ connections from the same BBS.
    
 	   On Synchronet, %i specifies the user's IP:
 
-		 umrc-client -D c:\path\to\DOOR32.SYS -IP%i
+		 ./umrc-client -D /path_to/DOOR32.SYS -IP%i
 	   
 	   On Mystic, %4 specifies the user's IP:
 
-		 umrc-client -D c:\path\to\DOOR32.SYS -IP%4
+		 ./umrc-client -D /path_to/DOOR32.SYS -IP%4
    
    The -IP should only be used if the BBS is capable of knowing a user's IP
    and passing it to the door. Check your BBS documentation.
@@ -370,8 +368,8 @@ future changes to the MRC protocol, but that's about it.
 Technical Notes:
 
 uMRC is written in C, and was developed and compiled on Windows using 
-Microsoft Visual Studio Community 2022. The Linux binaries were compiled on
-Ubuntu 22.04 using gcc.
+Microsoft Visual Studio Community 2022. The macOS binaries were compiled on
+Taho using gcc (Clang).
 
 uMRC makes extensive use of threading, both in umrc-bridge and umrc-client.
 Separate threads are used for establishing connections to the MRC host,

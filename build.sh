@@ -1,5 +1,12 @@
 #! /bin/bash
 
+plat="linux"
+plat_arc="linux-x64"
+if [[ $OSTYPE == darwin* ]]; then
+    plat="macos"
+    plat_arc="macos-arm64"
+fi   
+
 mkdir -p bin
 mkdir -p bin/screens
 mkdir -p bin/themes
@@ -34,7 +41,7 @@ cd ..
 
 echo -n "Building umrc-client..."
 cd umrc-client
-gcc main.c func.c ../common/common.c -o umrc-client -L ../lib/odoors/nix -lODoors
+gcc main.c func.c ../common/common.c -o umrc-client -L ../lib/odoors/$plat_arc -lODoors
 if [ $? -eq 0 ]; then
     echo -e "\033[32;1mOK\033[0m"
 else
@@ -47,7 +54,7 @@ cp umrc-client ../bin
 cd ..
 
 echo "Copying assets..."
-cp -r ./assets/nix/* ./bin/
+cp -r ./assets/$plat/* ./bin/
 cp -r ./assets/screens/* ./bin/screens/
 cp -r ./assets/themes/* ./bin/themes/
 

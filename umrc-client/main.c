@@ -49,7 +49,6 @@
 #define CTCP_ROOM "ctcp_echo_channel"
 #define CHAT_CURSOR "`flashing %s`\262`bright black`\372``"
 
-
 bool gRoomTopicChanged = false;
 bool gLatencyChanged = false;
 bool gUserCountChanged = false;
@@ -81,13 +80,11 @@ char** gChattersInRoom;
 char gStatusThemeLine1[400] = "\325\315\315[                                                                 /help ]\315\315\270";
 char gStatusThemeLine2[400] = "\324\315\315[ users:     ]\315\315[ latency:      ]\315\315\315[ mentions:     ]\315[ buffer:         ]\315\315\276";
 
-
 struct messageQueue {
     char message[512];
     bool isMention;
 };
 struct messageQueue mq;
-
 
 #define DEFAULT_BRACKETS_COUNT 20
 const char* DEFAULT_BRACKETS[DEFAULT_BRACKETS_COUNT] = {
@@ -247,28 +244,7 @@ void defaultDisplayName() {
         user.chatterNamePrefixFgColor = (rand() % 11) + 2;
     } while (user.chatterNamePrefixFgColor == user.chatterNameFgColor);
     suffixColor = user.chatterNamePrefixFgColor;
-    user.chatterNamePrefix = brackets[0];
-
-    // This commented-out section sets a suffix string based on the BBS name.
-    // People didn't seem to like it, so I settled for a simple 1-character 
-    // default suffix instead. Leaving this section commented out in case I
-    // decide to ever revisit.
-    //
-    // form a default suffix string using the board's name, i.e. an abbreviation..
-    //for (int i = 0; cfg.name[i] != '\0' && suffixLen <= 3; i++) {
-    //    if (buildSuffix == true && tolower(cfg.name[i]) >= 97 && tolower(cfg.name[i]) <= 122) {
-    //        _snprintf_s(defaultSuf, 30, -1, "%s%c", defaultSuf, tolower(cfg.name[i]));
-    //        suffixLen = suffixLen + 1;
-    //        if (strstr(cfg.name, " ") != NULL) {
-    //            buildSuffix = false;
-    //        }
-    //    }
-    //    else if (cfg.name[i] == 32) {
-    //        buildSuffix = true;
-    //    }
-    //}
-    //_snprintf_s(user.chatterNameSuffix, 33, -1, "%s|%02d%c", defaultSuf, user.chatterNamePrefixFgColor, brackets[1]);
-    
+    user.chatterNamePrefix = brackets[0];    
     _snprintf_s(user.chatterNameSuffix, sizeof(user.chatterNameSuffix), -1, "|%02d%c|16", user.chatterNamePrefixFgColor, brackets[1]);
 }
 
@@ -550,7 +526,7 @@ void enterChatterSettings() {
     char pickedTheme[20] = "";
 
     // failsafe in case a user hasn't picked a theme
-    if (/*user.theme == NULL ||*/ strlen(user.theme) == 0) {
+    if (strlen(user.theme) == 0) {
         strcpy_s(user.theme, sizeof(user.theme), "default.ans");
     } 
     loadTheme();
@@ -1342,6 +1318,7 @@ void processUserCommand(char* cmd, char* params) {
     // Any other server command goes straight to the server and processed there.
     // If the server received an invalid command, it will let the user know.
     else {
+        ustr(cmd);
         sendCmdPacket(&mrcSock, cmd, params);
         
         // request a new USERLIST when checking the current users
@@ -1383,8 +1360,8 @@ void processServerMessage(char* body, char* toUser) {
         //
         // Notification messages have the same structure as a 
         // BANNER packet, so we handle it the same way.
-        char banner[512] = "";// { 0 };
-        _snprintf_s(banner, sizeof(banner), -1, (strcmp(cmd, "BANNER") == 0 ? "|14* |13<|15#|13> |15%s" : "|14* |14<|15!|14> |15%s"), params); //"|14* |11<|15#|11> |17|15%s|16" : "|14* |09<|15!|09> |23|00%s|16"
+        char banner[512] = "";
+        _snprintf_s(banner, sizeof(banner), -1, (strcmp(cmd, "BANNER") == 0 ? "|14* |13<|15#|13> |15%s" : "|14* |14<|15!|14> |15%s"), params);
         queueIncomingMessage(banner, false);
     }
     else if (strcmp(cmd, "ROOMTOPIC") == 0) {
@@ -1409,7 +1386,7 @@ void processServerMessage(char* body, char* toUser) {
         strcpy_s(user.chatterName, sizeof(user.chatterName), params);
         _snprintf_s(gDisplayChatterName, sizeof(gDisplayChatterName), -1, "|%02d|%02d%c|%02d|%02d%s%s|16", user.chatterNamePrefixFgColor, user.chatterNamePrefixBgColor, user.chatterNamePrefix, user.chatterNameFgColor, user.chatterNameBgColor, user.chatterName, user.chatterNameSuffix);
         // inform the user of the change...
-        char nicknotice[512] = "";// { 0 };
+        char nicknotice[512] = "";
         _snprintf_s(nicknotice, sizeof(nicknotice), -1, "|15* |08(|14Notice|08) |07The MRC server has updated your name to |15%s|07.", user.chatterName);
         queueIncomingMessage(nicknotice, true);
         stripPipeCodes(nicknotice);
@@ -1586,7 +1563,6 @@ void* handleIncomingMessages(void* lpArg) {
                         (strlen(toRoom) == 0 && strlen(toUser) == 0)) {
 
                     if (checkTwit(fromUser)) {
-                        //queueIncomingMessage("|15* |08Incoming message filtered.", false);
                         continue;
                     }
 
@@ -1629,9 +1605,7 @@ void* handleIncomingMessages(void* lpArg) {
             gIsInChat = false;
         }
     }
-//#if defined(WIN32) || defined(_MSC_VER)  
     return 0;
-//#endif
 }
 
 /**
@@ -1890,7 +1864,7 @@ void doChatRoutines(char* input) {
 
 bool enterChat() {
         
-    if (/*user.theme == NULL ||*/ strlen(user.theme) == 0) {
+    if (strlen(user.theme) == 0) {
         strcpy_s(user.theme, sizeof(user.theme), "default.ans");
     }
     loadTheme();  
@@ -2020,8 +1994,6 @@ bool enterChat() {
     od_sleep(20);
     sendCmdPacket(&mrcSock, "NEWROOM::", gRoom);
     od_sleep(20);    
-    sendCmdPacket(&mrcSock, "BANNERS", "");
-    od_sleep(20);
 
     // Loop to get input from the user, and send it over the Bridge.
     while (gIsInChat) {
@@ -2257,7 +2229,7 @@ int main(int argc, char** argv)
         od_printf("Existing user data LOADED.\r\n\r\n");
     }
 
-    if (/*user.theme == NULL ||*/ strlen(user.theme) == 0) {
+    if (strlen(user.theme) == 0) {
         strcpy_s(user.theme, sizeof(user.theme), "default.ans");
     }
     loadTheme();    
