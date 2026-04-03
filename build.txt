@@ -16,7 +16,7 @@ Linux (x64):
   
        sudo apt install libssl-dev
 
-  (Refer to your distro's documentation on installing gcc and LibreSSL.)
+     (Refer to your distro's documentation on installing gcc and LibreSSL.)
 	   
  
   3. Make the build.sh script executable:
@@ -31,6 +31,13 @@ Linux (x64):
 	 
   When done, you will find the compiled binaries and other necessary files
   in a subdirectory named "bin".
+  
+  [bin]:
+  - [screens]
+  - [themes]
+  - setup
+  - umrc-bridge
+  - umrc-client
   
   Compiling for Linux arm64 requires having a precompiled OpenDoors library 
   for arm64. This precompiled library is currently not included in the uMRC 
@@ -69,8 +76,8 @@ macOS (arm64):
        ./build.sh
 	 
 	 
-  When done, you will find the compiled binaries and other necessary files
-  in a subdirectory named "bin".
+  You will find the compiled binaries and other necessary files in a 
+  subdirectory named "bin", just as outlined above with Linux.
   
   
 
@@ -112,13 +119,17 @@ Windows (x86 & x64):
    
   Optional:
   
-  If you wish to compile Windows x64 executables of setup and umrc-bridge,
-  change "x86" to "x64" in the Solution Platforms dropdown near the top of
-  the Visual Studio window. Right click the "setup" project under 
+  If you wish to compile 64-bit executables of the setup and umrc-bridge
+  programs, change "x86" to "x64" in the Solution Platforms dropdown near the 
+  top of the Visual Studio window. Right click the "setup" project under 
   "Solution 'umrc'" in the Solution Explorer panel and select "Build". Do the
   same for "umrc-bridge" (umrc-client will not build for x64 at this time). 
   You will find the compiled EXEs and DLLs in a subfolder named "x64\Release" 
-  within the solution folder. You may replace the x86 EXEs and DLLs with these.
+  within the solution folder. You may replace the x86 EXEs and DLLs with these.  
+  
+  The only notable differences in the x64 executables are: 
+    - "Windows.x86_64" will be shown in your BBS's /info screen.
+	- umrc-bridge uses the 64-bit LibreSSL libraries.
   
     
   

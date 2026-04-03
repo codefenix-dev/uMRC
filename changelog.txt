@@ -1,6 +1,6 @@
 Change Log:
 
-v102 - TBA:
+v102 - April 3, 2026:
 
   - Improved string handling all throughout the code, preventing
     potential crashes.

@@ -74,7 +74,7 @@ connections from the same BBS.
 
    If the pre-built binaries don't run on your system for some reason, 
    try compiling from source using the latest code from the GitHub 
-   project page. Instructions are provided in the README.md file.
+   project page. Instructions are provided in the build.txt file at:
    https://github.com/codefenix-dev/uMRC   
 
 
