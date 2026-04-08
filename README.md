@@ -228,7 +228,7 @@ everything he offers.
 - ssh://a-net-online.lol
 
 
-**X-Bit** of **x-big.org**
+**X-Bit** of **x-bit.org**
 
 xbit is a veteran sysop and league coordinator of the X-League (777) Inter-BBS 
 network which re-launched in 2025. If you're interested in joining the network, 
