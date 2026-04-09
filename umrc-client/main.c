@@ -2127,6 +2127,12 @@ int main(int argc, char** argv)
     strcpy_s(user.chatterName, sizeof(user.chatterName), strReplace(user.chatterName, "~", ""));  // tildes are disallowed; strip them out
     strcpy_s(gFromSite, sizeof(gFromSite), strReplace(cfg.name, "~", ""));
     stripPipeCodes(gFromSite);
+    // Spaces must be replaced by _[underscore / chr(95)] when sent to server
+    for (int i = 0; i < strlen(gFromSite); i++) {
+        if (gFromSite[i] == ' ') {
+            gFromSite[i] = '_';
+        }
+    }
     if (strlen(gFromSite) > 30) gFromSite[30] = '\0';
     char userFileName[36] = "";
     strcpy_s(userFileName, sizeof(userFileName), user.chatterName);

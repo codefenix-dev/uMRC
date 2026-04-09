@@ -1,5 +1,11 @@
 Change Log:
 
+v103 - TBA:
+
+  - Fixed an issue with the "fromSite" containing spaces; replaced them
+    with underscores per the MRC protocol.
+
+
 v102 - April 3, 2026:
 
   - Improved string handling all throughout the code, preventing
