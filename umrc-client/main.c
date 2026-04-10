@@ -86,6 +86,8 @@ struct messageQueue {
 };
 struct messageQueue mq;
 
+time_t gLastActTm;
+
 #define DEFAULT_BRACKETS_COUNT 20
 const char* DEFAULT_BRACKETS[DEFAULT_BRACKETS_COUNT] = {
     "<>",
@@ -811,7 +813,7 @@ void enterScrollBack(int initialScroll, int mode) {
 
             case '\x10':
             case OD_KEY_PGUP:
-                scrollPos = scrollPos - height;
+                scrollPos = scrollPos - (height-1);
                 if (scrollPos < 0) {
                     scrollPos = 0;
                 }
@@ -820,7 +822,7 @@ void enterScrollBack(int initialScroll, int mode) {
 
             case '\x0e':
             case OD_KEY_PGDN:
-                scrollPos = scrollPos + height;
+                scrollPos = scrollPos + (height-1);
                 if (scrollPos > scrollMax) {
                     scrollPos = scrollMax;
                 }
@@ -1477,7 +1479,7 @@ void* handleIncomingMessages(void* lpArg) {
         time_t curtime;
         time(&curtime);
         if (curtime - lastIamHere >= 60) {
-            sendCmdPacket(&mrcSock, "IAMHERE", "");
+            sendCmdPacket(&mrcSock, "IAMHERE:", curtime - gLastActTm > 600 ? "AWAY" : "ACTIVE");
             lastIamHere = curtime;
         }
 
@@ -1665,6 +1667,7 @@ void doChatRoutines(char* input) {
 
         if (InputEvent.EventType == EVENT_EXTENDED_KEY) {
             int overfill = 0;
+            time(&gLastActTm);
             switch (InputEvent.chKeyPress)
             {
 
@@ -1751,6 +1754,7 @@ void doChatRoutines(char* input) {
         else if (InputEvent.EventType == EVENT_CHARACTER) {
             key = InputEvent.chKeyPress;
             updateInput = true;
+            time(&gLastActTm);
 
             // Add the keystroke to the input string...            
             if (key == 13 || key == 10) {
@@ -1966,6 +1970,8 @@ bool enterChat() {
     pthread_create(&incomingThreadID, NULL, handleIncomingMessages, NULL);
 #endif   
 
+    time(&gLastActTm);
+
     // Send some initial packets to the server...
     //
     sendCmdPacket(&mrcSock, "motd", "");
@@ -1993,7 +1999,7 @@ bool enterChat() {
     sendMsgPacket(&mrcSock, "NOTME", "", "", user.joinMessage);
     od_sleep(20);
     sendCmdPacket(&mrcSock, "NEWROOM::", gRoom);
-    od_sleep(20);    
+    od_sleep(20);
 
     // Loop to get input from the user, and send it over the Bridge.
     while (gIsInChat) {
@@ -2128,12 +2134,14 @@ int main(int argc, char** argv)
     strcpy_s(gFromSite, sizeof(gFromSite), strReplace(cfg.name, "~", ""));
     stripPipeCodes(gFromSite);
     // Spaces must be replaced by _[underscore / chr(95)] when sent to server
-    for (int i = 0; i < strlen(gFromSite); i++) {
+    for (int i = 0; i < (int)strlen(gFromSite); i++) {
         if (gFromSite[i] == ' ') {
             gFromSite[i] = '_';
         }
     }
-    if (strlen(gFromSite) > 30) gFromSite[30] = '\0';
+    if (strlen(gFromSite) > 30) {
+        gFromSite[30] = '\0';
+    }
     char userFileName[36] = "";
     strcpy_s(userFileName, sizeof(userFileName), user.chatterName);
     cleanUpFilename(userFileName); 
@@ -2381,5 +2389,6 @@ int main(int argc, char** argv)
         }
     }
     	
+    od_clr_scr();
 	od_exit(0, FALSE);
 }

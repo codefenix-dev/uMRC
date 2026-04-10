@@ -52,6 +52,29 @@ void writeToLog(char* msg, char* source, char* user) {
     }
 }
 
+/**
+ *  Removes pipe color code sequences (0-24) from a string.
+ */
+void stripPipeCodes(char* str) {
+    int len = 0;
+    for (int i = 0; i < (int)strlen(str); i++) {
+        if (str[i] == '|' && i < ((int)strlen(str) - 2)) { // check the next 2 characters for digits
+            if (isdigit(str[i + 1]) && isdigit(str[i + 2])) {
+                i = i + 2; // skip if it's a pipe code
+            }
+            else {
+                str[len] = str[i];
+                len = len + 1;
+            }
+        }
+        else {
+            str[len] = str[i];
+            len = len + 1;
+        }
+    }
+    str[len] = '\0';
+}
+
 char* strReplace(char* orig, char* rep, char* with) {
 	// set the length of this the largest string length that will be converted
 	char newstr[512] = ""; // not ideal, but meh...

@@ -81,7 +81,7 @@ int _snprintf_s(char* buffer, size_t sizeOfBuffer, size_t count, const char* for
 #define UMRC_VERSION "103"
 #define YEAR_AND_AUTHOR "2026 Craig Hendricks (aka Codefenix)"
 #define AUTHOR_INITIALS "cf" // alias initials
-#define COMPILE_DATE "2026-04-09"
+#define COMPILE_DATE "2026-04-10"
 
 // These defaults should remain the same, and
 // not be changed without a good reason.
@@ -205,6 +205,7 @@ struct userdata {
 };
 
 void writeToLog(char* msg, char* source, char* user);
+void stripPipeCodes(char* str);
 char* strReplace(char* orig, char* rep, char* with);
 void ustr(char* s);
 void lstr(char* s);

@@ -196,7 +196,7 @@ int main()
 {
 #if defined(WIN32) || defined(_MSC_VER)
 	hCon = GetStdHandle(STD_OUTPUT_HANDLE);
-	if (hCon == INVALID_HANDLE_VALUE) return;
+	if (hCon == INVALID_HANDLE_VALUE) return 1;
 #endif
 
 	char selection = ' ';

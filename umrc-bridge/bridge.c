@@ -39,12 +39,12 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <arpa/inet.h>
-#include <time.h>
 #include <sys/time.h>
     
 typedef uint32_t  DWORD;
 
 #endif
+#include <time.h>
 
 #include "../common/common.h"
 #include "openssl/ssl.h"
@@ -67,6 +67,9 @@ bool gConnectionIsDown = true;
 bool gReconnect = false;
 bool gHasConnected = false;
 int gRetry = 0;
+char gFromSite[140] = "";
+char gProcessID[8] = "";
+
 #define DEFAULT_MAX_RETRIES 0
 #define DEFAULT_RETRY_WAIT_SECONDS 5
 
@@ -84,21 +87,23 @@ SSL_CTX* ctx;
 
 // latency tracking
 #define MAX_LATENCIES 50
-double gLatency;
+int64_t gLatency;
 struct latencyTracker {
     int packetSum;
-    clock_t timeSent;
+    int64_t timeSent;
     bool isServerCmd;
 };
 struct latencyTracker lt[MAX_LATENCIES];
 
 #pragma endregion
 
-#if defined(WIN32) || defined(_MSC_VER)  
-clock_t currentTimeMillis() {
-    return clock();
-#else
 int64_t currentTimeMillis() {
+#if defined(WIN32) || defined(_MSC_VER)  
+    FILETIME ft;
+    GetSystemTimeAsFileTime(&ft);
+    uint64_t ts = ((uint64_t)ft.dwHighDateTime << 32) | ft.dwLowDateTime;
+    return (ts / 10000) - 11644473600000ULL;
+#else
   struct timeval time;
   gettimeofday(&time, NULL);
   int64_t s1 = (int64_t)(time.tv_sec) * 1000;
@@ -175,7 +180,7 @@ int WSAGetLastError() {
 /**
  * Sends SERVER command to the MRC host.
  */ 
-bool sendCmdPacket(const char* cmd, const char* cmdArg) {
+bool sendCmdPacket(char* fromRoom, char* msgExt, const char* cmd, const char* cmdArg) {
     int iResult;
     char cmdstr[MSG_LEN] = "";
     char packet[PACKET_LEN] = "";
@@ -186,10 +191,10 @@ bool sendCmdPacket(const char* cmd, const char* cmdArg) {
     else {
         strcpy_s(cmdstr, MSG_LEN, cmd);
     }
-    strcpy_s(packet, PACKET_LEN, createPacket("CLIENT", "", "", "SERVER", "", "", cmdstr));
+    strcpy_s(packet, PACKET_LEN, createPacket("CLIENT", gFromSite, fromRoom, "SERVER", msgExt, "", cmdstr));
 
     if (gVerboseLogging) {
-        _snprintf_s(logstring, sizeof(logstring), -1, "sendCmdPacket \"%s\" to host", packet);
+        _snprintf_s(logstring, sizeof(logstring), -1, "sendCmdPacket \"%s\" to host", strReplace(packet, "\n", ""));
         printDateTimeStamp();
         puts(logstring);
         writeToLog(logstring, PROGRAM, "");
@@ -226,7 +231,7 @@ bool sendMsgPacket(char* fromUser, char* fromSite, char* fromRoom, char* toUser,
     strcpy_s(packet, PACKET_LEN, createPacket(fromUser, fromSite, fromRoom, toUser, msgExt, toRoom, body));
     
     if (gVerboseLogging) {
-        _snprintf_s(logstring, sizeof(logstring), -1, "sendMsgPacket \"%s\" to host", packet);
+        _snprintf_s(logstring, sizeof(logstring), -1, "sendMsgPacket \"%s\" to host", strReplace(packet, "\n", ""));
         printDateTimeStamp();
         puts(logstring);
         writeToLog(logstring, PROGRAM, "");
@@ -256,11 +261,11 @@ bool sendMsgPacket(char* fromUser, char* fromSite, char* fromRoom, char* toUser,
 /**
  * Sends a packet to the MRC host from local clients.
  */
-bool sendHostPacket(const char* packet) {
+bool sendHostPacket(char* packet) {
     int iResult;
     char logstring[512] = "";
     if (gVerboseLogging) {
-        _snprintf_s(logstring, sizeof(logstring), -1, "sendHostPacket \"%s\" to host", packet);
+        _snprintf_s(logstring, sizeof(logstring), -1, "sendHostPacket \"%s\" to host", strReplace(packet, "\n", ""));
         printDateTimeStamp();
         puts(logstring);
         writeToLog(logstring, PROGRAM, "");
@@ -295,7 +300,7 @@ bool sendClientPacket(SOCKET* sock, char* packet) {
     int iResult;
     char logstring[512] = "";
     if (gVerboseLogging) {
-        _snprintf_s(logstring, sizeof(logstring), -1, "sendClientPacket \"%s\" to socket %d", packet, (int)*sock);
+        _snprintf_s(logstring, sizeof(logstring), -1, "sendClientPacket \"%s\" to socket %d", strReplace(packet, "\n", ""), (int)*sock);
         printDateTimeStamp();
         puts(logstring);
         writeToLog(logstring, PROGRAM, "");
@@ -369,7 +374,7 @@ void* clientProcess(void* lpArg) {
                         writeToLog(logstring, PROGRAM, "");
                     }
                     char ltccmd[20] = "";
-                    _snprintf_s(ltccmd, sizeof(ltccmd), -1, "LATENCY:%.0f", gLatency);
+                    _snprintf_s(ltccmd, sizeof(ltccmd), -1, "LATENCY:%lld", gLatency);
                     sendClientPacket(&pSock, createPacket("SERVER", "", "", "CLIENT", "", "", ltccmd));
                 }
             }
@@ -387,7 +392,7 @@ void* clientProcess(void* lpArg) {
     if (strlen(thisUser) > 0 && !cleanLogoff) {
         char disconnMsg[MSG_LEN] = "";
         _snprintf_s(disconnMsg, MSG_LEN, -1, "|08- %s has disconnected.", thisUser);
-        sendMsgPacket(thisUser, "", "", "NOTME", "", "", disconnMsg);
+        sendMsgPacket(thisUser, gFromSite, "", "NOTME", "", "", disconnMsg);
     }
 
     clientSocks[pSlot] = INVALID_SOCKET;
@@ -750,11 +755,11 @@ void mrcHostProcess(struct settings cfg) {
                 char* fromUser, * fromSite, * fromRoom, * toUser, * msgExt, * toRoom, * body;
                 processPacket(packet, &fromUser, &fromSite, &fromRoom, &toUser, &msgExt, &toRoom, &body);        
 
-                for (int i = 0; i < MAX_LATENCIES; i++) {
-                    if (lt[i].packetSum == packetSum(packet) || lt[i].isServerCmd && strcmp(fromUser, "SERVER")==0) {
-                        gLatency = currentTimeMillis() - lt[i].timeSent;      
+                for (int iml = 0; iml < MAX_LATENCIES; iml++) {
+                    if (lt[iml].packetSum == packetSum(packet) || (lt[iml].isServerCmd && strcmp(fromUser, "SERVER")==0)) {
+                        gLatency = currentTimeMillis() - lt[iml].timeSent;      
                         char ltccmd[20] = "";
-                        _snprintf_s(ltccmd, sizeof(ltccmd), -1, "LATENCY:%.0f", gLatency);
+                        _snprintf_s(ltccmd, sizeof(ltccmd), -1, "LATENCY:%lld", gLatency);
                         sendToLocalClients(createPacket("SERVER", "", "", "CLIENT", "", "", ltccmd));
                         initializeLt();
                         break;
@@ -778,23 +783,34 @@ void mrcHostProcess(struct settings cfg) {
                 if (strcmp(fromUser, "SERVER") == 0) {
 
                     if (gVerboseLogging) {
-                        _snprintf_s(logstring, sizeof(logstring), -1, "received \"%s\" from host", packet);
+                        Sleep(10);
+                        _snprintf_s(logstring, sizeof(logstring), -1, "received \"%s\" from host", strReplace(packet, "\n", ""));
                         printDateTimeStamp();
                         puts(logstring);
                         writeToLog(logstring, PROGRAM, "");
                     }
 
+                    for (int ii = 0; packet[ii] != '\0'; ii++) { // replace control characters with underscores
+                        if (packet[ii] > 6 && packet[ii] < 32 && packet[ii] != 10) { // all except for "card" characters and LF
+                            if (gVerboseLogging) {
+                                printDateTimeStamp();
+                                printf("replacing ascii %d (%c).\r\n", packet[ii], packet[ii]);
+                            }
+                            packet[ii] = '_';
+                        }
+                    }
+
                     // Server acknowledged our connection, so send the INFO packets.
                     if (strcmp(body, "HELLO") == 0) { 
-                        sendCmdPacket("INFOWEB:%s", cfg.web);
-                        sendCmdPacket("INFOTEL:%s", cfg.tel);
-                        sendCmdPacket("INFOSSH:%s", cfg.ssh);
-                        sendCmdPacket("INFOSYS:%s", cfg.sys);
-                        sendCmdPacket("INFODSC:%s", cfg.dsc);
-                        sendCmdPacket("IMALIVE:%s", cfg.name);
+                        sendCmdPacket("", "", "INFOWEB:%s", cfg.web);
+                        sendCmdPacket("", "", "INFOTEL:%s", cfg.tel);
+                        sendCmdPacket("", "", "INFOSSH:%s", cfg.ssh);
+                        sendCmdPacket("", "", "INFOSYS:%s", cfg.sys);
+                        sendCmdPacket("", "", "INFODSC:%s", cfg.dsc);
+                        sendCmdPacket(gProcessID, "", "IMALIVE:%s", cfg.name);
                         char capStr[20] = "";
                         _snprintf_s(capStr, sizeof(capStr), -1, "%s%s%s", "MCI", (cfg.ssl ? " SSL" : ""), " CTCP");
-                        sendCmdPacket("CAPABILITIES: %s", capStr);    
+                        sendCmdPacket("", "", "CAPABILITIES: %s", capStr);
                         Sleep(20);
 
                         // Inform the local clients that the reconnect occurred.
@@ -805,8 +821,10 @@ void mrcHostProcess(struct settings cfg) {
                     }
                     // Server is checking whether we're still up, so let it know.
                     else if (_stricmp(body, "ping") == 0) { 
-                        sendCmdPacket("IMALIVE:%s", cfg.name);                        
-                        sendCmdPacket("STATS", ""); // As long as we're letting the server know IMALIVE, might as well request stats.             
+                        char epochTime[20] = "";
+                        _snprintf_s(epochTime, sizeof(epochTime), -1, "%lld", currentTimeMillis());
+                        sendCmdPacket(gProcessID, epochTime, "IMALIVE:%s", cfg.name);
+                        sendCmdPacket("", "", "STATS", ""); // As long as we're letting the server know IMALIVE, might as well request stats.             
                     }
                     else if (strncmp(body, "STATS:", 6) == 0) {
                         int act = 0;
@@ -903,9 +921,11 @@ int main(int argc, char** argv)
     HANDLE hClient;
     DWORD clientThreadId;
     hCon = GetStdHandle(STD_OUTPUT_HANDLE);
-    if (hCon == INVALID_HANDLE_VALUE) return;
+    if (hCon == INVALID_HANDLE_VALUE) return 1;
+    _snprintf_s(gProcessID, sizeof(gProcessID), -1, "%d", GetCurrentProcessId());
 #else 
     pthread_t hClient;
+    _snprintf_s(gProcessID, sizeof(gProcessID), -1, "%d", getpid());
 #endif
 
     for (int i = 0; i < MAX_CLIENTS; i++) {
@@ -913,6 +933,7 @@ int main(int argc, char** argv)
     }
 
     initializeLt();
+
 
     // logo time...
 
@@ -969,6 +990,18 @@ int main(int argc, char** argv)
             writeToLog("Invalid config. Run setup.", PROGRAM, "");
         }
         return -1;
+    }
+
+    strcpy_s(gFromSite, sizeof(gFromSite), strReplace(cfg.name, "~", ""));
+    stripPipeCodes(gFromSite);
+    // Spaces must be replaced by _[underscore / chr(95)] when sent to server
+    for (int i = 0; i < (int)strlen(gFromSite); i++) {
+        if (gFromSite[i] == ' ') {
+            gFromSite[i] = '_';
+        }
+    }
+    if (strlen(gFromSite) > 30) {
+        gFromSite[30] = '\0';
     }
 
     // create a new thread for waiting for client connections.
