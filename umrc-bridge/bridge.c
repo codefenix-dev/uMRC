@@ -91,7 +91,7 @@ int64_t gLatency;
 struct latencyTracker {
     int packetSum;
     int64_t timeSent;
-    bool isServerCmd;
+    bool isStats;
 };
 struct latencyTracker lt[MAX_LATENCIES];
 
@@ -167,7 +167,7 @@ void initializeLt() {
     for (int j = 0; j < MAX_LATENCIES; j++) {
         lt[j].packetSum = -1;
         lt[j].timeSent = -1;
-        lt[j].isServerCmd = false;
+        lt[j].isStats = false;
     }
 }
 
@@ -213,7 +213,7 @@ bool sendCmdPacket(char* fromRoom, char* msgExt, const char* cmd, const char* cm
             if (lt[i].packetSum == -1) {
                 lt[i].packetSum = packetSum(packet);
                 lt[i].timeSent = currentTimeMillis();
-                lt[i].isServerCmd = true;
+                lt[i].isStats = strcmp(cmd, "STATS") == 0 ? true : false;
                 break;
             }
         }
@@ -251,6 +251,7 @@ bool sendMsgPacket(char* fromUser, char* fromSite, char* fromRoom, char* toUser,
             if (lt[i].packetSum == -1) {
                 lt[i].packetSum = packetSum(packet);
                 lt[i].timeSent = currentTimeMillis(); 
+                lt[i].isStats = false;
                 break;
             }
         }
@@ -281,12 +282,14 @@ bool sendHostPacket(char* packet) {
         return false;
     }
     else {
-        for (int i = 0; i < MAX_LATENCIES; i++) {
-            if (lt[i].packetSum == -1) {
-                lt[i].packetSum = packetSum(packet);
-                lt[i].timeSent = currentTimeMillis();
-                lt[i].isServerCmd = strstr(packet, "~SERVER~") != NULL && strstr(packet, "~IAMHERE~") == NULL;
-                break;
+        if (strstr(packet, "~NOTME~") == NULL) {
+            for (int i = 0; i < MAX_LATENCIES; i++) {
+                if (lt[i].packetSum == -1) {
+                    lt[i].packetSum = packetSum(packet);
+                    lt[i].timeSent = currentTimeMillis();
+                    lt[i].isStats = false;
+                    break;
+                }
             }
         }
         return true;
@@ -756,12 +759,17 @@ void mrcHostProcess(struct settings cfg) {
                 processPacket(packet, &fromUser, &fromSite, &fromRoom, &toUser, &msgExt, &toRoom, &body);        
 
                 for (int iml = 0; iml < MAX_LATENCIES; iml++) {
-                    if (lt[iml].packetSum == packetSum(packet) || (lt[iml].isServerCmd && strcmp(fromUser, "SERVER")==0)) {
+                    if (lt[iml].packetSum == packetSum(packet) || (lt[iml].isStats == true && strstr(body, "STATS") != 0)) {
                         gLatency = currentTimeMillis() - lt[iml].timeSent;      
+                        initializeLt();
                         char ltccmd[20] = "";
                         _snprintf_s(ltccmd, sizeof(ltccmd), -1, "LATENCY:%lld", gLatency);
                         sendToLocalClients(createPacket("SERVER", "", "", "CLIENT", "", "", ltccmd));
-                        initializeLt();
+                        if (gVerboseLogging) {
+                            printDateTimeStamp();
+                            puts(ltccmd);
+                            writeToLog(ltccmd, PROGRAM, "");
+                        }
                         break;
                     }
                 } 
