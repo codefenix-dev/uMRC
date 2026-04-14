@@ -1,9 +1,9 @@
 ** Building uMRC from Source **
 
 
-Linux (x64):
+Linux (x64 and arm64):
 
-  Follow these steps to compile Linux x64 binaries:
+  Follow these steps to compile Linux x64 or arm64 binaries:
 
   1. First make sure gcc is installed on the system.
   
@@ -38,13 +38,6 @@ Linux (x64):
   - setup
   - umrc-bridge
   - umrc-client
-  
-  Compiling for Linux arm64 requires having a precompiled OpenDoors library 
-  for arm64. This precompiled library is currently not included in the uMRC 
-  project. Until such time, you may compile your own from source using the 
-  files available from:
-  
-    https://github.com/SynchronetBBS/sbbs/tree/master/src/odoors
   
 
 

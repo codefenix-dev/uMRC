@@ -2,8 +2,18 @@ Change Log:
 
 v103 - TBA:
 
-  - Fixed an issue with the "fromSite" containing spaces; replaced them
-    with underscores per the MRC protocol.
+  - Lots of bug fixes:     
+     - umrc-bridge now strips nonprintable control characters from incoming 
+       message packets, to prevent them from jamming up the terminal. This 
+       addresses an issue caused when a BBS includes control characters in 
+       their BBS info.
+     - Fixed flawed latency calculation and display.
+     - Fixed the PGUP & PGDN scroll distance, as it was scrolling by one too 
+       many rows in either direction.
+     - Fixed an issue with the "fromSite" containing spaces; replaced them
+       with underscores per the MRC protocol.    
+     - Added many previously missing packet fields, ensuring protocol
+       compliance.
 
 
 v102 - April 3, 2026:

@@ -1,15 +1,20 @@
 #! /bin/bash
 
 plat="linux"
-plat_arc="linux-x64"
+arc="x64"
+arch=$(uname -m)
 if [[ $OSTYPE == darwin* ]]; then
     plat="macos"
-    plat_arc="macos-arm64"
-fi   
+fi
+if [[ "$arch" == arm* ]] || [[ "$arch" == aarch64 ]]; then
+    arc="arm64"
+fi
 
 mkdir -p bin
 mkdir -p bin/screens
 mkdir -p bin/themes
+
+echo $plat-$arc
 
 echo -n "Building setup..."
 cd setup
@@ -41,7 +46,7 @@ cd ..
 
 echo -n "Building umrc-client..."
 cd umrc-client
-gcc main.c func.c ../common/common.c -o umrc-client -L ../lib/odoors/$plat_arc -lODoors
+gcc main.c func.c ../common/common.c -o umrc-client -L ../lib/odoors/$plat-$arc -lODoors
 if [ $? -eq 0 ]; then
     echo -e "\033[32;1mOK\033[0m"
 else
