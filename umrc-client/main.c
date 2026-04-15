@@ -522,7 +522,7 @@ void drawStatusBar() {
 /**
  *  Lets the user modify settings
  */
-void enterChatterSettings() {
+void enterChatterSettings(char* quitToWhere) {
     bool changesMade = false;
     bool exit = false;
     char pickedTheme[20] = "";
@@ -570,7 +570,7 @@ void enterChatterSettings() {
         od_printf(" `bright magenta`7`bright white`) `white`Theme:         `bright white`%s\r\n", user.theme);
 
         od_printf("``\r\n");
-        od_printf(" `bright green`Q`bright white`) `white`Quit to main menu");
+        od_printf(" `bright green`Q`bright white`) `white`Quit to %s", quitToWhere);
         od_printf("``\r\n\r\n> ");
 
         switch (od_get_answer("1234567Q")) {
@@ -1249,6 +1249,25 @@ void processUserCommand(char* cmd, char* params) {
     else if (_stricmp(cmd, "nick") == 0) {
         isChatPaused = true;
         editDisplayName("chat");
+        // refresh the scrollLines and re-display the latest lines when exiting scrollback, in 
+        // case any were received while editing.
+        char** scrollLines;
+        int height = od_control.user_screen_length - 2;
+        int scrollLineCount = split(gScrollBack, '\n', &scrollLines);
+        int scrollPos = scrollLineCount - height;
+        if (scrollPos < 0) {
+            scrollPos = 0;
+        }
+        scrollToScrollbackSection(scrollLines, scrollPos, scrollLineCount, height);
+        free(scrollLines); // needed?
+        isChatPaused = false;
+        drawStatusBar();
+        resetInputLine();
+        od_printf(CHAT_CURSOR, CURSOR_COLORS[user.textColor]);
+    }
+    else if (_stricmp(cmd, "set") == 0) {
+        isChatPaused = true;
+        enterChatterSettings("chat");
         // refresh the scrollLines and re-display the latest lines when exiting scrollback, in 
         // case any were received while editing.
         char** scrollLines;
@@ -2235,7 +2254,7 @@ int main(int argc, char** argv)
             doPause();
 
             _snprintf_s(gDisplayChatterName, sizeof(gDisplayChatterName), -1, "|%02d|%02d%c|%02d|%02d%s%s", user.chatterNamePrefixFgColor, user.chatterNamePrefixBgColor, user.chatterNamePrefix, user.chatterNameFgColor, user.chatterNameBgColor, user.chatterName, user.chatterNameSuffix);
-            enterChatterSettings();
+            enterChatterSettings("main menu");
         }
     }
     else {
@@ -2340,7 +2359,7 @@ int main(int argc, char** argv)
             break;
 
         case 'S':
-            enterChatterSettings();
+            enterChatterSettings("main menu");
             break;
 
         case 'I':

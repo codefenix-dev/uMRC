@@ -14,6 +14,9 @@ v103 - TBA:
        with underscores per the MRC protocol.    
      - Added many previously missing packet fields, ensuring protocol
        compliance.
+  - Added support for Linux-arm64 platforms.
+  - Added /set command to access chatter settings menu without having to
+    exit chat.  
 
 
 v102 - April 3, 2026:
