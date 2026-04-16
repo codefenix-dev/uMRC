@@ -16,7 +16,7 @@ Pre-compiled Linux binaries are also available, or may be compiled from source u
 If you use NetFoss to start up your DOS-based BBS, then the NFU utility bundled with NetFoss should run the uMRC Client. As of this writing, Renegade and Oblivion/2 have been confirmed.
 
 
-## ℹ️ Features:
+## 📋 Features:
 
 - Secure SSL MRC host connections 
 - Automatic host reconnection & rejoin
@@ -30,7 +30,7 @@ If you use NetFoss to start up your DOS-based BBS, then the NFU utility bundled 
 - Twit filter
 
 
-## 🗐 Common Files Included:
+## 📄 Common Files Included:
 
 - **setup**:            Setup utility
 - **umrc-bridge**:      MRC host connection program (multiplexer)
@@ -259,6 +259,20 @@ and is always happy to try running new things on his board.
 - telnet://shsbbs.net 
 - for SSH, see: https://shsbbs.net/faq.html
 
+
+
+## ⌨️ Other MRC Clients ##
+
+If you haven't yet decided on which MRC client to set up on your BBS, have a
+look at this alternative:
+
+- **ANETMRC**: https://github.com/anetonline/anetmrc
+
+Also check out the **MRC Clients Directory** for a current listing of actively
+developed clients: https://status-na-multi.relaychat.net/clients
+
+2026 truly became the year of the custom MRC client, with more options now
+available than ever before!
 
 
 ## ✌ Enjoy!
