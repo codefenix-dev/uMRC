@@ -81,7 +81,7 @@ int _snprintf_s(char* buffer, size_t sizeOfBuffer, size_t count, const char* for
 #define UMRC_VERSION "103"
 #define YEAR_AND_AUTHOR "2026 Craig Hendricks (aka Codefenix)"
 #define AUTHOR_INITIALS "cf" // alias initials
-#define COMPILE_DATE "2026-04-15"
+#define COMPILE_DATE "2026-04-17"
 
 // These defaults should remain the same, and
 // not be changed without a good reason.
@@ -89,9 +89,6 @@ int _snprintf_s(char* buffer, size_t sizeOfBuffer, size_t count, const char* for
 #define MRC_STATS_FILE "mrcstats.dat"
 #define LOG_FILE "umrc.log"
 #define USER_DATA_DIR "userdata"
-#define DEFAULT_HOST "mrc.bottomlessabyss.net"
-#define DEFAULT_PORT "5000"
-#define DEFAULT_SSL_PORT "5001"
 #define MSG_LEN 141
 #define PACKET_LEN 513
 #define DATA_LEN 12228

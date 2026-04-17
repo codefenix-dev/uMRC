@@ -16,6 +16,9 @@
 
 #include "../common/common.h"
 
+#define DEFAULT_HOST "mrc.bottomlessabyss.net"
+#define DEFAULT_PORT "5000"
+#define DEFAULT_SSL_PORT "5001"
 #define NOT_LISTED "Something Else..."
 #define BBS_TYPE_COUNT 12
 const char* BBS_TYPES[BBS_TYPE_COUNT] = {
@@ -33,9 +36,16 @@ const char* BBS_TYPES[BBS_TYPE_COUNT] = {
 	NOT_LISTED
 };
 
+/*#define MRC_HOST_COUNT 4
+const char* MRC_HOSTS[MRC_HOST_COUNT] = {
+	"na-multi.relaychat.net",
+	"au-multi.relaychat.net",
+	"eu-multi.relaychat.net",
+	NOT_LISTED
+};*/
+
 
 char* textPrompt(char* promptText, int maxLen, int displayableLen, char* defaultValue, bool convertPipeCodes) {
-	//clearScreen(); 
 	int enteredLen = 0;
 	char buffer[75];
 	while (enteredLen == 0) {
@@ -111,36 +121,49 @@ char charPrompt(char* promptText, char allowedChars[], char defaultChar) {
 	return input;
 }
 
-char* listPrompt(char* promptText, const char* choices[], int choiceCount, char* freeTextPrompt, int size) {
+char* listPrompt(char* promptText, const char* choices[], int choiceCount, char* freeTextPrompt, int size, char* defaultValue) {
 
 	printPipeCodeString(promptText);
 	puts("\r\n");
 
 	char buffer[5];
-	int iIpt = 0;
+	int selectedIndex = 0;
 	for (int i = 0; i < choiceCount; i++) {
 		char dispOpt[80] = "";
 		_snprintf_s(dispOpt, sizeof(dispOpt), -1, "%2d: %s\r\n", i + 1, choices[i]);
 		printPipeCodeString(dispOpt);
 	}
-	while (iIpt < 1 || iIpt > choiceCount) {
+	if (strlen(defaultValue) > 0) {
+		char defdisp[140] = "";
+		_snprintf_s(defdisp, sizeof(defdisp), -1, "\r\n |08(Press ENTER for: |15\"%s\"|08)|07\r\n", defaultValue);
+		printPipeCodeString(defdisp);
+	}
+
+	while (selectedIndex < 1 || selectedIndex > choiceCount) {
 		char dispPrmpt[80] = "";
 		_snprintf_s(dispPrmpt, sizeof(dispPrmpt), -1, "\r\nMake a selection (%d-%d): |17   \b\b", 1, choiceCount);
 		printPipeCodeString(dispPrmpt);
 		fgets(buffer, size, stdin);
-		iIpt = atoi(buffer);
+		int numentry = atoi(buffer);
+		if (numentry > 0) {
+			selectedIndex = numentry;
+		} else if (strlen(defaultValue) > 0) { // use the default if nothing was entered
+			printPipeCodeString("|07|16");
+			return defaultValue;
+			break;
+		}
 		printPipeCodeString("|07|16");
 	}
-	printPipeCodeString("|07");
-	char fdbk[50] = "";
-	if (strcmp(choices[iIpt-1], NOT_LISTED)==0) { // if option isn't listed, let them type in whatever
+	printPipeCodeString("|07|16");
+	char fdbk[80] = "";
+	if (strcmp(choices[selectedIndex-1], NOT_LISTED)==0) { // if option isn't listed, let them type in whatever
 		char* rEntered = textPrompt(freeTextPrompt, size, 0, "", false);		
-		_snprintf_s(fdbk, sizeof(fdbk), -1, "|15%s|07 entered.\r\n\r\n", rEntered);
+		_snprintf_s(fdbk, sizeof(fdbk), -1, "|15%s|07|16 entered.\r\n\r\n", rEntered);
 		printPipeCodeString(fdbk);
 		return rEntered;
 	} else {
-		char* rPicked = (char*)choices[iIpt - 1];
-		_snprintf_s(fdbk, sizeof(fdbk), -1, "|15%s|07 selected.\r\n\r\n", rPicked);
+		char* rPicked = (char*)choices[selectedIndex - 1];
+		_snprintf_s(fdbk, sizeof(fdbk), -1, "|15%s|07|16 selected.\r\n\r\n", rPicked);
 		printPipeCodeString(fdbk);
 		return rPicked;
 	}
@@ -151,6 +174,7 @@ void enterInfo(struct settings info, bool enter_new) {
 	clearScreen(); 
 
 	strcpy_s(info.host, sizeof(info.host), textPrompt("|07Enter the |15MRC host address|08:|07", 70, 0, enter_new ? DEFAULT_HOST : info.host, false));
+	//strcpy_s(info.host, sizeof(info.host), listPrompt("|07Select the |15MRC host address|08:|07", MRC_HOSTS, MRC_HOST_COUNT, "|07Enter the |15MRC host address|08:|07", 70 , enter_new ? "" : info.host));
 	lstr(info.host);
 	puts("");
 	info.ssl = charPrompt("|07Use |15SSL|08 (|15Y|07/|15N|08)|07:", "YN", (enter_new ? 'Y' : (info.ssl ? 'Y' : 'N'))) == 'Y';
@@ -163,7 +187,7 @@ void enterInfo(struct settings info, bool enter_new) {
 	strcpy_s(info.name, sizeof(info.name), textPrompt("|07Enter your |15BBS name|08:|07", 70, 60, enter_new ? "" : info.name, true));
 
 	clearScreen(); 
-	strcpy_s(info.soft, sizeof(info.soft), listPrompt("|07Choose your |15BBS software|08:|07", BBS_TYPES, BBS_TYPE_COUNT, "|07Enter your |15BBS software|08:|07", 30));
+	strcpy_s(info.soft, sizeof(info.soft), listPrompt("|07Choose your |15BBS software|08:|07", BBS_TYPES, BBS_TYPE_COUNT, "|07Enter your |15BBS software|08:|07", 30, enter_new ? "" : info.soft));
 	ustr(info.soft);
 	for (int i = 0; info.soft[i] != '\0'; i++) { // replace forward slash with underscore in the BBS type (e.g.: Oblivion/2)
 		if (info.soft[i]=='/') {
@@ -207,7 +231,7 @@ int main()
 		clearScreen();
 		
 		char dispStr[140] = "";
-		_snprintf_s(dispStr, sizeof(dispStr), -1, "|13 uMRC for %s Setup|07\r\n", PLATFORM);
+		_snprintf_s(dispStr, sizeof(dispStr), -1, "|13 uMRC %s for %s Setup|07\r\n", UMRC_VERSION, PLATFORM);
 		printPipeCodeString(dispStr);
 		printPipeCodeString("|01 ==========================================================================|07\r\n");
 		puts("");

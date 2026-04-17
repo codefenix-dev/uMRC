@@ -982,14 +982,6 @@ int main(int argc, char** argv)
             printf("Retry wait seconds: %d\r\n", retryWaitSeconds);
         }
     }
-
-    printDateTimeStamp();
-    if (maxRetries == 0) {
-        puts("Max connection retries: Infinite");
-    }
-    else {
-        printf("Max connection retries: %d\r\n", maxRetries);
-    }
     
     if (loadData(&cfg, CONFIG_FILE) != 0) {
         printDateTimeStamp();
@@ -1019,6 +1011,14 @@ int main(int argc, char** argv)
 #else
     pthread_create(&hClient, NULL, waitProcess, (void*)clientport);
 #endif
+
+    printDateTimeStamp();
+    if (maxRetries == 0) {
+        puts("Max connection retries: Infinite");
+    }
+    else {
+        printf("Max connection retries: %d\r\n", maxRetries);
+    }
     
     // If we've connected successfully at least once, then the "maxRetries" takes effect,
     // otherwise give up after 10 attempts.
@@ -1028,7 +1028,11 @@ int main(int argc, char** argv)
         gRetry = gRetry + 1;
         printDateTimeStamp();
         char logstring[50] = "";
-        _snprintf_s(logstring, sizeof(logstring), -1, "Retry %d of %d...\r\n", gRetry, gHasConnected ? maxRetries : 10);
+		if (maxRetries == 0 && gHasConnected) {
+		   _snprintf_s(logstring, sizeof(logstring), -1, "Retry %d...\r\n", gRetry);
+		} else {
+		   _snprintf_s(logstring, sizeof(logstring), -1, "Retry %d of %d...\r\n", gRetry, gHasConnected ? maxRetries : 10);
+		}
         puts(logstring);
         writeToLog(logstring, PROGRAM, "");        
     }

@@ -14,6 +14,7 @@ mkdir -p bin
 mkdir -p bin/screens
 mkdir -p bin/themes
 
+echo -n "Platform: "
 echo $plat-$arc
 
 echo -n "Building setup..."

@@ -3,20 +3,24 @@ Change Log:
 v103 - TBA:
 
   - Lots of bug fixes:     
-     - umrc-bridge now strips nonprintable control characters from incoming 
+     . umrc-bridge now strips nonprintable control characters from incoming 
        message packets, to prevent them from jamming up the terminal. This 
        addresses an issue caused when a BBS includes control characters in 
        their BBS info.
-     - Fixed flawed latency calculation and display.
-     - Fixed the PGUP & PGDN scroll distance, as it was scrolling by one too 
+     . Fixed flawed latency calculation and display.
+     . Fixed the PGUP & PGDN scroll distance, as it was scrolling by one too 
        many rows in either direction.
-     - Fixed an issue with the "fromSite" containing spaces; replaced them
+     . Fixed an issue with the "fromSite" containing spaces; replaced them
        with underscores per the MRC protocol.    
-     - Added many previously missing packet fields, ensuring protocol
+     . Added many previously missing packet fields, ensuring protocol
        compliance.
+     . Fixed an issue where lengthy CTCP responses from certain clients 
+       (e.g.: HexChat) could crash umrc-client.
   - Added support for Linux-arm64 platforms.
   - Added /set command to access chatter settings menu without having to
-    exit chat.  
+    exit chat.
+  - Setup utility now accepts the previously selected/entered BBS type as a
+    default if nothing was selected. This makes reconfigurations easier.
 
 
 v102 - April 3, 2026:

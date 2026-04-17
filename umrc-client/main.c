@@ -1474,7 +1474,7 @@ void processCtcpCommand(char* body, char* toUser, char* fromUser) {
         sendCtcpPacket(&mrcSock, fromUser, "[CTCP-REPLY]", repStr);
     }
     else if (strncmp(body, "[CTCP-REPLY] ", 13) == 0 && _stricmp(toUser, user.chatterName) == 0) {
-        char resp[100] = "";
+        char resp[200] = ""; // needs to be long enough in case of lengthy responses
         strcat_s(resp, sizeof(resp), "* |14[CTCP-REPLY] |10");
         strcat_s(resp, sizeof(resp), fromUser);
         strcat_s(resp, sizeof(resp), " |15");
