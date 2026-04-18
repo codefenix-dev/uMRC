@@ -1390,13 +1390,13 @@ void processServerMessage(char* body, char* toUser) {
         // - No pipe codes
         // - Room name cannot contain spaces
         // - Topic can contain spaces
-        strcpy_s(gTopic, sizeof(gTopic), params + strlen(gRoom) + 1);
+        strncpy_s(gTopic, sizeof(gTopic), params + strlen(gRoom) + 1, 54);
         gRoomTopicChanged = true;
     }
     else if (strcmp(cmd, "USERROOM") == 0) {
         // USERROOM: Server confirm the room user is in, usually sent after NEWROOM but may be the result of other reasons.[NEW in 1.3]
         // Client must enforce or routing will break
-        strcpy_s(gRoom, sizeof(gRoom), params);
+        strncpy_s(gRoom, sizeof(gRoom), params, 29);
         gRoomTopicChanged = true;
     }
     else if (strcmp(cmd, "USERNICK") == 0) {

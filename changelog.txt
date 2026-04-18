@@ -1,6 +1,6 @@
 Change Log:
 
-v103 - TBA:
+v103 - Apri 18 2026:
 
   - Lots of bug fixes:     
      . umrc-bridge now strips nonprintable control characters from incoming 
@@ -16,6 +16,8 @@ v103 - TBA:
        compliance.
      . Fixed an issue where lengthy CTCP responses from certain clients 
        (e.g.: HexChat) could crash umrc-client.
+     . Fixed an issue where topic lines 55 characters or longer would crash
+       the client, probably just on Windows.
   - Added support for Linux-arm64 platforms.
   - Added /set command to access chatter settings menu without having to
     exit chat.
