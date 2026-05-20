@@ -1,5 +1,10 @@
 Change Log:
 
+v104 - TBA:
+
+  - Fix umrc-bridge not auto-retrying connections on failed SSL handshakes.
+
+
 v103 - Apri 18 2026:
 
   - Lots of bug fixes:     

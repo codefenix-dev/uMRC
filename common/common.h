@@ -78,10 +78,10 @@ int _snprintf_s(char* buffer, size_t sizeOfBuffer, size_t count, const char* for
 // numeric and incremented when any significant 
 // modification is made to the code, keeping to 
 // 3 digits (e.g.: "101", "102", "103", etc...).
-#define UMRC_VERSION "103"
+#define UMRC_VERSION "104"
 #define YEAR_AND_AUTHOR "2026 Craig Hendricks (aka Codefenix)"
 #define AUTHOR_INITIALS "cf" // alias initials
-#define COMPILE_DATE "2026-04-18"
+#define COMPILE_DATE "2026-05-19"
 
 // These defaults should remain the same, and
 // not be changed without a good reason.

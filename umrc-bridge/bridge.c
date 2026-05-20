@@ -633,7 +633,7 @@ void mrcHostProcess(struct settings cfg) {
             writeToLog(logstring, PROGRAM, "");
             mrcHostSock = INVALID_SOCKET;
             continue;
-        }else {
+        } else {
             printPipeCodeString(OK);
         }
 
@@ -653,6 +653,8 @@ void mrcHostProcess(struct settings cfg) {
                 }
             }
             else {
+                closesocket(mrcHostSock);
+                mrcHostSock = INVALID_SOCKET;
                 puts("failed.");   
             }
         }
