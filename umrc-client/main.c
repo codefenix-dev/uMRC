@@ -87,22 +87,22 @@ char gUserIP[30] = "";
 #define BUFFER_FG_DEFAULT_2 "white"
 #define BUFFER_BG_DEFAULT_2 "black"
 
-char gTopicFg1[20] = "";
-char gTopicBg1[20] = "";
-char gTopicFg2[20] = "";
-char gTopicBg2[20] = "";
-char gTopicFg3[20] = "";
-char gTopicBg3[20] = "";
-char gUserCountFg[20] = "";
-char gUserCountBg[20] = "";
-char gLatencyFg[20] = "";
-char gLatencyBg[20] = "";
-char gMentionsFg[20] = "";
-char gMentionsBg[20] = "";
-char gBufferFg1[20] = "";
-char gBufferBg1[20] = "";
-char gBufferFg2[20] = "";
-char gBufferBg2[20] = "";
+char gTopicFg1[20] = TOPIC_FG_DEFAULT_1;
+char gTopicBg1[20] = TOPIC_BG_DEFAULT_1;
+char gTopicFg2[20] = TOPIC_FG_DEFAULT_2;
+char gTopicBg2[20] = TOPIC_BG_DEFAULT_2;
+char gTopicFg3[20] = TOPIC_FG_DEFAULT_3;
+char gTopicBg3[20] = TOPIC_BG_DEFAULT_3;
+char gUserCountFg[20] = USERCOUNT_FG_DEFAULT;
+char gUserCountBg[20] = USERCOUNT_BG_DEFAULT;
+char gLatencyFg[20] = LATENCY_FG_DEFAULT;
+char gLatencyBg[20] = LATENCY_BG_DEFAULT;
+char gMentionsFg[20] = MENTIONS_FG_DEFAULT;
+char gMentionsBg[20] = MENTIONS_BG_DEFAULT;
+char gBufferFg1[20] = BUFFER_FG_DEFAULT_1;
+char gBufferBg1[20] = BUFFER_BG_DEFAULT_1;
+char gBufferFg2[20] = BUFFER_FG_DEFAULT_2;
+char gBufferBg2[20] = BUFFER_BG_DEFAULT_2;
 
 char* gScrollBack;
 char* gMentions;
@@ -466,27 +466,26 @@ void loadTheme() {
 #endif
     int lineCount = 0;
     if (extFile != NULL) {
-        // Clear all existing colors before setting new ones
-        strcpy_s(gTopicFg1, sizeof(gTopicFg1), "");
-        strcpy_s(gTopicBg1, sizeof(gTopicBg1), "");
-        strcpy_s(gTopicFg2, sizeof(gTopicFg2), "");
-        strcpy_s(gTopicBg2, sizeof(gTopicBg2), "");
-        strcpy_s(gTopicFg3, sizeof(gTopicFg3), "");
-        strcpy_s(gTopicBg3, sizeof(gTopicBg3), "");
-        strcpy_s(gUserCountFg, sizeof(gUserCountFg), "");
-        strcpy_s(gUserCountBg, sizeof(gUserCountBg), "");
-        strcpy_s(gLatencyFg, sizeof(gLatencyFg), "");
-        strcpy_s(gLatencyBg, sizeof(gLatencyBg), "");
-        strcpy_s(gMentionsFg, sizeof(gMentionsFg), "");
-        strcpy_s(gMentionsBg, sizeof(gMentionsBg), "");
-        strcpy_s(gBufferFg1, sizeof(gBufferFg1), "");
-        strcpy_s(gBufferBg1, sizeof(gBufferBg1), "");
-        strcpy_s(gBufferFg2, sizeof(gBufferFg2), "");
-        strcpy_s(gBufferBg2, sizeof(gBufferBg2), "");
+        // Reinitialize all colors to default values
+        strcpy_s(gTopicFg1, sizeof(gTopicFg1), TOPIC_FG_DEFAULT_1);
+        strcpy_s(gTopicBg1, sizeof(gTopicBg1), TOPIC_BG_DEFAULT_1);
+        strcpy_s(gTopicFg2, sizeof(gTopicFg2), TOPIC_FG_DEFAULT_2);
+        strcpy_s(gTopicBg2, sizeof(gTopicBg2), TOPIC_BG_DEFAULT_2);
+        strcpy_s(gTopicFg3, sizeof(gTopicFg3), TOPIC_FG_DEFAULT_3);
+        strcpy_s(gTopicBg3, sizeof(gTopicBg3), TOPIC_BG_DEFAULT_3);
+        strcpy_s(gUserCountFg, sizeof(gUserCountFg), USERCOUNT_FG_DEFAULT);
+        strcpy_s(gUserCountBg, sizeof(gUserCountBg), USERCOUNT_BG_DEFAULT);
+        strcpy_s(gLatencyFg, sizeof(gLatencyFg), LATENCY_FG_DEFAULT);
+        strcpy_s(gLatencyBg, sizeof(gLatencyBg), LATENCY_BG_DEFAULT);
+        strcpy_s(gMentionsFg, sizeof(gMentionsFg), MENTIONS_FG_DEFAULT);
+        strcpy_s(gMentionsBg, sizeof(gMentionsBg), MENTIONS_BG_DEFAULT);
+        strcpy_s(gBufferFg1, sizeof(gBufferFg1), BUFFER_FG_DEFAULT_1);
+        strcpy_s(gBufferBg1, sizeof(gBufferBg1), BUFFER_BG_DEFAULT_1);
+        strcpy_s(gBufferFg2, sizeof(gBufferFg2), BUFFER_FG_DEFAULT_2);
+        strcpy_s(gBufferBg2, sizeof(gBufferBg2), BUFFER_BG_DEFAULT_2);
 
         char line[400] = "";
         while (fgets(line, sizeof(line), extFile)) {
-
 
             if (lineCount == 0) {
                 // strip out the CRs and LFs... in case someone uses a file with just one or the other...
@@ -496,7 +495,7 @@ void loadTheme() {
                 strcpy_s(gStatusThemeLine2, sizeof(gStatusThemeLine2), strReplace(strReplace(line, "\r", ""), "\n", ""));
             }
             else if (lineCount > 1) {
-                //removeNonAlphanumeric(line);
+
                 if (strlen(line) == 0) {
                     continue;
                 }
@@ -505,8 +504,8 @@ void loadTheme() {
                 }
                 char colorname[20] = "";
                 char colorvalue[20] = "";
-                int spcidx = indexOfChar(line, ' ');
                 int tokencnt = 0;
+                int spcidx = indexOfChar(line, ' ');
                 char* token;
                 char* context = NULL;
                 token = strtok_s(line, " ", &context);
@@ -526,7 +525,6 @@ void loadTheme() {
                         strcat_s(colorvalue, sizeof(colorvalue), " ");
                     }
                 }
-
 
                 if (_stricmp(colorname, "TopicFg1") == 0) {
                     strcpy_s(gTopicFg1, sizeof(gTopicFg1), colorvalue);
@@ -594,15 +592,11 @@ void updateRoomTopic() {
     strcpy_s(displayableTopic, 65 - (strlen(gRoom) + 2), gTopic);
     od_set_cursor(od_control.user_screen_length - 2, 6); 
     od_printf("`%s %s`#`%s %s`%s`%s %s`:`%s %s`%s ", 
-        (strlen(gTopicFg2) > 0 ? gTopicFg2 : TOPIC_FG_DEFAULT_2), 
-        (strlen(gTopicBg2) > 0 ? gTopicBg2 : TOPIC_BG_DEFAULT_2), 
-        (strlen(gTopicFg1) > 0 ? gTopicFg1 : TOPIC_FG_DEFAULT_1), 
-        (strlen(gTopicBg1) > 0 ? gTopicBg1 : TOPIC_BG_DEFAULT_1), 
+        gTopicFg2, gTopicBg2, 
+        gTopicFg1, gTopicBg1, 
         gRoom, 
-        (strlen(gTopicFg3) > 0 ? gTopicFg3 : TOPIC_FG_DEFAULT_3), 
-        (strlen(gTopicBg3) > 0 ? gTopicBg3 : TOPIC_BG_DEFAULT_3), 
-        (strlen(gTopicFg1) > 0 ? gTopicFg1 : TOPIC_FG_DEFAULT_1), 
-        (strlen(gTopicBg1) > 0 ? gTopicBg1 : TOPIC_BG_DEFAULT_1), 
+        gTopicFg3, gTopicBg3, 
+        gTopicFg1, gTopicBg1, 
         displayableTopic);
 }
 
@@ -611,7 +605,7 @@ void updateRoomTopic() {
  */
 void updateUserCount() {
     od_set_cursor(od_control.user_screen_length - 1, 13);
-    od_printf("`%s %s`%-3d``", (strlen(gUserCountFg) > 0 ? gUserCountFg : USERCOUNT_FG_DEFAULT), (strlen(gUserCountBg) > 0 ? gUserCountBg : USERCOUNT_BG_DEFAULT), gChatterCount);
+    od_printf("`%s %s`%-3d``", gUserCountFg, gUserCountBg, gChatterCount);
 }
 
 /**
@@ -627,7 +621,7 @@ void updateLatency() {
         "`%s %s`%-4s``", 
         ltcy > 400 ? "bright red" : (
         ltcy > 200 ? "bright yellow" : ( 
-        (strlen(gLatencyFg) > 0 ? gLatencyFg : LATENCY_FG_DEFAULT))), (strlen(gLatencyBg) > 0 ? gLatencyBg : LATENCY_BG_DEFAULT), 
+        gLatencyFg)), gLatencyBg, 
         strlen(gLatency) > 0 ? gLatency : "--");
 }
 
@@ -636,7 +630,7 @@ void updateLatency() {
  */
 void updateMentions() {
     od_set_cursor(od_control.user_screen_length - 1, 52);
-    od_printf("`%s %s`%-4d``", (strlen(gMentionsFg) > 0 ? gMentionsFg : MENTIONS_FG_DEFAULT), (strlen(gMentionsBg) > 0 ? gMentionsBg : MENTIONS_BG_DEFAULT), gMentionCount);
+    od_printf("`%s %s`%-4d``", gMentionsFg, gMentionsBg, gMentionCount);
 }
 
 /**
@@ -648,15 +642,15 @@ void updateBuffer(int typed) {
 
         "`%s %s`%03d`%s %s`/`%s %s`%03d``"
 
-        , typed >= 135 ? "bright red" : (typed >= 120 ? "bright yellow" : (strlen(gBufferFg1) > 0 ? gBufferFg1 : BUFFER_FG_DEFAULT_1) )
-        , (strlen(gBufferBg1) > 0 ? gBufferBg1 : BUFFER_BG_DEFAULT_1)
+        , typed >= 135 ? "bright red" : (typed >= 120 ? "bright yellow" : gBufferFg1 )
+        , gBufferBg1
         
         , typed
-        , (strlen(gBufferFg2) > 0 ? gBufferFg2 : BUFFER_FG_DEFAULT_2)
-        , (strlen(gBufferBg2) > 0 ? gBufferBg2 : BUFFER_BG_DEFAULT_2)
+        , gBufferFg2
+        , gBufferBg2
 
-        , (strlen(gBufferFg1) > 0 ? gBufferFg1 : BUFFER_FG_DEFAULT_1)
-        , (strlen(gBufferBg1) > 0 ? gBufferBg1 : BUFFER_BG_DEFAULT_1)
+        , gBufferFg1
+        , gBufferBg1
         
         , MSG_LEN - 1);
 }
@@ -698,15 +692,11 @@ void enterChatterSettings(char* quitToWhere) {
         od_set_cursor(od_control.user_screen_length - 2, 6);
 
         od_printf("`%s %s`#`%s %s`%s`%s %s`:`%s %s`%s %s",
-            (strlen(gTopicFg2) > 0 ? gTopicFg2 : TOPIC_FG_DEFAULT_2),
-            (strlen(gTopicBg2) > 0 ? gTopicBg2 : TOPIC_BG_DEFAULT_2),
-            (strlen(gTopicFg1) > 0 ? gTopicFg1 : TOPIC_FG_DEFAULT_1),
-            (strlen(gTopicBg1) > 0 ? gTopicBg1 : TOPIC_BG_DEFAULT_1),
+            gTopicFg2, gTopicBg2,
+            gTopicFg1, gTopicBg1,
             strlen(gRoom) > 0 ? gRoom : user.defaultRoom,
-            (strlen(gTopicFg3) > 0 ? gTopicFg3 : TOPIC_FG_DEFAULT_3),
-            (strlen(gTopicBg3) > 0 ? gTopicBg3 : TOPIC_BG_DEFAULT_3),
-            (strlen(gTopicFg1) > 0 ? gTopicFg1 : TOPIC_FG_DEFAULT_1),
-            (strlen(gTopicBg1) > 0 ? gTopicBg1 : TOPIC_BG_DEFAULT_1),
+            gTopicFg3, gTopicBg3,
+            gTopicFg1, gTopicBg1,
             "Theme Preview of", user.theme);
 
 
@@ -897,9 +887,45 @@ void resetInputLine() {
 
 void scrollToScrollbackSection(char** scrollLines, int start, int end, int height) {
     int row = 1;
+    int fg = 7;
+    int bg = 16;
+
+    // find the last colors used before this point in the buffer
+    for (int i = start; i >= 0; i--) {        
+        for (int ii = (int)strlen(scrollLines[i])-2; ii >= 5; ii--) {
+            if (scrollLines[i][ii] == '|' && ii < ((int)strlen(scrollLines[i]) - 2)) { // check the next 2 characters for digits
+                if (isdigit(scrollLines[i][ii + 1]) && isdigit(scrollLines[i][ii + 2])) {
+
+                    int pcci = 0;
+                    char pcc[3] = "";
+                    strncpy_s(pcc, sizeof(pcc), scrollLines[i] + ii + 1, 2);
+                    pcci = atoi(pcc);
+
+                    if (pcci > 0 && pcci <= 15 && fg == 7) {
+                        fg = pcci;
+                    }
+                    else if (pcci > 16 && pcci < 24 && bg == 16) {
+                        bg = pcci;
+                    }
+                }
+            }
+            if (fg != 7 || bg != 16) {
+                break;
+            }
+        }
+        if (fg != 7 || bg != 16) {
+            break;
+        }
+    }
+    char startcolor[10] = "";
+    _snprintf_s(startcolor, sizeof(startcolor), -1, "|%02d|%02d", fg, bg);
+
     for (int i = start; i < end && row < height; i++) {
         od_set_cursor(row, 1);
         od_clr_line();
+        if (i == start) {
+            od_disp_emu(pipeToAnsi(startcolor), TRUE);
+        }
         od_disp_emu(pipeToAnsi(scrollLines[i]), TRUE);
         row = row + 1;
     }
@@ -944,51 +970,33 @@ void enterScrollBack(int initialScroll, int mode) {
     scrollToScrollbackSection(scrollLines, scrollPos, scrollLineCount, height);
     od_set_cursor(od_control.user_screen_length - 2, 1);
     od_disp_emu(gStatusThemeLine1, TRUE);
-    od_set_cursor(od_control.user_screen_length - 2, 6);
-
-    od_printf("`%s %s`%10.10s`%s %s`:          `%s %s`\030`%s %s`/`%s %s`\031`%s %s`/`%s %s`PGUP`%s %s`/`%s %s`PGDN`%s %s`/`%s %s`HOME`%s %s`/`%s %s`END`%s %s`   `%s %s`ENTER`%s %s` to return to chat",
-        (strlen(gTopicFg1) > 0 ? gTopicFg1 : TOPIC_FG_DEFAULT_1),
-        (strlen(gTopicBg1) > 0 ? gTopicBg1 : TOPIC_BG_DEFAULT_1),
+    od_clr_line();
+    od_set_cursor(od_control.user_screen_length - 2, 2);
+    od_printf("`%s %s`%12.12s`%s %s`:          `%s %s`\030`%s %s`/`%s %s`\031`%s %s`/`%s %s`PGUP`%s %s`/`%s %s`PGDN`%s %s`/`%s %s`HOME`%s %s`/`%s %s`END`%s %s`   `%s %s`ENTER`%s %s` to return to chat      ",
+        gTopicFg1, gTopicBg1,
         mode == 0 ? "Scrollback" : "Mentions",
-        (strlen(gTopicFg2) > 0 ? gTopicFg2 : TOPIC_FG_DEFAULT_2),
-        (strlen(gTopicBg2) > 0 ? gTopicBg2 : TOPIC_BG_DEFAULT_2),
-        (strlen(gTopicFg1) > 0 ? gTopicFg1 : TOPIC_FG_DEFAULT_1),
-        (strlen(gTopicBg1) > 0 ? gTopicBg1 : TOPIC_BG_DEFAULT_1),
-        (strlen(gTopicFg2) > 0 ? gTopicFg2 : TOPIC_FG_DEFAULT_2),
-        (strlen(gTopicBg2) > 0 ? gTopicBg2 : TOPIC_BG_DEFAULT_2),
-        (strlen(gTopicFg1) > 0 ? gTopicFg1 : TOPIC_FG_DEFAULT_1),
-        (strlen(gTopicBg1) > 0 ? gTopicBg1 : TOPIC_BG_DEFAULT_1),
-        (strlen(gTopicFg2) > 0 ? gTopicFg2 : TOPIC_FG_DEFAULT_2),
-        (strlen(gTopicBg2) > 0 ? gTopicBg2 : TOPIC_BG_DEFAULT_2),
-        (strlen(gTopicFg1) > 0 ? gTopicFg1 : TOPIC_FG_DEFAULT_1),
-        (strlen(gTopicBg1) > 0 ? gTopicBg1 : TOPIC_BG_DEFAULT_1),
-        (strlen(gTopicFg2) > 0 ? gTopicFg2 : TOPIC_FG_DEFAULT_2),
-        (strlen(gTopicBg2) > 0 ? gTopicBg2 : TOPIC_BG_DEFAULT_2),
-        (strlen(gTopicFg1) > 0 ? gTopicFg1 : TOPIC_FG_DEFAULT_1),
-        (strlen(gTopicBg1) > 0 ? gTopicBg1 : TOPIC_BG_DEFAULT_1),
-        (strlen(gTopicFg2) > 0 ? gTopicFg2 : TOPIC_FG_DEFAULT_2),
-        (strlen(gTopicBg2) > 0 ? gTopicBg2 : TOPIC_BG_DEFAULT_2),
-        (strlen(gTopicFg1) > 0 ? gTopicFg1 : TOPIC_FG_DEFAULT_1),
-        (strlen(gTopicBg1) > 0 ? gTopicBg1 : TOPIC_BG_DEFAULT_1),
-        (strlen(gTopicFg2) > 0 ? gTopicFg2 : TOPIC_FG_DEFAULT_2),
-        (strlen(gTopicBg2) > 0 ? gTopicBg2 : TOPIC_BG_DEFAULT_2),
-        (strlen(gTopicFg1) > 0 ? gTopicFg1 : TOPIC_FG_DEFAULT_1),
-        (strlen(gTopicBg1) > 0 ? gTopicBg1 : TOPIC_BG_DEFAULT_1), 
-        (strlen(gTopicFg2) > 0 ? gTopicFg2 : TOPIC_FG_DEFAULT_2),
-        (strlen(gTopicBg2) > 0 ? gTopicBg2 : TOPIC_BG_DEFAULT_2),
-        (strlen(gTopicFg1) > 0 ? gTopicFg1 : TOPIC_FG_DEFAULT_1),
-        (strlen(gTopicBg1) > 0 ? gTopicBg1 : TOPIC_BG_DEFAULT_1),
-        (strlen(gTopicFg2) > 0 ? gTopicFg2 : TOPIC_FG_DEFAULT_2),
-        (strlen(gTopicBg2) > 0 ? gTopicBg2 : TOPIC_BG_DEFAULT_2)
+        gTopicFg2, gTopicBg2,
+        gTopicFg1, gTopicBg1,
+        gTopicFg2, gTopicBg2,
+        gTopicFg1, gTopicBg1,
+        gTopicFg2, gTopicBg2,
+        gTopicFg1, gTopicBg1,
+        gTopicFg2, gTopicBg2,
+        gTopicFg1, gTopicBg1,
+        gTopicFg2, gTopicBg2,
+        gTopicFg1, gTopicBg1,
+        gTopicFg2, gTopicBg2,
+        gTopicFg1, gTopicBg1, 
+        gTopicFg2, gTopicBg2,
+        gTopicFg1, gTopicBg1,
+        gTopicFg2, gTopicBg2
     );
 
-    od_set_cursor(od_control.user_screen_length - 1, 1);
+    od_set_cursor(od_control.user_screen_length - 1, 2);
     od_printf("``");
-    od_clr_line();
-    od_printf("`flashing %s %s`%s``",
-        (strlen(gTopicFg1) > 0 ? gTopicFg1 : TOPIC_FG_DEFAULT_1),
-        (strlen(gTopicBg1) > 0 ? gTopicBg1 : TOPIC_BG_DEFAULT_1),
-        "                            * * * CHAT PAUSED * * *                            ");
+    //od_clr_line();
+    od_printf("`flashing %s %s`%s``", gTopicFg1, gTopicBg1,
+        "                           * * * CHAT PAUSED * * *                          ");
 
     tODInputEvent InputEvent;
 
@@ -996,14 +1004,11 @@ void enterScrollBack(int initialScroll, int mode) {
 
         od_set_cursor(od_control.user_screen_length - 2, 18);
         od_printf("`%s %s`%.0f`%s %s`%c`%s %s` ``",
-            (strlen(gTopicFg1) > 0 ? gTopicFg1 : TOPIC_FG_DEFAULT_1),
-            (strlen(gTopicBg1) > 0 ? gTopicBg1 : TOPIC_BG_DEFAULT_1),
+            gTopicFg1, gTopicBg1,
             (scrollPos / (scrollMax + 0.1)) * 100,
-            (strlen(gTopicFg2) > 0 ? gTopicFg2 : TOPIC_FG_DEFAULT_2),
-            (strlen(gTopicBg2) > 0 ? gTopicBg2 : TOPIC_BG_DEFAULT_2), 
+            gTopicFg2, gTopicBg2, 
             '%',
-            (strlen(gTopicFg2) > 0 ? gTopicFg2 : TOPIC_FG_DEFAULT_2),
-            (strlen(gTopicBg2) > 0 ? gTopicBg2 : TOPIC_BG_DEFAULT_2));            
+            gTopicFg2, gTopicBg2);            
 
         od_get_input(&InputEvent, OD_NO_TIMEOUT, GETIN_NORMAL);
 

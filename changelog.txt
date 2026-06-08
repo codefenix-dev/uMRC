@@ -3,8 +3,10 @@ Change Log:
 v104 - TBA:
 
   - Color options added to themes. Colors default to bright white on black if
-    not specified. See bitchx.ans theme for example usage.
+    not specified. 
+     . See bitchx.ans and plate.ans theme files for example usage.
   - Fixed umrc-bridge not auto-retrying connections on failed SSL handshakes.
+  - Fix for text color showing up gray in the top of the visible scrollback.
 
 
 v103 - Apri 18 2026:

@@ -149,7 +149,9 @@ char* listPrompt(char* promptText, const char* choices[], int choiceCount, char*
 			selectedIndex = numentry;
 		} else if (strlen(defaultValue) > 0) { // use the default if nothing was entered
 			printPipeCodeString("|07|16");
-			return defaultValue;
+			char defVal[80] = "";
+			strcpy_s(defVal, sizeof(defVal), defaultValue); // Can't return a pointer to a string; errors on macOS
+			return defVal; 
 			break;
 		}
 		printPipeCodeString("|07|16");
