@@ -141,7 +141,7 @@ int split(const char* txt, char delim, char*** tokens)
 			p = *arr++ = calloc(*(t++) + 1, sizeof(char*));
 			txt++;
 		}
-		else *p++ = *txt++; // TODO: Derefferecing NULL pointer 'p'
+		else *p++ = *txt++; // TODO: Dereferencing NULL pointer 'p'
 	}
 	free(tklen);
 	return count;
