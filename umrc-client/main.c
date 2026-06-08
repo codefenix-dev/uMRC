@@ -70,6 +70,40 @@ char gUserDataFile[260] = "";
 char gTwitFile[260] = "";
 char gUserIP[30] = "";
 
+#define TOPIC_FG_DEFAULT_1 "bright white"
+#define TOPIC_BG_DEFAULT_1 "black"
+#define TOPIC_FG_DEFAULT_2 "white"
+#define TOPIC_BG_DEFAULT_2 "black"
+#define TOPIC_FG_DEFAULT_3 "bright black"
+#define TOPIC_BG_DEFAULT_3 "black"
+#define USERCOUNT_FG_DEFAULT "bright white"
+#define USERCOUNT_BG_DEFAULT "black"
+#define LATENCY_FG_DEFAULT "bright white"
+#define LATENCY_BG_DEFAULT "black"
+#define MENTIONS_FG_DEFAULT "bright white"
+#define MENTIONS_BG_DEFAULT "black"
+#define BUFFER_FG_DEFAULT_1 "bright white"
+#define BUFFER_BG_DEFAULT_1 "black"
+#define BUFFER_FG_DEFAULT_2 "white"
+#define BUFFER_BG_DEFAULT_2 "black"
+
+char gTopicFg1[20] = "";
+char gTopicBg1[20] = "";
+char gTopicFg2[20] = "";
+char gTopicBg2[20] = "";
+char gTopicFg3[20] = "";
+char gTopicBg3[20] = "";
+char gUserCountFg[20] = "";
+char gUserCountBg[20] = "";
+char gLatencyFg[20] = "";
+char gLatencyBg[20] = "";
+char gMentionsFg[20] = "";
+char gMentionsBg[20] = "";
+char gBufferFg1[20] = "";
+char gBufferBg1[20] = "";
+char gBufferFg2[20] = "";
+char gBufferBg2[20] = "";
+
 char* gScrollBack;
 char* gMentions;
 
@@ -432,8 +466,28 @@ void loadTheme() {
 #endif
     int lineCount = 0;
     if (extFile != NULL) {
+        // Clear all existing colors before setting new ones
+        strcpy_s(gTopicFg1, sizeof(gTopicFg1), "");
+        strcpy_s(gTopicBg1, sizeof(gTopicBg1), "");
+        strcpy_s(gTopicFg2, sizeof(gTopicFg2), "");
+        strcpy_s(gTopicBg2, sizeof(gTopicBg2), "");
+        strcpy_s(gTopicFg3, sizeof(gTopicFg3), "");
+        strcpy_s(gTopicBg3, sizeof(gTopicBg3), "");
+        strcpy_s(gUserCountFg, sizeof(gUserCountFg), "");
+        strcpy_s(gUserCountBg, sizeof(gUserCountBg), "");
+        strcpy_s(gLatencyFg, sizeof(gLatencyFg), "");
+        strcpy_s(gLatencyBg, sizeof(gLatencyBg), "");
+        strcpy_s(gMentionsFg, sizeof(gMentionsFg), "");
+        strcpy_s(gMentionsBg, sizeof(gMentionsBg), "");
+        strcpy_s(gBufferFg1, sizeof(gBufferFg1), "");
+        strcpy_s(gBufferBg1, sizeof(gBufferBg1), "");
+        strcpy_s(gBufferFg2, sizeof(gBufferFg2), "");
+        strcpy_s(gBufferBg2, sizeof(gBufferBg2), "");
+
         char line[400] = "";
         while (fgets(line, sizeof(line), extFile)) {
+
+
             if (lineCount == 0) {
                 // strip out the CRs and LFs... in case someone uses a file with just one or the other...
                 strcpy_s(gStatusThemeLine1, sizeof(gStatusThemeLine1), strReplace(strReplace(line, "\r", ""), "\n", ""));
@@ -442,7 +496,86 @@ void loadTheme() {
                 strcpy_s(gStatusThemeLine2, sizeof(gStatusThemeLine2), strReplace(strReplace(line, "\r", ""), "\n", ""));
             }
             else if (lineCount > 1) {
-                break;
+                //removeNonAlphanumeric(line);
+                if (strlen(line) == 0) {
+                    continue;
+                }
+                if (line[0] == ';') {
+                    continue;
+                }
+                char colorname[20] = "";
+                char colorvalue[20] = "";
+                int spcidx = indexOfChar(line, ' ');
+                int tokencnt = 0;
+                char* token;
+                char* context = NULL;
+                token = strtok_s(line, " ", &context);
+                while (token != NULL) {
+                    if (tokencnt == 0) {
+                        strcpy_s(colorname, sizeof(colorname), token);
+                    }
+                    else if (tokencnt >= 1) {
+                        removeNonAlphanumeric(token);
+                        if (strlen(token) + strlen(colorvalue) < sizeof(colorvalue)) {
+                            strcat_s(colorvalue, sizeof(colorvalue), token);
+                        }
+                    }
+                    tokencnt = tokencnt + 1;
+                    token = strtok_s(NULL, " ", &context);
+                    if (token != NULL && strlen(colorvalue) > 0) {
+                        strcat_s(colorvalue, sizeof(colorvalue), " ");
+                    }
+                }
+
+
+                if (_stricmp(colorname, "TopicFg1") == 0) {
+                    strcpy_s(gTopicFg1, sizeof(gTopicFg1), colorvalue);
+                }
+                else if (_stricmp(colorname, "TopicBg1") == 0) {
+                    strcpy_s(gTopicBg1, sizeof(gTopicBg1), colorvalue);
+                }
+                else if (_stricmp(colorname, "TopicFg2") == 0) {
+                    strcpy_s(gTopicFg2, sizeof(gTopicFg2), colorvalue);
+                }
+                else if (_stricmp(colorname, "TopicBg2") == 0) {
+                    strcpy_s(gTopicBg2, sizeof(gTopicBg2), colorvalue);
+                }
+                else if (_stricmp(colorname, "TopicFg3") == 0) {
+                    strcpy_s(gTopicFg3, sizeof(gTopicFg3), colorvalue);
+                }
+                else if (_stricmp(colorname, "TopicBg3") == 0) {
+                    strcpy_s(gTopicBg3, sizeof(gTopicBg3), colorvalue);
+                }
+                else if (_stricmp(colorname, "UserCountFg") == 0) {
+                    strcpy_s(gUserCountFg, sizeof(gUserCountFg), colorvalue);
+                }
+                else if (_stricmp(colorname, "UserCountBg") == 0) {
+                    strcpy_s(gUserCountBg, sizeof(gUserCountBg), colorvalue);
+                }
+                else if (_stricmp(colorname, "LatencyFg") == 0) {
+                    strcpy_s(gLatencyFg, sizeof(gLatencyFg), colorvalue);
+                }
+                else if (_stricmp(colorname, "LatencyBg") == 0) {
+                    strcpy_s(gLatencyBg, sizeof(gLatencyBg), colorvalue);
+                }
+                else if (_stricmp(colorname, "MentionsFg") == 0) {
+                    strcpy_s(gMentionsFg, sizeof(gMentionsFg), colorvalue);
+                }
+                else if (_stricmp(colorname, "MentionsBg") == 0) {
+                    strcpy_s(gMentionsBg, sizeof(gMentionsBg), colorvalue);
+                }
+                else if (_stricmp(colorname, "BufferFg1") == 0) {
+                    strcpy_s(gBufferFg1, sizeof(gBufferFg1), colorvalue);
+                }
+                else if (_stricmp(colorname, "BufferBg1") == 0) {
+                    strcpy_s(gBufferBg1, sizeof(gBufferBg1), colorvalue);
+                }
+                else if (_stricmp(colorname, "BufferFg2") == 0) {
+                    strcpy_s(gBufferFg2, sizeof(gBufferFg2), colorvalue);
+                }
+                else if (_stricmp(colorname, "BufferBg2") == 0) {
+                    strcpy_s(gBufferBg2, sizeof(gBufferBg2), colorvalue);
+                }
             }
             lineCount = lineCount + 1;
         }
@@ -460,7 +593,17 @@ void updateRoomTopic() {
     char displayableTopic[65] = "";
     strcpy_s(displayableTopic, 65 - (strlen(gRoom) + 2), gTopic);
     od_set_cursor(od_control.user_screen_length - 2, 6); 
-    od_printf("`white`#`bright white`%s`bright black`:`bright white`%s ", gRoom, displayableTopic);
+    od_printf("`%s %s`#`%s %s`%s`%s %s`:`%s %s`%s ", 
+        (strlen(gTopicFg2) > 0 ? gTopicFg2 : TOPIC_FG_DEFAULT_2), 
+        (strlen(gTopicBg2) > 0 ? gTopicBg2 : TOPIC_BG_DEFAULT_2), 
+        (strlen(gTopicFg1) > 0 ? gTopicFg1 : TOPIC_FG_DEFAULT_1), 
+        (strlen(gTopicBg1) > 0 ? gTopicBg1 : TOPIC_BG_DEFAULT_1), 
+        gRoom, 
+        (strlen(gTopicFg3) > 0 ? gTopicFg3 : TOPIC_FG_DEFAULT_3), 
+        (strlen(gTopicBg3) > 0 ? gTopicBg3 : TOPIC_BG_DEFAULT_3), 
+        (strlen(gTopicFg1) > 0 ? gTopicFg1 : TOPIC_FG_DEFAULT_1), 
+        (strlen(gTopicBg1) > 0 ? gTopicBg1 : TOPIC_BG_DEFAULT_1), 
+        displayableTopic);
 }
 
 /**
@@ -468,7 +611,7 @@ void updateRoomTopic() {
  */
 void updateUserCount() {
     od_set_cursor(od_control.user_screen_length - 1, 13);
-    od_printf("`bright white`%-3d``", gChatterCount);
+    od_printf("`%s %s`%-3d``", (strlen(gUserCountFg) > 0 ? gUserCountFg : USERCOUNT_FG_DEFAULT), (strlen(gUserCountBg) > 0 ? gUserCountBg : USERCOUNT_BG_DEFAULT), gChatterCount);
 }
 
 /**
@@ -480,11 +623,12 @@ void updateLatency() {
         strcpy_s(gLatency, sizeof(gLatency), ">999");
     }
     od_set_cursor(od_control.user_screen_length - 1, 31);
-    od_printf(
-        ltcy > 400 ? "`bright red`%-4s``" : (
-        ltcy > 200 ? "`bright yellow`%-4s``" : (
-        "`bright white`%-4s``")
-        ), gLatency);
+    od_printf(        
+        "`%s %s`%-4s``", 
+        ltcy > 400 ? "bright red" : (
+        ltcy > 200 ? "bright yellow" : ( 
+        (strlen(gLatencyFg) > 0 ? gLatencyFg : LATENCY_FG_DEFAULT))), (strlen(gLatencyBg) > 0 ? gLatencyBg : LATENCY_BG_DEFAULT), 
+        strlen(gLatency) > 0 ? gLatency : "--");
 }
 
 /**
@@ -492,7 +636,7 @@ void updateLatency() {
  */
 void updateMentions() {
     od_set_cursor(od_control.user_screen_length - 1, 52);
-    od_printf("`bright white`%-4d``", gMentionCount);
+    od_printf("`%s %s`%-4d``", (strlen(gMentionsFg) > 0 ? gMentionsFg : MENTIONS_FG_DEFAULT), (strlen(gMentionsBg) > 0 ? gMentionsBg : MENTIONS_BG_DEFAULT), gMentionCount);
 }
 
 /**
@@ -500,7 +644,21 @@ void updateMentions() {
  */
 void updateBuffer(int typed) {
     od_set_cursor(od_control.user_screen_length - 1, 68);
-    od_printf(typed > 135 ? "`bright red`%03d`white`/`bright yellow`%03d``" : (typed > 120 ? "`bright yellow`%03d`white`/`bright white`%03d``" : "`bright white`%03d`white`/`bright white`%03d``"), typed, MSG_LEN - 1);
+    od_printf(
+
+        "`%s %s`%03d`%s %s`/`%s %s`%03d``"
+
+        , typed >= 135 ? "bright red" : (typed >= 120 ? "bright yellow" : (strlen(gBufferFg1) > 0 ? gBufferFg1 : BUFFER_FG_DEFAULT_1) )
+        , (strlen(gBufferBg1) > 0 ? gBufferBg1 : BUFFER_BG_DEFAULT_1)
+        
+        , typed
+        , (strlen(gBufferFg2) > 0 ? gBufferFg2 : BUFFER_FG_DEFAULT_2)
+        , (strlen(gBufferBg2) > 0 ? gBufferBg2 : BUFFER_BG_DEFAULT_2)
+
+        , (strlen(gBufferFg1) > 0 ? gBufferFg1 : BUFFER_FG_DEFAULT_1)
+        , (strlen(gBufferBg1) > 0 ? gBufferBg1 : BUFFER_BG_DEFAULT_1)
+        
+        , MSG_LEN - 1);
 }
 
 void drawStatusBar() {
@@ -538,7 +696,19 @@ void enterChatterSettings(char* quitToWhere) {
 
         drawStatusBar();
         od_set_cursor(od_control.user_screen_length - 2, 6);
-        od_printf("`white`#`bright white`%s`bright black`:`bright white`%s %s ", "room", "Theme preview of", user.theme);
+
+        od_printf("`%s %s`#`%s %s`%s`%s %s`:`%s %s`%s %s",
+            (strlen(gTopicFg2) > 0 ? gTopicFg2 : TOPIC_FG_DEFAULT_2),
+            (strlen(gTopicBg2) > 0 ? gTopicBg2 : TOPIC_BG_DEFAULT_2),
+            (strlen(gTopicFg1) > 0 ? gTopicFg1 : TOPIC_FG_DEFAULT_1),
+            (strlen(gTopicBg1) > 0 ? gTopicBg1 : TOPIC_BG_DEFAULT_1),
+            strlen(gRoom) > 0 ? gRoom : user.defaultRoom,
+            (strlen(gTopicFg3) > 0 ? gTopicFg3 : TOPIC_FG_DEFAULT_3),
+            (strlen(gTopicBg3) > 0 ? gTopicBg3 : TOPIC_BG_DEFAULT_3),
+            (strlen(gTopicFg1) > 0 ? gTopicFg1 : TOPIC_FG_DEFAULT_1),
+            (strlen(gTopicBg1) > 0 ? gTopicBg1 : TOPIC_BG_DEFAULT_1),
+            "Theme Preview of", user.theme);
+
 
         od_set_cursor(1, 1);
         od_printf("`bright white`Chatter Settings``\r\n");
@@ -769,26 +939,72 @@ void enterScrollBack(int initialScroll, int mode) {
     }
     
     od_set_cursor(od_control.user_screen_length, 1);
+    od_printf("``");
     od_clr_line();
     scrollToScrollbackSection(scrollLines, scrollPos, scrollLineCount, height);
     od_set_cursor(od_control.user_screen_length - 2, 1);
     od_disp_emu(gStatusThemeLine1, TRUE);
     od_set_cursor(od_control.user_screen_length - 2, 6);
-    if (mode == 0) { // 0 = standard scrollback mode        
-        od_printf("`bright white`Scrollback`bright black`:          `bright white`\030`bright black`/`bright white`\031`bright black`/`bright white`PGUP`bright black`/`bright white`PGDN`bright black`/`bright white`HOME`bright black`/`bright white`END``   `bright white`ENTER`` to return to chat");
-    }
-    else if (mode == 1) { // 1 = mention scrollback mode
-        od_printf("`bright white`Mentions`bright black`:            `bright white`\030`bright black`/`bright white`\031`bright black`/`bright white`PGUP`bright black`/`bright white`PGDN`bright black`/`bright white`HOME`bright black`/`bright white`END``   `bright white`ENTER`` to return to chat");
-    }
+
+    od_printf("`%s %s`%10.10s`%s %s`:          `%s %s`\030`%s %s`/`%s %s`\031`%s %s`/`%s %s`PGUP`%s %s`/`%s %s`PGDN`%s %s`/`%s %s`HOME`%s %s`/`%s %s`END`%s %s`   `%s %s`ENTER`%s %s` to return to chat",
+        (strlen(gTopicFg1) > 0 ? gTopicFg1 : TOPIC_FG_DEFAULT_1),
+        (strlen(gTopicBg1) > 0 ? gTopicBg1 : TOPIC_BG_DEFAULT_1),
+        mode == 0 ? "Scrollback" : "Mentions",
+        (strlen(gTopicFg2) > 0 ? gTopicFg2 : TOPIC_FG_DEFAULT_2),
+        (strlen(gTopicBg2) > 0 ? gTopicBg2 : TOPIC_BG_DEFAULT_2),
+        (strlen(gTopicFg1) > 0 ? gTopicFg1 : TOPIC_FG_DEFAULT_1),
+        (strlen(gTopicBg1) > 0 ? gTopicBg1 : TOPIC_BG_DEFAULT_1),
+        (strlen(gTopicFg2) > 0 ? gTopicFg2 : TOPIC_FG_DEFAULT_2),
+        (strlen(gTopicBg2) > 0 ? gTopicBg2 : TOPIC_BG_DEFAULT_2),
+        (strlen(gTopicFg1) > 0 ? gTopicFg1 : TOPIC_FG_DEFAULT_1),
+        (strlen(gTopicBg1) > 0 ? gTopicBg1 : TOPIC_BG_DEFAULT_1),
+        (strlen(gTopicFg2) > 0 ? gTopicFg2 : TOPIC_FG_DEFAULT_2),
+        (strlen(gTopicBg2) > 0 ? gTopicBg2 : TOPIC_BG_DEFAULT_2),
+        (strlen(gTopicFg1) > 0 ? gTopicFg1 : TOPIC_FG_DEFAULT_1),
+        (strlen(gTopicBg1) > 0 ? gTopicBg1 : TOPIC_BG_DEFAULT_1),
+        (strlen(gTopicFg2) > 0 ? gTopicFg2 : TOPIC_FG_DEFAULT_2),
+        (strlen(gTopicBg2) > 0 ? gTopicBg2 : TOPIC_BG_DEFAULT_2),
+        (strlen(gTopicFg1) > 0 ? gTopicFg1 : TOPIC_FG_DEFAULT_1),
+        (strlen(gTopicBg1) > 0 ? gTopicBg1 : TOPIC_BG_DEFAULT_1),
+        (strlen(gTopicFg2) > 0 ? gTopicFg2 : TOPIC_FG_DEFAULT_2),
+        (strlen(gTopicBg2) > 0 ? gTopicBg2 : TOPIC_BG_DEFAULT_2),
+        (strlen(gTopicFg1) > 0 ? gTopicFg1 : TOPIC_FG_DEFAULT_1),
+        (strlen(gTopicBg1) > 0 ? gTopicBg1 : TOPIC_BG_DEFAULT_1),
+        (strlen(gTopicFg2) > 0 ? gTopicFg2 : TOPIC_FG_DEFAULT_2),
+        (strlen(gTopicBg2) > 0 ? gTopicBg2 : TOPIC_BG_DEFAULT_2),
+        (strlen(gTopicFg1) > 0 ? gTopicFg1 : TOPIC_FG_DEFAULT_1),
+        (strlen(gTopicBg1) > 0 ? gTopicBg1 : TOPIC_BG_DEFAULT_1), 
+        (strlen(gTopicFg2) > 0 ? gTopicFg2 : TOPIC_FG_DEFAULT_2),
+        (strlen(gTopicBg2) > 0 ? gTopicBg2 : TOPIC_BG_DEFAULT_2),
+        (strlen(gTopicFg1) > 0 ? gTopicFg1 : TOPIC_FG_DEFAULT_1),
+        (strlen(gTopicBg1) > 0 ? gTopicBg1 : TOPIC_BG_DEFAULT_1),
+        (strlen(gTopicFg2) > 0 ? gTopicFg2 : TOPIC_FG_DEFAULT_2),
+        (strlen(gTopicBg2) > 0 ? gTopicBg2 : TOPIC_BG_DEFAULT_2)
+    );
+
     od_set_cursor(od_control.user_screen_length - 1, 1);
-    od_disp_emu(gStatusThemeLine2, TRUE);
+    od_printf("``");
+    od_clr_line();
+    od_printf("`flashing %s %s`%s``",
+        (strlen(gTopicFg1) > 0 ? gTopicFg1 : TOPIC_FG_DEFAULT_1),
+        (strlen(gTopicBg1) > 0 ? gTopicBg1 : TOPIC_BG_DEFAULT_1),
+        "                            * * * CHAT PAUSED * * *                            ");
 
     tODInputEvent InputEvent;
 
     while (!exitScrollback) {
 
         od_set_cursor(od_control.user_screen_length - 2, 18);
-        od_printf("`bright white`%.0f``%%  ", (scrollPos / (scrollMax + 0.1)) * 100);
+        od_printf("`%s %s`%.0f`%s %s`%c`%s %s` ``",
+            (strlen(gTopicFg1) > 0 ? gTopicFg1 : TOPIC_FG_DEFAULT_1),
+            (strlen(gTopicBg1) > 0 ? gTopicBg1 : TOPIC_BG_DEFAULT_1),
+            (scrollPos / (scrollMax + 0.1)) * 100,
+            (strlen(gTopicFg2) > 0 ? gTopicFg2 : TOPIC_FG_DEFAULT_2),
+            (strlen(gTopicBg2) > 0 ? gTopicBg2 : TOPIC_BG_DEFAULT_2), 
+            '%',
+            (strlen(gTopicFg2) > 0 ? gTopicFg2 : TOPIC_FG_DEFAULT_2),
+            (strlen(gTopicBg2) > 0 ? gTopicBg2 : TOPIC_BG_DEFAULT_2));            
+
         od_get_input(&InputEvent, OD_NO_TIMEOUT, GETIN_NORMAL);
 
         if (InputEvent.EventType == EVENT_EXTENDED_KEY)
