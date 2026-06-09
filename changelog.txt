@@ -3,27 +3,28 @@ Change Log:
 v104 - TBA:
 
   - Color options added to themes. Colors default to bright white on black if
-    not specified. 
-     . See bitchx.ans and plate.ans theme files for example usage.
-  - Fixed umrc-bridge not auto-retrying connections on failed SSL handshakes.
-  - Fix for text color showing up gray in the top of the visible scrollback.
+    not specified. See bitchx.ans and plate.ans theme files for example usage.
+  - Fixed an issue where umrc-bridge would not auto-retry connections on failed
+    SSL handshakes. MRC host reconnections are now more reliable than ever 
+	before.
+  - Fix for text color showing up gray at the top of the visible scrollback.
 
 
 v103 - Apri 18 2026:
 
-  - Lots of bug fixes:     
-     . umrc-bridge now strips nonprintable control characters from incoming 
-       message packets, to prevent them from jamming up the terminal. This 
-       addresses an issue caused when a BBS includes control characters in 
+  - Lots of bug fixes:
+     . umrc-bridge now strips nonprintable control characters from incoming
+       message packets, to prevent them from jamming up the terminal. This
+       addresses an issue caused when a BBS includes control characters in
        their BBS info.
      . Fixed flawed latency calculation and display.
-     . Fixed the PGUP & PGDN scroll distance, as it was scrolling by one too 
+     . Fixed the PGUP & PGDN scroll distance, as it was scrolling by one too
        many rows in either direction.
      . Fixed an issue with the "fromSite" containing spaces; replaced them
-       with underscores per the MRC protocol.    
+       with underscores per the MRC protocol.
      . Added many previously missing packet fields, ensuring protocol
        compliance.
-     . Fixed an issue where lengthy CTCP responses from certain clients 
+     . Fixed an issue where lengthy CTCP responses from certain clients
        (e.g.: HexChat) could crash umrc-client.
      . Fixed an issue where topic lines 55 characters or longer would crash
        the client, probably just on Windows.
@@ -48,14 +49,14 @@ v102 - April 3, 2026:
     an arrow key.
   - Fixed a crash that could occur while using TAB username autocompletion
     on macOS.
-  - umrc-bridge now makes unlimited reconnection attempts by default, 
-    instead of 10 in previous versions. This may still be changed to 
+  - umrc-bridge now makes unlimited reconnection attempts by default,
+    instead of 10 in previous versions. This may still be changed to
     a finite value if the sysop wishes with the -r option. At least one
-    successful connection must be established, otherwise umrc-bridge 
-    will fail after 10 tries. This is in case the MRC host is offline, 
+    successful connection must be established, otherwise umrc-bridge
+    will fail after 10 tries. This is in case the MRC host is offline,
     or the URL is wrong, etc.
-  - The number of seconds to wait before umrc-bridge retries the 
-    connection can now be specified with the -w option (e.g.: -w10 to 
+  - The number of seconds to wait before umrc-bridge retries the
+    connection can now be specified with the -w option (e.g.: -w10 to
     wait 10 seconds before making another connection attempt). Default
     is 5 seconds if omitted or a zero or negative value.
   - umrc-client now takes an OPTIONAL -IP parameter, so that sysops
@@ -66,13 +67,13 @@ v102 - April 3, 2026:
            On Synchronet, %i specifies the user's IP: -IP%i
            On Mystic, %4 specifies the user's IP: -IP%4
            Check your BBS's documentation.
-  - Improved BANNER and NOTIF display, now that banners are sent a 
+  - Improved BANNER and NOTIF display, now that banners are sent a
     from the host when using the /BANNERS command.
   - Latency values greater than 999 are now displayed as ">999".
   - Latency values are now color-coded. Greater than 200 is yellow, and
     greater than 400 is red. Any other color is white.
-  - Latency stat has been removed from the title screen, since it's not 
-    helpful information out of chat, and potentially problematic to 
+  - Latency stat has been removed from the title screen, since it's not
+    helpful information out of chat, and potentially problematic to
     include in the external stats file (mrcstats.dat).
   - Buffer display turns red when length is over 135, to warn when
     reaching the maximum input length.
@@ -99,28 +100,28 @@ v100 - January 27, 2026:
     a 0 for infinite attempts.
   - Basic twit list implemented. Added an additional help file called
     helptwit.txt containing usage.
-  - Added a /nick chat command, which lets users edit their display name 
+  - Added a /nick chat command, which lets users edit their display name
     (aka nick) without leaving chat.
-  - uMRC now compiles for Linux. Many sections of code have been 
+  - uMRC now compiles for Linux. Many sections of code have been
     refactored to allow cross-compiling for both Windows and Linux.
-  - Backspace and DEL keys now both act like a backspace, in order to 
+  - Backspace and DEL keys now both act like a backspace, in order to
     ensure compatibility across platforms.
   - Improved text input handling all throughout umrc-client.
-  - Fixed an issue where laying down on the PGUP or PGDN keys for too 
+  - Fixed an issue where laying down on the PGUP or PGDN keys for too
     long would crash the door. This required a modification to OpenDoors
     to redefine the behavior of these keys, so going forward a customized
     version of OpenDoors will be necessary to run the door, and will be
     included in the project files and releases. This fixes a particularly
     horrible way the PGUP and PGDN keys were handled, and the responsiveness
     of these keys is now much faster as a result. Fixing this issue did also
-    lead to the realization that laying on the ESC key similarly crashes the 
+    lead to the realization that laying on the ESC key similarly crashes the
     door, with no fix as of yet.
-  - Updated LibreSSL libraries for Windows from 2.5.5 to 4.2.1, the latest 
-    available version as of this update (from October 2025).  
+  - Updated LibreSSL libraries for Windows from 2.5.5 to 4.2.1, the latest
+    available version as of this update (from October 2025).
   - Display the "Quit to" BBS name it all its pipe code colorful glory.
-  - Chat message area now scrolls up the number of carriage returns that 
+  - Chat message area now scrolls up the number of carriage returns that
     was added while wrapping the message.
-  - Fixed pipe-code color to ANSI translation for strings containing dim 
+  - Fixed pipe-code color to ANSI translation for strings containing dim
     colors immediately after background colors.
   - Fix for incoming and outgoing /ctcp commands.
   - Fix for direct msgs (/msg /t /r) sent to users not in the same room.
@@ -128,7 +129,7 @@ v100 - January 27, 2026:
     proper formatting in the handshake string.
   - Added error logging from umrc-client (e.g.: connection drops, etc.)
   - New "anet" themes contibuted by StingRay!
-  
+
 
 v099b - December 10, 2025:
 
@@ -141,10 +142,10 @@ v099b - December 10, 2025:
 
 v099 - December 9, 2025:
 
-  - Added a dark gray row of dots to the bottom of the screen, to make the 
+  - Added a dark gray row of dots to the bottom of the screen, to make the
     input line slightly more obvious.
   - Fix for changing colors with left/right while typing past the screen width.
-  - Nonalphanumeric characters are stripped from the sysop name before being 
+  - Nonalphanumeric characters are stripped from the sysop name before being
     passed over to the host in the BBSMETA packet.
   - Option T is no longer visible on the main menu, but it's still a valid
     selection. Changed the verbiage to instruct users to include the info when
@@ -153,20 +154,20 @@ v099 - December 9, 2025:
   - Added logic so that the "%s has disconnected." string only gets sent to the
     host if the user has not logged off cleanly. In other words, this string
     should only get sent by the bridge in the event that the user drops carrier,
-    or something else unexpected happened to terminate their session. It's not 
+    or something else unexpected happened to terminate their session. It's not
     needed if their exit was already announced.
   - Added an extra gray dash - in front of the default join and exit messages,
     to keep them consistent with other systems.
   - Clear both the room and topic strings when leaving chat.
   - Added /theme in help.txt.
   - Included two theme contributions from xbit: l33t and stars.
-  
+
 
 v095 - December 7, 2025:
 
   - Shortened the displayable text input area by one character, as it was
     causing some terminals to drag it up the screen while typing strings
-    longer than the terminal width.    
+    longer than the terminal width.
   - Fix for NOTME messages announcing users joining rooms the user is not
     in.
 
@@ -174,24 +175,24 @@ v095 - December 7, 2025:
 v094 - December 6, 2025:
 
   Changes:
-  
+
   - Fixed some nasty text input issues that happen when % symbols appear
-    in the chat text or input text, or when cycling through colors for 
+    in the chat text or input text, or when cycling through colors for
     lines longer than the input area.
   - Basic errors written to a log file named "umrc.log".
   - Optional verbose logging can be enabled in umrc-bridge with -V command
     line switch.
   - Reset mention counter to 0 when user leaves chat.
-  - Fix for messages not getting line-wrapped while chat is paused in 
+  - Fix for messages not getting line-wrapped while chat is paused in
     scrollback mode.
-  
+
 
 v093 - December 5, 2025:
 
   Changes:
-        
-  - Added /theme chat command. User types /theme by itself to list the 
-    available themes, or includes the name of theme as a parameter to 
+
+  - Added /theme chat command. User types /theme by itself to list the
+    available themes, or includes the name of theme as a parameter to
     set the theme.
   - A few more themes added, others edited.
   - Fix for /join, which was passing the new room for both the first
@@ -200,24 +201,24 @@ v093 - December 5, 2025:
   - Further tweaks for partial packet correction in the bridge.
   - Fix for sendPacket returning an invalid error code on failure when
     using SSL in the bridge.
-  - Blinking chat input cursor is now a shaded block, instead of an 
-    underscore. Hopefully more obvious to the user that's where the input 
+  - Blinking chat input cursor is now a shaded block, instead of an
+    underscore. Hopefully more obvious to the user that's where the input
     line is.
-  
+
 
 v092 - November 30, 2025:
 
   Changes:
 
-  - Basic theme options added. Themes are standard ANSI files 
+  - Basic theme options added. Themes are standard ANSI files
     containing 2 lines and can be edited by the sysop.
-  - Added a timestamp and retry counter to umrc-bridge as visual 
+  - Added a timestamp and retry counter to umrc-bridge as visual
     feedback for the sysop.
-  - Improved receipt of inbound data in umrc-bridge in SSL mode, 
+  - Improved receipt of inbound data in umrc-bridge in SSL mode,
     greatly reducing partial packets.
   - Chatter default display name suffix simplified to one character,
     instead of a string of alphas based on the BBS name.
-  - Fixed an issue where displaying time warnings in the main 
+  - Fixed an issue where displaying time warnings in the main
     menu would crash umrc-client.
   - Scrollback scrolling optimizations.
   - Fixed an issue with setup that would cause input to loop
@@ -228,12 +229,12 @@ v092 - November 30, 2025:
   - General code cleanup.
 
 
- 
+
 v091 - November 28, 2025:
 
   Fixes:
 
-  - umrc-bridge will attempt to reconnect to the MRC host if the 
+  - umrc-bridge will attempt to reconnect to the MRC host if the
     connection drops (up to 10 times). Upon successful reconnect,
     any users logged in will be notified.
 
@@ -254,8 +255,8 @@ v002 - November 25, 2025:
   - Timeout warning messages are now shown in the chat window
     instead of overlapping into the status & input area.
   - Room & topic line now clears entirely whenever the topic changes.
-         
+
 
 v001 - November 23, 2025:
 
-  Initial working build. 
+  Initial working build.

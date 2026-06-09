@@ -1,5 +1,5 @@
  uMRC  ┌──── ▄█▀▀▀▀▀█▄ ───┬───┬───┬─┐
- v103┌──── ▄██ ▄███ ▀▀█▄ ·────────┐ ┤
+ v104┌──── ▄██ ▄███ ▀▀█▄ ·────────┐ ┤
    ┌──── ▄█▀▀ ▐█▀ ▀ █ ██  ▄ ▄ ▄ · │ │
  ┌──── ▄█▀ ▄██▄▀█▄▄██ ██  █████ · │ ┤
 ┌─── ▄█▀ ▐██▀▀█▌ ▀▀▀ ▄█▀  ▐▄█▄▌   │ │
@@ -16,19 +16,26 @@
 
 by Craig Hendricks
 codefenix@conchaos.synchro.net
-  https://conchaos.synchro.net/umrc/
+  https://conchaos.synchro.net/umrc
   https://github.com/codefenix-dev/uMRC
 
 
 What is uMRC?
 
-uMRC is a full-featured, cross-platform Multi-Relay Chat client for BBSes. It 
-runs as a native door on your system, letting you access Multi-Relay Chat 
-without having to install and maintain a Mystic BBS instance with Python. In 
-other words, as long as your BBS is capable of running 32-bit doors, then you 
+uMRC is a full-featured, cross-platform Multi-Relay Chat client for BBSes. It
+runs as a native door on your system, letting you access Multi-Relay Chat
+without having to install and maintain a Mystic BBS instance with Python. In
+other words, as long as your BBS is capable of running 32-bit doors, then you
 and your users can participate in MRC.
 
-It should be compatible with any DOOR32.SYS capable BBS.
+It should be compatible with any DOOR32.SYS capable BBS, however the macOS
+build has not actually been tested on a real macOS BBS as of the time of this
+writing. I personally use it in local mode on my MacBook Pro M3 all the time
+though. The code was compiled for macOS on Apple Silicon, so in theory it 
+should work on Hermes BBS, Synchronet, Magicka, or EniGMA 1/2. Those are the
+BBS types I'm currently aware of, but maybe there are more. If you decide to 
+try it out, please let me know how it works for you so I can update this
+documentation.
 
 
 Features:
@@ -70,10 +77,10 @@ connections from the same BBS.
 
    Example:  /doors/umrc
 
-   If the pre-built binaries don't run on your system for some reason, 
-   try compiling from source using the latest code from the GitHub    
+   If the pre-built binaries don't run on your system for some reason,
+   try compiling from source using the latest code from the GitHub
    project page. Instructions are provided in the build.txt file at:
-   https://github.com/codefenix-dev/uMRC   
+   https://github.com/codefenix-dev/uMRC
 
 
 2. Run setup, and press 1 to begin.
@@ -149,14 +156,14 @@ connections from the same BBS.
    successful.
 
    umrc-bridge takes an optional -V command line switch, which enables
-   verbose logging. This logs all packets passed through the bridge to 
+   verbose logging. This logs all packets passed through the bridge to
    umrc.log, which can be useful for troubleshooting purposes.
 
    After making a successfully connection to the MRC host, umrc-bridge
-   makes unlimited automatic reconnect attempts in the event the connection  
-   is lost. This can be changed by starting umrc-bridge with the -Rx option, 
+   makes unlimited automatic reconnect attempts in the event the connection
+   is lost. This can be changed by starting umrc-bridge with the -Rx option,
    where "x" is the number of retries (e.g.: -R30 for 30 retries).
- 
+
    The -W option can be used to specify the wait time between retries
    (e.g.: -W10 for 10 seconds). The default is 5 seconds.
 
@@ -165,21 +172,21 @@ connections from the same BBS.
    The command line syntax is:
 
      ./umrc-client -D /path/to/DOOR32.SYS
-	 
-   It has been observed that using the DOOR32.SYS drop file type with this 
-   door can lead to user-input issues on Mystic under Linux. If DOOR32.SYS 
+
+   It has been observed that using the DOOR32.SYS drop file type with this
+   door can lead to user-input issues on Mystic under Linux. If DOOR32.SYS
    does not work properly with your BBS type, then use DOOR.SYS instead.
-	 
+
    Also refer to your BBS software documentation on whether the ./ prefix
    needs to be included.
 
    If you get an error saying, "Invalid config. Run setup", it means you either
-   did not run Setup, or you're not launching umrc-client from its own 
-   directory. On some BBSes (like Mystic) it is necessary to use a batch 
+   did not run Setup, or you're not launching umrc-client from its own
+   directory. On some BBSes (like Mystic) it is necessary to use a batch
    file or bash script to launch the door. Something like the below ought
    to do the trick:
 
-   
+
      #bash
      # call this file "launch.sh" and pass the node number (%N) to it
      cd /path_to/umrc
@@ -188,19 +195,19 @@ connections from the same BBS.
 
    umrc-client takes an OPTIONAL -IP parameter, so that sysops may include the
    user's IP address. If used, umrc-client reports the user IP to the host,
-   which grants the host greater control over banning users without banning an 
+   which grants the host greater control over banning users without banning an
    entire BBS.
-	
+
    Usage: -IPxxx.xxx.xxx.xxx (no space between "IP" and the actual IP)
-   
+
 	   On Synchronet, %i specifies the user's IP:
 
 		 ./umrc-client -D /path_to/DOOR32.SYS -IP%i
-	   
+
 	   On Mystic, %4 specifies the user's IP:
 
 		 ./umrc-client -D /path_to/DOOR32.SYS -IP%4
-   
+
    The -IP should only be used if the BBS is capable of knowing a user's IP
    and passing it to the door. Check your BBS documentation.
 
@@ -260,15 +267,17 @@ Exit Message:
 Theme:
 
    This is a 2-line ANSI file in the "themes" subdirectory. The sysop
-   can add/edit theme files as needed. Only the first 2 lines in the
-   file are used. Anything after line #2 is ignored.
+   can add/edit theme files as needed. The first 2 lines in the file 
+   are used as the first and second line of the status bar.
+   
+   See the section About Themes for more information.
 
 The user presses the Q key to save their options and quit to the
 main menu.
 
 User settings are saved the userdata subdirectory. One file per user,
-named using their alias or username on the BBS. If a user's settings 
-ever need to be reset, simply delete (or rename) the file associated 
+named using their alias or username on the BBS. If a user's settings
+ever need to be reset, simply delete (or rename) the file associated
 with them.
 
 
@@ -291,24 +300,6 @@ I Instructions:     Shows a list of basic chat commands, as listed in
 Q Quit:             Exits back to the BBS.
 
 
-MRC Stats, as reported by umrc-bridge:
-
-State:    ONLINE or OFFLINE. 60 seconds or less since last ping = ONLINE
-BBSes:    Number of BBSes currently connected to the MRC host.
-Rooms:    Current number of chat rooms.
-Users:    Total number of users in all chat room.
-Activity: NUL, LOW, MED, or HI, based on chatter activity.
-
-umrc-bridge makes requests for server stats every 60 seconds and stores 
-them in the mrcstats.dat file for display elsewhere on the BBS.
-
-The stats are separated by spaces and follow this order:
-   1 - BBSES
-   2 - Rooms
-   3 - Users
-   4 - Activity (0=NONE, 1=LOW, 2=MED, 3, HI)
-
-
 Basic Chat Usage:
 
 Upon entering chat, the user will be greeted with the message of the day
@@ -326,10 +317,99 @@ the user was mentioned, latency, and input buffer (max input: 140). These
 stats update continuously throughout chat.
 
 The door should let the user remain in chat up to the number of minutes
-allowed by the BBS, and should not have an issue with any time spent 
+allowed by the BBS, and should not have an issue with any time spent
 idling.
 
 The user types /quit or /q to exit chat and return to the main menu.
+
+
+MRC Stats, as reported by umrc-bridge:
+
+State:    ONLINE or OFFLINE. 60 seconds or less since last ping = ONLINE
+BBSes:    Number of BBSes currently connected to the MRC host.
+Rooms:    Current number of chat rooms.
+Users:    Total number of users in all chat room.
+Activity: NUL, LOW, MED, or HI, based on chatter activity.
+
+umrc-bridge makes requests for server stats every 60 seconds and stores
+them in the mrcstats.dat file for display elsewhere on the BBS.
+
+The stats are separated by spaces and follow this order:
+   1 - BBSES
+   2 - Rooms
+   3 - Users
+   4 - Activity (0=NONE, 1=LOW, 2=MED, 3, HI)
+
+
+About Themes:
+
+Theme files are ANSI files located in the themes subdirectory. The first 2 lines
+are the displayable status line, and may be edited as the sysop wishes.
+   
+Colors may optionally be customized by including the following below
+the second line:
+
+	TopicFg1      ... foreground color of the room & topic     
+	TopicBg1      ... background color of the room & topic
+	TopicFg2      ... foreground color of the # before the room
+	TopicBg2      ... background color of the # before the room
+	TopicFg3      ... foreground color of the : between the room and topic
+	TopicBg3      ... background color of the : between the room and topic
+
+	UserCountFg   ... foreground color of the user count
+	UserCountBg   ... background color of the user count
+
+	LatencyFg     ... foreground color of the latency stat
+	LatencyBg     ... background color of the latency stat
+
+	MentionsFg    ... foreground color of the mention counter
+	MentionsBg    ... background color of the mention counter
+
+	BufferFg1     ... foreground color of the input buffer stats
+	BufferBg1     ... background color of the input buffer stats
+	BufferFg2     ... foreground color of the / in the buffer stats
+	BufferBg2     ... background color of the / in the buffer stats
+
+
+Any other lines or blank lines are ignored.
+
+The following standard OpenDoors strings are recognized as valid foreground 
+colors:
+
+	black  
+	blue  
+	green  
+	cyan  
+	red  
+	magenta  
+	brown  
+	grey  
+	bright black  
+	bright blue  
+	bright green  
+	bright cyan  
+	bright red  
+	bright magenta  
+	bright yellow  
+	bright white 
+
+
+The following are recognized as valid background color strings:
+
+	black  
+	blue  
+	green  
+	cyan  
+	red  
+	magenta  
+	brown  
+	grey  
+
+
+Bright white is used as the default foreground color, and black is the
+default background.   
+
+See the bitchx.ans or plate.ans files for example usage.
 
 
 Meetups!
@@ -345,7 +425,7 @@ More info at: https://erb.pw
 Type /meetups in chat for a current list of meetups.
 
 
-Known Issues & Limitations: 
+Known Issues & Limitations:
 
 Height and width are limited to 80 columns by 24 rows. OpenDoors has
 a default maximum row limit of 23, but umrc-client is hard-coded with
@@ -367,7 +447,7 @@ future changes to the MRC protocol, but that's about it.
 
 Technical Notes:
 
-uMRC is written in C, and was developed and compiled on Windows using 
+uMRC is written in C, and was developed and compiled on Windows using
 Microsoft Visual Studio Community 2022. The macOS binaries were compiled on
 Taho using gcc (Clang).
 
