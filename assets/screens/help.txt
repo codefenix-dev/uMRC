@@ -10,6 +10,7 @@
 |15/|11info          |08:|07 View information about a BBS|08:|07 |15/|11info |15#
 |15/|11me            |08:|07 Perform an action|08:|07            |15/|11me |07waves
 |15/|11motd          |08:|07 Display the Message of the Day
+|15/|11cls           |08:|07 Clear the chat area
 |15/|11scroll |08or |11PGUP|08:|07 Scroll the chat window
 |15/|11mentions |08or |11UP|08:|07 Reset mention counter and review mentions
 |15/|11sound         |08:|07 Toggle chat sounds |08(|07e.g.: mentions|08)|07

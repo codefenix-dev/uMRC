@@ -1,6 +1,13 @@
 Change Log:
 
-v104 - TBA:
+v105 - TBA:
+
+  - Added new client command: /cls
+    Clears the visible chat area by inserting a screen's worth
+    of rows to the chat history.
+
+
+v104 - June 11, 2026:
 
   - Color options added to themes. Colors default to bright white on black if
     not specified. See bitchx.ans and plate.ans theme files for example usage.
@@ -10,7 +17,7 @@ v104 - TBA:
   - Fix for text color showing up gray at the top of the visible scrollback.
 
 
-v103 - Apri 18 2026:
+v103 - April 18 2026:
 
   - Lots of bug fixes:
      . umrc-bridge now strips nonprintable control characters from incoming

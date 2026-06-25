@@ -1556,6 +1556,32 @@ void processUserCommand(char* cmd, char* params) {
             drawStatusBar();
         }
     }
+    else if (_stricmp(cmd, "cls") == 0) {
+        isChatPaused = true;
+        // Insert a screen's worth of blank lines to the chat history, and then
+        // scroll to the first blank line.
+        // We'll add a line indicating that the screen was cleared, and when.
+        displayMessage("|15 * * * CHAT AREA CLEARED * * * |07", false);
+        for (int i = 0; i < od_control.user_screen_length - 3; i++) {
+            addToScrollBack(" ", 0);
+        }
+        // refresh the scrollLines and re-display the latest lines when exiting scrollback, in 
+        // case any were received while editing.
+        char** scrollLines;
+        int height = od_control.user_screen_length - 2;
+        int scrollLineCount = split(gScrollBack, '\n', &scrollLines);
+        int scrollPos = scrollLineCount - height;
+        if (scrollPos < 0) {
+            scrollPos = 0;
+        }
+        scrollToScrollbackSection(scrollLines, scrollPos, scrollLineCount, height);
+        free(scrollLines); // needed?
+        isChatPaused = false;
+        drawStatusBar();
+        resetInputLine();
+        od_printf(CHAT_CURSOR, CURSOR_COLORS[user.textColor]);
+
+    }
 
     // Any other server command goes straight to the server and processed there.
     // If the server received an invalid command, it will let the user know.
