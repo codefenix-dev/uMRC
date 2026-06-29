@@ -2046,6 +2046,7 @@ void doChatRoutines(char* input) {
                 resetInputLine();
                 masking = false;
                 od_printf(CHAT_CURSOR, CURSOR_COLORS[user.textColor]);
+                break;
             }
             else if (key == 9) {   // TAB - chatter name completion
                 if (strlen(input) == 0) {
