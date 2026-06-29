@@ -3,10 +3,12 @@ Change Log:
 v105 - TBA:
 
   - Added new client command: /cls
-    Clears the visible chat area by inserting a screen's worth
-    of rows to the chat history.
+    Clears the visible chat area by inserting a screen's worth of rows to the 
+    chat history.
   - Added ESC key as an alternate key for clearing the input line, instead of
     END only.
+  - Fix for redisplaying input buffer text if there was any text in the input
+    buffer before entering scrollback.
 
 
 v104 - June 11, 2026:

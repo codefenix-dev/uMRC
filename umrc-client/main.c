@@ -2008,10 +2008,48 @@ void doChatRoutines(char* input) {
             case '\x0e':
             case OD_KEY_PGUP:
                 enterScrollBack(od_control.user_screen_length - 3, 0);
+                // If there was something in the input buffer before entering scrollback, 
+                // put it back in the input buffer. Should only be needed when pressing the
+                // hotkey.
+                if (strlen(input) > 0) {
+                    // Scroll the input string display if it's longer than the terminal width
+                    if ((int)strlen(input) >= (int)od_control.user_screenwidth - 3) {
+                        overfill = strlen(input) - (od_control.user_screenwidth - 4);
+                    }              
+                    od_set_cursor(od_control.user_screen_length, 1);
+                    _snprintf_s(pcol, sizeof(pcol), -1, "|%02d", user.textColor);
+                    od_disp_emu(pipeToAnsi(pcol), TRUE);
+                    if (overfill > 0) {
+                        od_disp_str(input + overfill - 1);
+                    }
+                    else {
+                        od_disp_str(input);
+                    }
+                    od_printf(CHAT_CURSOR, CURSOR_COLORS[user.textColor]);
+                }
                 break;
 
             case OD_KEY_UP:
                 enterScrollBack(0, 1);
+                // If there was something in the input buffer before entering scrollback, 
+                // put it back in the input buffer. Should only be needed when pressing the
+                // hotkey.
+                if (strlen(input) > 0) {
+                    // Scroll the input string display if it's longer than the terminal width
+                    if ((int)strlen(input) >= (int)od_control.user_screenwidth - 3) {
+                        overfill = strlen(input) - (od_control.user_screenwidth - 4);
+                    }                 
+                    od_set_cursor(od_control.user_screen_length, 1);
+                    _snprintf_s(pcol, sizeof(pcol), -1, "|%02d", user.textColor);
+                    od_disp_emu(pipeToAnsi(pcol), TRUE);
+                    if (overfill > 0) {
+                        od_disp_str(input + overfill - 1);
+                    }
+                    else {
+                        od_disp_str(input);
+                    }
+                    od_printf(CHAT_CURSOR, CURSOR_COLORS[user.textColor]);
+                }
                 gMentionCount = 0;
                 updateMentions();
                 break;
