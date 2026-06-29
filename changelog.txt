@@ -5,6 +5,8 @@ v105 - TBA:
   - Added new client command: /cls
     Clears the visible chat area by inserting a screen's worth
     of rows to the chat history.
+  - Added ESC key as an alternate key for clearing the input line, instead of
+    END only.
 
 
 v104 - June 11, 2026:

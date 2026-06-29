@@ -1580,7 +1580,6 @@ void processUserCommand(char* cmd, char* params) {
         drawStatusBar();
         resetInputLine();
         od_printf(CHAT_CURSOR, CURSOR_COLORS[user.textColor]);
-
     }
 
     // Any other server command goes straight to the server and processed there.
@@ -2002,6 +2001,7 @@ void doChatRoutines(char* input) {
             case OD_KEY_END:
                 strcpy_s(input, MSG_LEN, "");
                 resetInputLine();
+                masking = false;
                 od_printf(CHAT_CURSOR, CURSOR_COLORS[user.textColor]);
                 break;
 
@@ -2040,6 +2040,12 @@ void doChatRoutines(char* input) {
                     input[strlen(input) - 1] = '\0';
                     endOfInput = endOfInput + 1;
                 }
+            }
+            else if (key == 27) { // ESC
+                strcpy_s(input, MSG_LEN, "");
+                resetInputLine();
+                masking = false;
+                od_printf(CHAT_CURSOR, CURSOR_COLORS[user.textColor]);
             }
             else if (key == 9) {   // TAB - chatter name completion
                 if (strlen(input) == 0) {
