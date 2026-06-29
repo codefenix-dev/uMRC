@@ -996,7 +996,7 @@ void enterScrollBack(int initialScroll, int mode) {
     od_printf("``");
     //od_clr_line();
     od_printf("`flashing %s %s`%s``", gTopicFg1, gTopicBg1,
-        "                           * * * CHAT PAUSED * * *                          ");
+        "                           * * * CHAT PAUSED * * *                           ");
 
     tODInputEvent InputEvent;
 
@@ -1402,6 +1402,14 @@ void processUserCommand(char* cmd, char* params) {
         strcpy_s(newRoom, sizeof(newRoom), strReplace(params, "#", ""));  // no #
         strcpy_s(newRoom, sizeof(newRoom), strReplace(newRoom, " ", "_")); // Single word
         stripPipeCodes(newRoom); // No pipe codes
+
+        // Let the user know they're trying to join a room they're already in.
+        // Not necessarily needed, since the server doesn't consider the action
+        // invalid, but we'll inform the user anyway. 
+        if (_stricmp(newRoom, gRoom) == 0) {
+            displayMessage("|15* |14Already in that room|07.", false);
+            return;
+        }
 
         char newRoomCmd[30] = "";
         _snprintf_s(newRoomCmd, sizeof(newRoomCmd), -1, "NEWROOM:%s:", gRoom); // include the OLD room as the first parameter...
@@ -2007,6 +2015,7 @@ void doChatRoutines(char* input) {
 
             case '\x0e':
             case OD_KEY_PGUP:
+                od_set_cursor(1, 1);
                 enterScrollBack(od_control.user_screen_length - 3, 0);
                 // If there was something in the input buffer before entering scrollback, 
                 // put it back in the input buffer. Should only be needed when pressing the
@@ -2026,10 +2035,12 @@ void doChatRoutines(char* input) {
                         od_disp_str(input);
                     }
                     od_printf(CHAT_CURSOR, CURSOR_COLORS[user.textColor]);
+                    updateBuffer(strlen(input));
                 }
                 break;
 
             case OD_KEY_UP:
+                od_set_cursor(1, 1);
                 enterScrollBack(0, 1);
                 // If there was something in the input buffer before entering scrollback, 
                 // put it back in the input buffer. Should only be needed when pressing the
@@ -2049,6 +2060,7 @@ void doChatRoutines(char* input) {
                         od_disp_str(input);
                     }
                     od_printf(CHAT_CURSOR, CURSOR_COLORS[user.textColor]);
+                    updateBuffer(strlen(input));
                 }
                 gMentionCount = 0;
                 updateMentions();
