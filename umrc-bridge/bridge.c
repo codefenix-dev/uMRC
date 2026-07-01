@@ -819,7 +819,7 @@ void mrcHostProcess(struct settings cfg) {
                         sendCmdPacket("", "", "INFODSC:%s", cfg.dsc);
                         sendCmdPacket(gProcessID, "", "IMALIVE:%s", cfg.name);
                         char capStr[20] = "";
-                        _snprintf_s(capStr, sizeof(capStr), -1, "%s%s%s", "MCI", (cfg.ssl ? " SSL" : ""), " CTCP");
+                        _snprintf_s(capStr, sizeof(capStr), -1, "%s%s%s", "MCI", (cfg.ssl ? " SSL" : ""), " CTCP GOODBYE");
                         sendCmdPacket("", "", "CAPABILITIES: %s", capStr);
                         Sleep(20);
 

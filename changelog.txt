@@ -9,6 +9,9 @@ v105 - TBA:
     END only.
   - Fix for redisplaying input buffer text if there was any text in the input
     buffer before entering scrollback.
+  - Display fixes to status bar when accessing scrollback or mentions with a 
+    hotkey (i.e.: UP & PGUP).  
+  - New theme contributed by Winzlo!
 
 
 v104 - June 11, 2026:
@@ -139,7 +142,7 @@ v100 - January 27, 2026:
   - Fix to strip forward slashes from BBS and platform stings to ensure
     proper formatting in the handshake string.
   - Added error logging from umrc-client (e.g.: connection drops, etc.)
-  - New "anet" themes contibuted by StingRay!
+  - New "anet" themes contributed by StingRay!
 
 
 v099b - December 10, 2025:

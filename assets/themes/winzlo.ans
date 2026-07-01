@@ -1,0 +1,32 @@
+[0m[1;36;44m MRC[1;44m                                                                     [1;33;44m/help [0m
+[1;34;40m----[1;34m{[1;36;40mUsers[1;34m:[1;33m       [1;34m}-{[1;36;40mLatency[1;34m:[1;33m        [1;34m }-{[1;36;40mMentions[1;34m:[1;33m      [34m}-{[1;36;40mBuffer[1;34m:[1;33m        [1;34m}----[0m
+
+; Theme: Winzlo
+; Author: Winzlo
+; Inspired by: Codefenix's BitchX-inspired theme
+; https://bbswiki.bottomlessabyss.net/images/4/4c/MRC_BitchX_inspired_theme.png
+;
+; Color settings:
+
+TopicFg1      bright white
+TopicBg1      blue
+TopicFg2      bright cyan
+TopicBg2      blue
+TopicFg3      bright green
+TopicBg3      blue
+
+UserCountFg   bright yellow
+UserCountBg   black
+
+LatencyFg     bright yellow
+LatencyBg     black
+
+MentionsFg    bright yellow
+MentionsBg    black
+
+BufferFg1     bright white
+BufferBg1     black
+BufferFg2     bright white
+BufferBg2     black
+
+; end of file

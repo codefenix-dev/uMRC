@@ -1676,6 +1676,13 @@ void processServerMessage(char* body, char* toUser) {
         writeToLog("User was terminated by the server", PROGRAM, od_control.user_handle);
         writeToLog(params, PROGRAM, od_control.user_handle);
     }
+    else if (strcmp(cmd, "GOODBYE") == 0) {
+        // GOODBYE : Server is gracefully closing connection. [NEW in 1.4]
+        // Sent only if client reports the CAPABILITY
+        gIsInChat = false;
+        displayMessage("Server is closing the connection.", true); // should be displayed immediately
+        writeToLog("Server is closing the connection.", PROGRAM, od_control.user_handle);
+    }
     else if (strcmp(cmd, "USERLIST") == 0) {
         gChatterCount = split(params, ',', &gChattersInRoom);
         gUserCountChanged = true;
@@ -1843,7 +1850,7 @@ void* handleIncomingMessages(void* lpArg) {
 
                     // Direct message (DirectMsg)
                     else if (strlen(toUser) != 0 && strlen(fromUser) != 0) {
-                        queueIncomingMessage(body, false);
+                        queueIncomingMessage(body, true);
                         strcpy_s(gLastDirectMsgFrom, sizeof(gLastDirectMsgFrom), fromUser);
                     }
 
