@@ -3,11 +3,13 @@
 plat="linux"
 arc="x64"
 arch=$(uname -m)
-if [[ $OSTYPE == darwin* ]]; then
-    plat="macos"
-fi
 if [[ "$arch" == arm* ]] || [[ "$arch" == aarch64 ]]; then
     arc="arm64"
+fi
+assetpath=$plat-$arc 
+if [[ $OSTYPE == darwin* ]]; then
+    plat="macos"
+    assetpath=$plat 
 fi
 
 mkdir -p bin
@@ -60,7 +62,7 @@ cp umrc-client ../bin
 cd ..
 
 echo "Copying assets..."
-cp -r ./assets/$plat/* ./bin/
+cp -r ./assets/$assetpath/* ./bin/
 cp -r ./assets/screens/* ./bin/screens/
 cp -r ./assets/themes/* ./bin/themes/
 

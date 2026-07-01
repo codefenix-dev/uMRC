@@ -11,6 +11,7 @@ v105 - TBA:
     buffer before entering scrollback.
   - Display fixes to status bar when accessing scrollback or mentions with a 
     hotkey (i.e.: UP & PGUP).  
+  - /mentions now includes direct messages in addition to standard mentions.
   - New theme contributed by Winzlo!
 
 
