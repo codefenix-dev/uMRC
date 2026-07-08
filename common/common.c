@@ -117,38 +117,100 @@ int indexOfChar(char* s, char c) {
 
 /**
  *
- * Splits a string into an array. Used for parsing inbound packets and stats,
- * among other things.
- * Contains a couple compiler warnings. I tried to fix them, but then the function
- * did not work correctly. Will try to fix them later.
+ * Splits a string into an array of `count` NUL-terminated tokens delimited
+ * by `delim`. Used for parsing inbound packets and stats, among other
+ * things.
  *
+ * On allocation failure, returns 0 and sets *tokens = NULL. Every existing
+ * call site already only reads up to the returned count (e.g.
+ * `for (i = 0; i < split(...); i++)` or `if (split(...) >= N)`), so a
+ * caller that doesn't explicitly check the return value simply won't touch
+ * *tokens -- it will not dereference NULL, unlike the previous version.
+ *
+ * This also fixes a pre-existing bug where per-token buffers were sized
+ * with `sizeof(char*)` (8 bytes per character on 64-bit) instead of
+ * `sizeof(char)` -- harmless (over-allocation) but wasteful.
  */
 int split(const char* txt, char delim, char*** tokens)
 {
-	int* tklen, * t, count = 1;
-	char** arr, * p = (char*)txt;
+	*tokens = NULL;
+	if (txt == NULL) {
+		return 0;
+	}
 
-	while (*p != '\0') if (*p++ == delim) count += 1;
-	t = tklen = calloc(count, sizeof(int));
-	for (p = (char*)txt; *p != '\0'; p++) *p == delim ? *t++ : (*t)++;
-	*tokens = arr = malloc(count * sizeof(char*));
-	t = tklen;
-	p = *arr++ = calloc(*(t++) + 1, sizeof(char*)); // TODO: Dereferencing NULL pointer 'arr' and 't'. 
-	while (*txt != '\0')
-	{
-		if (*txt == delim)
-		{
-			p = *arr++ = calloc(*(t++) + 1, sizeof(char*));
-			txt++;
+	// First pass: count fields and the length of each one.
+	int count = 1;
+	for (const char* p = txt; *p != '\0'; p++) {
+		if (*p == delim) {
+			count += 1;
 		}
-		else *p++ = *txt++; // TODO: Dereferencing NULL pointer 'p'
+	}
+
+	int* tklen = calloc((size_t)count, sizeof(int));
+	if (tklen == NULL) {
+		return 0;
+	}
+
+	int idx = 0;
+	for (const char* p = txt; *p != '\0'; p++) {
+		if (*p == delim) {
+			idx++;
+		}
+		else {
+			tklen[idx]++;
+		}
+	}
+
+	char** arr = malloc((size_t)count * sizeof(char*));
+	if (arr == NULL) {
+		free(tklen);
+		return 0;
+	}
+
+	// Allocate each token's buffer up front, so we can safely unwind if
+	// any single allocation fails partway through.
+	for (int i = 0; i < count; i++) {
+		arr[i] = calloc((size_t)tklen[i] + 1, sizeof(char));
+		if (arr[i] == NULL) {
+			for (int j = 0; j < i; j++) {
+				free(arr[j]);
+			}
+			free(arr);
+			free(tklen);
+			return 0;
+		}
 	}
 	free(tklen);
+
+	// Second pass: copy characters into their token buffers.
+	idx = 0;
+	char* dst = arr[0];
+	for (const char* p = txt; *p != '\0'; p++) {
+		if (*p == delim) {
+			idx++;
+			dst = arr[idx];
+		}
+		else {
+			*dst++ = *p;
+		}
+	}
+
+	*tokens = arr;
 	return count;
 }
 
 void processPacket(char* packet, char** fromUser, char** fromSite, char** fromRoom, char** toUser, char** msgExt, char** toRoom, char** body)
-{
+{	
+    // Default every field to a safe, non-NULL empty string first. If
+	// split() fails (allocation failure) or the packet doesn't contain
+	// enough delimited fields, callers still get valid pointers instead
+	// of uninitialized/garbage ones -- previously, callers that didn't
+	// initialize their own char* locals before calling this (bridge.c's
+	// clientProcess loop, for one) would pass those garbage pointers to
+	// strlen()/strcmp() further down.
+	static char empty[] = "";
+	*fromUser = *fromSite = *fromRoom = *toUser = *msgExt = *toRoom = *body = empty;
+
 	char** field;
 	int fieldCount = split(packet, '~', &field);
 	if (fieldCount >= 7) {
@@ -163,6 +225,8 @@ void processPacket(char* packet, char** fromUser, char** fromSite, char** fromRo
 }
 
 void parseStats(char* stats, char** bbses, char** rooms, char** users, char** activity) {
+	static char empty[] = "";
+	*bbses = *rooms = *users = *activity = empty;
 
 	char** stat;
 	int statCount = split(stats, ' ', &stat);
@@ -499,6 +563,79 @@ char _getch() {
 
 void Sleep(int ms) {
     usleep(ms * 1000);
+}
+
+/**
+ * Bounded, always-NUL-terminating replacement for the Windows secure-CRT
+ * strcpy_s() on POSIX platforms. Unlike strncpy(), this guarantees dest is
+ * NUL-terminated even when source is longer than destsize (it truncates
+ * rather than leaving dest unterminated, which previously allowed
+ * out-of-bounds reads by every downstream strlen()/strcat()/printf("%s")
+ * call on a truncated buffer).
+ */
+int safe_strcpy_s(char* dest, size_t destsize, const char* source) {
+    if (dest == NULL || destsize == 0) {
+        return -1;
+    }
+    if (source == NULL) {
+        dest[0] = '\0';
+        return -1;
+    }
+    size_t srclen = strlen(source);
+    size_t copylen = (srclen >= destsize) ? destsize - 1 : srclen;
+    memmove(dest, source, copylen);
+    dest[copylen] = '\0';
+    return 0;
+}
+
+/**
+ * Bounded, always-NUL-terminating replacement for strncpy_s(). Copies at
+ * most `count` bytes from source, but never more than destsize-1, and
+ * always NUL-terminates dest.
+ */
+int safe_strncpy_s(char* dest, size_t destsize, const char* source, size_t count) {
+    if (dest == NULL || destsize == 0) {
+        return -1;
+    }
+    if (source == NULL) {
+        dest[0] = '\0';
+        return -1;
+    }
+    size_t srclen = strlen(source);
+    size_t copylen = (count < srclen) ? count : srclen;
+    if (copylen >= destsize) {
+        copylen = destsize - 1;
+    }
+    memmove(dest, source, copylen);
+    dest[copylen] = '\0';
+    return 0;
+}
+
+/**
+ * Bounds-checked replacement for strcat_s(). The previous POSIX shim mapped
+ * this directly to plain strcat(), which ignored the size bound entirely --
+ * this was a genuine unbounded stack buffer overflow anywhere strcat_s()
+ * was used with network-derived data (word wrapping, log-string building,
+ * CTCP reply formatting, etc). This version truncates safely and always
+ * NUL-terminates dest, and refuses to touch dest if it isn't already
+ * properly terminated within destsize (which indicates dest is already in
+ * a corrupted/unsafe state).
+ */
+int safe_strcat_s(char* dest, size_t destsize, const char* source) {
+    if (dest == NULL || destsize == 0 || source == NULL) {
+        return -1;
+    }
+    size_t destlen = strnlen(dest, destsize);
+    if (destlen >= destsize) {
+        // dest has no NUL within destsize bytes -- refuse to append blindly.
+        return -1;
+    }
+    size_t remaining = destsize - destlen - 1;
+    size_t srclen = strlen(source);
+    size_t copylen = (srclen < remaining) ? srclen : remaining;
+    memmove(dest + destlen, source, copylen);
+    dest[destlen + copylen] = '\0';
+    return 0;
 }
 
 int _snprintf_s(char* buffer, size_t sizeOfBuffer, size_t count, const char* format, ...) {

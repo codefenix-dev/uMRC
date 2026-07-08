@@ -12,6 +12,9 @@ v105 - TBA:
   - Display fixes to status bar when accessing scrollback or mentions with a 
     hotkey (i.e.: UP & PGUP).  
   - /mentions now includes direct messages in addition to standard mentions.
+  - Modified OpenDoors library to add handling for ESC[F sequence sent from
+    certain terminals when pressing the END key.
+  - Various security and performance fixes.
   - New theme contributed by Winzlo!
 
 

@@ -1470,7 +1470,6 @@ void processUserCommand(char* cmd, char* params) {
         int nextspcidx = indexOfChar(params, ' ');
         if (nextspcidx > 0) {
             getSubStr(params, target, 0, nextspcidx);
-            ustr(params);
             _snprintf_s(ctcp_data, sizeof(ctcp_data), -1, "%s %s", target, params + nextspcidx + 1);
             sendCtcpPacket(&mrcSock, (strcmp(target, "*") == 0 || target[0] == '#') ? "" : target, "[CTCP]", ctcp_data);
         }
@@ -1708,14 +1707,40 @@ void processServerMessage(char* body, char* toUser) {
 
 void processCtcpCommand(char* body, char* toUser, char* fromUser) {
 
-    // TODO: - This works, but could be written better.. 
-
     if (strncmp(body, "[CTCP] ", 7) == 0 && (_stricmp(toUser, user.chatterName) == 0 || strlen(toUser) == 0))
     {
+        // body is expected to look like:
+        //   "[CTCP] <senderName> <target> <cmd> [args...]"
+        // (see how "ctcp" the slash-command builds ctcp_data as
+        // "target cmd..." and sendCtcpPacket wraps that as
+        // "p senderName data" -- so two tokens, sender name and target,
+        // are embedded before the actual command).
+        //
+        // The previous version located <cmd> by adding strlen(fromUser) and
+        // strlen(toUser) -- lengths of separate packet fields -- to a fixed
+        // offset, assuming they matched the text actually embedded in body.
+        // Nothing guarantees that, so a body that doesn't match the packet's
+        // fromUser/toUser fields (malformed, or simply a different/older
+        // client) could push that offset past the end of body, and
+        // strcpy_s() would then start reading from wherever that landed.
+        //
+        // Instead, find <cmd>'s start by walking body's own content: skip
+        // the literal "[CTCP] " prefix, then skip past the next two
+        // space-delimited tokens (sender name, then target).
+        char* cursor = body + 7;
+        for (int i = 0; i < 2; i++) {
+            cursor = strchr(cursor, ' ');
+            if (cursor == NULL || *(cursor + 1) == '\0') {
+                return; // malformed CTCP command -- no command portion present
+            }
+            cursor += 1;
+        }
+        char* cmdStart = cursor;
+
         char cmdStr[80] = "";
         char repStr[80] = "";
 
-        strcpy_s(cmdStr, sizeof(cmdStr), body + 7 + strlen(fromUser) + (strlen(toUser) == 0 ? 1 : strlen(toUser)) + 2);
+        strcpy_s(cmdStr, sizeof(cmdStr), cmdStart);
 
         if (_strnicmp(cmdStr, "VERSION", 7) == 0) {
             _snprintf_s(repStr, sizeof(repStr), -1, "VERSION %s(%c) v%s.%s %s [%s]", TITLE, tolower(PLATFORM[0]), PROTOCOL_VERSION, UMRC_VERSION, COMPILE_DATE, AUTHOR_INITIALS);
@@ -1724,7 +1749,10 @@ void processCtcpCommand(char* body, char* toUser, char* fromUser) {
             _snprintf_s(repStr, sizeof(repStr), -1, "TIME %s ", getCtcpDatetime());
         }
         else if (_strnicmp(cmdStr, "PING", 4) == 0) {
-            _snprintf_s(repStr, sizeof(repStr), -1, "PING %s", cmdStr + 5);
+            // "PING" alone (4 chars, no trailing argument) is valid input --
+            // cmdStr + 5 would read past the end of the string in that case.
+            const char* pingArg = (strlen(cmdStr) > 5) ? cmdStr + 5 : "";
+            _snprintf_s(repStr, sizeof(repStr), -1, "PING %s", pingArg);
         }
         else if (_strnicmp(cmdStr, "CLIENTINFO", 10) == 0) {
             _snprintf_s(repStr, sizeof(repStr), -1, "CLIENTINFO VERSION TIME PING CLIENTINFO");
@@ -1735,11 +1763,17 @@ void processCtcpCommand(char* body, char* toUser, char* fromUser) {
         sendCtcpPacket(&mrcSock, fromUser, "[CTCP-REPLY]", repStr);
     }
     else if (strncmp(body, "[CTCP-REPLY] ", 13) == 0 && _stricmp(toUser, user.chatterName) == 0) {
+        // Same fix applied here: locate the reply text by finding the space
+        // after the embedded sender name in body, rather than computing
+        // "14 + strlen(fromUser)" and trusting it lines up.
+        char* replyText = strchr(body + 13, ' ');
         char resp[200] = ""; // needs to be long enough in case of lengthy responses
         strcat_s(resp, sizeof(resp), "* |14[CTCP-REPLY] |10");
         strcat_s(resp, sizeof(resp), fromUser);
         strcat_s(resp, sizeof(resp), " |15");
-        strcat_s(resp, sizeof(resp), body + (14 + strlen(fromUser)));
+        if (replyText != NULL && *(replyText + 1) != '\0') {
+            strcat_s(resp, sizeof(resp), replyText + 1);
+        }
         queueIncomingMessage(resp, false);
         od_sleep(20);
     }
@@ -1765,7 +1799,11 @@ void* handleIncomingMessages(void* lpArg) {
 
         char inboundData[DATA_LEN] = "";
 
-        while ((iResult = recv(mrcSock, inboundData, DATA_LEN, 0)) != 0 && gIsInChat) { // continue till disconnected       
+        // Reserve the last byte for a guaranteed NUL terminator -- recv() does
+        // not NUL-terminate, and a full-size read previously left no room for
+        // one, so downstream split()/strlen() calls could read past the end
+        // of this buffer.
+        while ((iResult = recv(mrcSock, inboundData, DATA_LEN - 1, 0)) != 0 && gIsInChat) { // continue till disconnected       
             if (iResult == -1) {
                 if (WSAGetLastError() == WSAEMSGSIZE) { // server has more data to send than the buffer can get in one call                   
                     continue; // iterate again to get more data
@@ -1777,6 +1815,9 @@ void* handleIncomingMessages(void* lpArg) {
             else {
                 break;
             }
+        }
+        if (iResult > 0) {
+            inboundData[iResult] = '\0';
         }
 
         if (!gIsInChat) { // user left chat.. none of the below needs to be executed

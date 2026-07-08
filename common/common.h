@@ -28,9 +28,20 @@ HANDLE hCon; // needed for setting console colors and clearing screen
 #include <errno.h>
 #include <stdarg.h>
 
-#define strcpy_s(dest, count, source)                         strncpy((dest), (source), (count))
-#define strncpy_s(dest, sizeofDest, source, max)              strncpy((dest), (source), (max))
-#define strcat_s(dest, max, source)                           strcat((dest), (source))
+// NOTE: strncpy()/strcat() do NOT provide the same safety guarantees as the
+// Windows secure-CRT strcpy_s/strncpy_s/strcat_s functions they were standing
+// in for: strncpy() does not guarantee NUL-termination when the source is
+// >= the destination size, and plain strcat() ignores any size bound
+// entirely. Both gaps allowed real overflow/over-read bugs on Linux/macOS
+// builds. These now route through bounds-checked, always-NUL-terminating
+// helpers (defined in common.c) instead.
+int safe_strcpy_s(char* dest, size_t destsize, const char* source);
+int safe_strncpy_s(char* dest, size_t destsize, const char* source, size_t count);
+int safe_strcat_s(char* dest, size_t destsize, const char* source);
+
+#define strcpy_s(dest, count, source)                         safe_strcpy_s((dest), (count), (source))
+#define strncpy_s(dest, sizeofDest, source, max)              safe_strncpy_s((dest), (sizeofDest), (source), (max))
+#define strcat_s(dest, max, source)                           safe_strcat_s((dest), (max), (source))
 #define _strdup(s)                                            strdup((s))
 #define _stricmp(s1, s2)                                      strcasecmp((s1), (s2))
 #define _strnicmp(s1, s2, n)                                  strncasecmp((s1), (s2), (n))             
@@ -81,7 +92,7 @@ int _snprintf_s(char* buffer, size_t sizeOfBuffer, size_t count, const char* for
 #define UMRC_VERSION "105"
 #define YEAR_AND_AUTHOR "2026 Craig Hendricks (aka Codefenix)"
 #define AUTHOR_INITIALS "cf" // alias initials
-#define COMPILE_DATE "2026-07-06"
+#define COMPILE_DATE "2026-07-08"
 
 // These defaults should remain the same, and
 // not be changed without a good reason.

@@ -360,8 +360,13 @@ void* clientProcess(void* lpArg) {
     // This process thread is for receiving data from the client on this socket.
     do {
         char clientPacket[PACKET_LEN] = "";
-        iResult = recv(pSock, clientPacket, PACKET_LEN, 0);
+        // Reserve the last byte for a guaranteed NUL terminator -- recv() does
+        // not NUL-terminate, and reading a full PACKET_LEN bytes left no room
+        // for one, so a full-size read caused every downstream strstr()/
+        // strlen() call to read past the end of this buffer.
+        iResult = recv(pSock, clientPacket, PACKET_LEN - 1, 0);
         if (iResult > 0) {
+            clientPacket[iResult] = '\0';
 
             if (strlen(thisUser) == 0) {
                 char** field;
@@ -722,8 +727,18 @@ void mrcHostProcess(struct settings cfg) {
             }
             strcpy_s(partialPacket, sizeof(partialPacket), "");
         }
-
-        iResult = usingSSL ? SSL_read(mrcHostSsl, inboundData + bytesread, DATA_LEN) : recv(mrcHostSock, inboundData + bytesread, DATA_LEN, 0);
+		
+        // IMPORTANT: leave room for the bytes already copied into inboundData
+        // (bytesread) plus a trailing NUL. Previously this always requested
+        // DATA_LEN bytes regardless of bytesread, which could write past the
+        // end of inboundData whenever a partial packet was carried over from
+        // the previous loop iteration -- a remotely-triggerable stack buffer
+        // overflow driven by data from the MRC host connection.
+        size_t maxRead = (bytesread < DATA_LEN - 1) ? (DATA_LEN - 1 - bytesread) : 0;
+        iResult = usingSSL ? SSL_read(mrcHostSsl, inboundData + bytesread, (int)maxRead) : recv(mrcHostSock, inboundData + bytesread, maxRead, 0);
+        if (iResult > 0) {
+            inboundData[bytesread + iResult] = '\0'; // guarantee NUL-termination before treating this as a C string
+        }
               
         if (gConnectionIsDown) {
             break;
@@ -757,7 +772,7 @@ void mrcHostProcess(struct settings cfg) {
                     continue;
                 }    
 
-                char* fromUser, * fromSite, * fromRoom, * toUser, * msgExt, * toRoom, * body;
+                char* fromUser = "", * fromSite = "", * fromRoom = "", * toUser = "", * msgExt = "", * toRoom = "", * body = "";
                 processPacket(packet, &fromUser, &fromSite, &fromRoom, &toUser, &msgExt, &toRoom, &body);        
 
                 for (int iml = 0; iml < MAX_LATENCIES; iml++) {
@@ -818,7 +833,7 @@ void mrcHostProcess(struct settings cfg) {
                         sendCmdPacket("", "", "INFOSYS:%s", cfg.sys);
                         sendCmdPacket("", "", "INFODSC:%s", cfg.dsc);
                         sendCmdPacket(gProcessID, "", "IMALIVE:%s", cfg.name);
-                        char capStr[20] = "";
+                        char capStr[30] = "";
                         _snprintf_s(capStr, sizeof(capStr), -1, "%s%s%s", "MCI", (cfg.ssl ? " SSL" : ""), " CTCP GOODBYE");
                         sendCmdPacket("", "", "CAPABILITIES: %s", capStr);
                         Sleep(20);
