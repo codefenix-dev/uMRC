@@ -833,9 +833,9 @@ void mrcHostProcess(struct settings cfg) {
                         sendCmdPacket("", "", "INFOSYS:%s", cfg.sys);
                         sendCmdPacket("", "", "INFODSC:%s", cfg.dsc);
                         sendCmdPacket(gProcessID, "", "IMALIVE:%s", cfg.name);
-                        char capStr[30] = "";
+                        char capStr[50] = "";
                         _snprintf_s(capStr, sizeof(capStr), -1, "%s%s%s", "MCI", (cfg.ssl ? " SSL" : ""), " CTCP GOODBYE");
-                        sendCmdPacket("", "", "CAPABILITIES: %s", capStr);
+                        sendCmdPacket(UMRC_BRIDGE_HASH, "", "CAPABILITIES: %s", capStr);
                         Sleep(20);
 
                         // Inform the local clients that the reconnect occurred.

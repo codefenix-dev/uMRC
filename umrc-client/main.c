@@ -1403,6 +1403,11 @@ void processUserCommand(char* cmd, char* params) {
         strcpy_s(newRoom, sizeof(newRoom), strReplace(newRoom, " ", "_")); // Single word
         stripPipeCodes(newRoom); // No pipe codes
 
+        if (strlen(newRoom) == 0) {
+            displayMessage("|15* |14No room specified|07.", false);
+            return;
+        }
+
         // Let the user know they're trying to join a room they're already in.
         // Not necessarily needed, since the server doesn't consider the action
         // invalid, but we'll inform the user anyway. 
