@@ -92,12 +92,7 @@ int _snprintf_s(char* buffer, size_t sizeOfBuffer, size_t count, const char* for
 #define UMRC_VERSION "105"
 #define YEAR_AND_AUTHOR "2026 Craig Hendricks (aka Codefenix)"
 #define AUTHOR_INITIALS "cf" // alias initials
-#define COMPILE_DATE "2026-07-09"
-
-// SHA256 digest from bridge.c source file. Used by umrc-bridge when
-// sending the CAPABILITIES packet.
-// This should be recalculated any time bridge.c is modified. 
-#define UMRC_BRIDGE_HASH "75996d4157a1b578d81086d3b6332ce8ee1d674622af5b07d52f0baebf06950d"
+#define COMPILE_DATE "2026-07-10"
 
 
 // These defaults should remain the same, and

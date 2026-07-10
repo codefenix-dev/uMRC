@@ -9,12 +9,13 @@ v105 - TBA:
     END only.
   - Fix for redisplaying input buffer text if there was any text in the input
     buffer before entering scrollback.
-  - Display fixes to status bar when accessing scrollback or mentions with a 
+  - Fix for status bar display when accessing scrollback or mentions with a 
     hotkey (i.e.: UP & PGUP).  
   - /mentions now includes direct messages in addition to standard mentions.
   - Modified OpenDoors library to add handling for ESC[F sequence sent from
     certain terminals when pressing the END key.
-  - Various security and performance fixes.
+  - Fix for users who /join without supplying a room name.
+  - Various security and performance fixes (Claude AI assisted).
   - New theme contributed by Winzlo!
 
 

@@ -69,6 +69,7 @@ bool gHasConnected = false;
 int gRetry = 0;
 char gFromSite[140] = "";
 char gProcessID[8] = "";
+char gHash[65] = "";
 
 #define DEFAULT_MAX_RETRIES 0
 #define DEFAULT_RETRY_WAIT_SECONDS 5
@@ -96,6 +97,58 @@ struct latencyTracker {
 struct latencyTracker lt[MAX_LATENCIES];
 
 #pragma endregion
+
+
+
+
+int calculate_sha256_of_file(const char* filepath, char* output_hex_buf) {
+    FILE* file = fopen(filepath, "rb");
+    if (!file) {
+        return -1;
+    }
+
+    EVP_MD_CTX* mdctx = EVP_MD_CTX_new();
+    if (!mdctx) {
+        fclose(file);
+        return -1;
+    }
+
+    if (EVP_DigestInit_ex(mdctx, EVP_sha256(), NULL) != 1) {
+        EVP_MD_CTX_free(mdctx);
+        fclose(file);
+        return -1;
+    }
+
+    unsigned char buffer[4096];
+    size_t bytes_read;
+    while ((bytes_read = fread(buffer, 1, 4096, file)) > 0) {
+        if (EVP_DigestUpdate(mdctx, buffer, bytes_read) != 1) {
+            EVP_MD_CTX_free(mdctx);
+            fclose(file);
+            return -1;
+        }
+    }
+
+    unsigned char hash[EVP_MAX_MD_SIZE];
+    unsigned int hash_len;
+    if (EVP_DigestFinal_ex(mdctx, hash, &hash_len) != 1) {
+        EVP_MD_CTX_free(mdctx);
+        fclose(file);
+        return -1;
+    }
+
+    // Convert raw binary hash to hex string
+    for (unsigned int i = 0; i < hash_len; i++) {
+        _snprintf_s(output_hex_buf + (i * 2), sizeof(output_hex_buf), -1, "%02x", hash[i]);
+    }
+    output_hex_buf[hash_len * 2] = '\0';
+
+    EVP_MD_CTX_free(mdctx);
+    fclose(file);
+    return 0;
+}
+
+
 
 int64_t currentTimeMillis() {
 #if defined(WIN32) || defined(_MSC_VER)  
@@ -735,7 +788,7 @@ void mrcHostProcess(struct settings cfg) {
         // the previous loop iteration -- a remotely-triggerable stack buffer
         // overflow driven by data from the MRC host connection.
         size_t maxRead = (bytesread < DATA_LEN - 1) ? (DATA_LEN - 1 - bytesread) : 0;
-        iResult = usingSSL ? SSL_read(mrcHostSsl, inboundData + bytesread, (int)maxRead) : recv(mrcHostSock, inboundData + bytesread, maxRead, 0);
+        iResult = usingSSL ? SSL_read(mrcHostSsl, inboundData + bytesread, (int)maxRead) : recv(mrcHostSock, inboundData + bytesread, (int)maxRead, 0);
         if (iResult > 0) {
             inboundData[bytesread + iResult] = '\0'; // guarantee NUL-termination before treating this as a C string
         }
@@ -835,7 +888,7 @@ void mrcHostProcess(struct settings cfg) {
                         sendCmdPacket(gProcessID, "", "IMALIVE:%s", cfg.name);
                         char capStr[50] = "";
                         _snprintf_s(capStr, sizeof(capStr), -1, "%s%s%s", "MCI", (cfg.ssl ? " SSL" : ""), " CTCP GOODBYE");
-                        sendCmdPacket(UMRC_BRIDGE_HASH, "", "CAPABILITIES: %s", capStr);
+                        sendCmdPacket(gHash, "", "CAPABILITIES:%s", capStr);
                         Sleep(20);
 
                         // Inform the local clients that the reconnect occurred.
@@ -948,9 +1001,11 @@ int main(int argc, char** argv)
     hCon = GetStdHandle(STD_OUTPUT_HANDLE);
     if (hCon == INVALID_HANDLE_VALUE) return 1;
     _snprintf_s(gProcessID, sizeof(gProcessID), -1, "%d", GetCurrentProcessId());
+    calculate_sha256_of_file("umrc-bridge.exe", gHash);
 #else 
     pthread_t hClient;
     _snprintf_s(gProcessID, sizeof(gProcessID), -1, "%d", getpid());
+    calculate_sha256_of_file("umrc-bridge", gHash);
 #endif
 
     for (int i = 0; i < MAX_CLIENTS; i++) {
@@ -958,6 +1013,7 @@ int main(int argc, char** argv)
     }
 
     initializeLt();
+
 
 
     // logo time...

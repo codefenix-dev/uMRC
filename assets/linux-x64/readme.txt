@@ -1,5 +1,5 @@
  uMRC  ┌──── ▄█▀▀▀▀▀█▄ ───┬───┬───┬─┐
- v104┌──── ▄██ ▄███ ▀▀█▄ ·────────┐ ┤
+ v105┌──── ▄██ ▄███ ▀▀█▄ ·────────┐ ┤
    ┌──── ▄█▀▀ ▐█▀ ▀ █ ██  ▄ ▄ ▄ · │ │
  ┌──── ▄█▀ ▄██▄▀█▄▄██ ██  █████ · │ ┤
 ┌─── ▄█▀ ▐██▀▀█▌ ▀▀▀ ▄█▀  ▐▄█▄▌   │ │
@@ -113,14 +113,14 @@ connections from the same BBS.
 
    Supported pipe color codes:
 
-    |01 ... dark blue
-    |02 ... dark green
-    |03 ... dark cyan
-    |04 ... dark red
-    |05 ... dark magenta
-    |06 ... brown (dark yellow)
-    |07 ... gray
-    |08 ... dark gray (bright black)
+    |01 ... dark blue                       |16 ... black background
+    |02 ... dark green                      |17 ... blue background
+    |03 ... dark cyan                       |18 ... green background
+    |04 ... dark red                        |19 ... cyan background
+    |05 ... dark magenta                    |20 ... red background
+    |06 ... brown (dark yellow)             |21 ... magenta background
+    |07 ... gray                            |22 ... brown background
+    |08 ... dark gray (bright black)        |23 ... gray background
     |09 ... bright blue
     |10 ... bright green
     |11 ... bright cyan
@@ -128,14 +128,6 @@ connections from the same BBS.
     |13 ... bright magenta
     |14 ... yellow
     |15 ... white
-    |16 ... black background
-    |17 ... blue background
-    |18 ... green background
-    |19 ... cyan background
-    |20 ... red background
-    |21 ... magenta background
-    |22 ... brown background
-    |23 ... gray background
 
    After you've entered your information, it will be displayed to you,
    with the option to re-enter everything, or quit. Your settings will
@@ -247,7 +239,7 @@ Chat sounds:
 
    Console beeps can optionally be heard any time the user's name
    is mentioned in chat. These beeps are disabled by default. They
-   can be toggled on or off with the /sound command while in-chat,
+   can be toggled on or off with the /sound command while in-chat.
 
 Join Message:
 
@@ -335,22 +327,14 @@ Any other lines or blank lines are ignored.
 The following standard OpenDoors strings are recognized as valid foreground 
 colors:
 
-	black  
-	blue  
-	green  
-	cyan  
-	red  
-	magenta  
-	brown  
-	grey  
-	bright black  
-	bright blue  
-	bright green  
-	bright cyan  
-	bright red  
-	bright magenta  
-	bright yellow  
-	bright white 
+	black               	bright black  
+	blue                	bright blue  
+	green               	bright green  
+	cyan                	bright cyan  
+	red                 	bright red  
+	magenta             	bright magenta 
+	brown               	bright yellow  
+	grey                	bright white 
 
 
 The following are recognized as valid background color strings:

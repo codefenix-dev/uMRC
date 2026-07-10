@@ -1380,14 +1380,22 @@ void displayPipeFile(char* filename) {
 #else
     extFile=fopen(filename, "r");
 #endif            
-
+    int lineCounter = 0;
     if (extFile != NULL) {
         char line[200] = "";
         while (fgets(line, sizeof(line), extFile)) {
             od_printf("\r"); // why???
             od_disp_emu(pipeToAnsi(line), TRUE);
+
+            if (lineCounter >= od_control.user_screen_length - 2) {
+                doPause();
+                lineCounter = 0;
+            }
+
+            lineCounter = lineCounter + 1;
         }
         fclose(extFile);
+        od_printf("\r\n");
     }
 }
 
@@ -1896,23 +1904,27 @@ void* handleIncomingMessages(void* lpArg) {
 
                     // Direct message (DirectMsg)
                     else if (strlen(toUser) != 0 && strlen(fromUser) != 0) {
+                        gMentionCount = gMentionCount + 1;
+                        gMentionCountChanged = true;
+                        if (user.chatSounds) {
+                            od_putch(7);
+                        }
                         queueIncomingMessage(body, true);
                         strcpy_s(gLastDirectMsgFrom, sizeof(gLastDirectMsgFrom), fromUser);
                     }
 
                     // Standard message
                     else {
-                        bool mentioned = false;
-
+                        //bool mentioned = false;
                         if (_stricmp(fromUser, user.chatterName) != 0 && strContainsStrI(body, user.chatterName)) {
                             gMentionCount = gMentionCount + 1;
-                            mentioned = true;
+                            //mentioned = true;
                             gMentionCountChanged = true;
                             if (user.chatSounds) {
                                 od_putch(7);
                             }
                         }
-                        queueIncomingMessage(body, mentioned);
+                        queueIncomingMessage(body, gMentionCountChanged);
                     }
                 }
 
@@ -2488,7 +2500,6 @@ int main(int argc, char** argv)
         od_exit(-1, FALSE);
     }
 
-    // TODO: Make these configurable in mrc.cfg? 
     od_control.od_inactivity = 0;     
     od_control.od_maxtime = 0;           
     od_control.user_ansi = TRUE;
