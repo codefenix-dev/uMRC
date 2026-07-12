@@ -25,8 +25,8 @@ What is uMRC?
 uMRC is a full-featured, cross-platform Multi-Relay Chat client for BBSes. It
 runs as a native door on your system, letting you access Multi-Relay Chat
 without having to install and maintain a Mystic BBS instance with Python. In
-other words, as long as your BBS is capable of running 32-bit doors, then you
-and your users can participate in MRC.
+other words, as long as your BBS is capable of running DOOR32.SYS doors, then 
+you and your users can participate in MRC.
 
 It should be compatible with any DOOR32.SYS capable BBS such as EleBBS, WWIV,
 Synchronet, Mystic, and possibly others. Linux builds have been tested on
@@ -154,7 +154,7 @@ connections from the same BBS.
    The -W option can be used to specify the wait time between retries
    (e.g.: -W10 for 10 seconds). The default is 5 seconds.
 
-4. Set up a menu item to launch a 32-bit door on your BBS.
+4. Set up a menu item to launch a native door on your BBS.
 
    The command line syntax is:
 

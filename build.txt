@@ -112,11 +112,10 @@ Windows (x86 & x64):
 
   Optional:
 
-  If you wish to compile 64-bit executables of the setup and umrc-bridge
-  programs, change "x86" to "x64" in the Solution Platforms dropdown near the
-  top of the Visual Studio window. Right click the "setup" project under
-  "Solution 'umrc'" in the Solution Explorer panel and select "Build". Do the
-  same for "umrc-bridge" (umrc-client will not build for x64 at this time).
+  If you wish to compile 64-bit executables, change "x86" to "x64" in the 
+  Solution Platforms dropdown near the top of the Visual Studio window, and then
+  rebuild the solution (see step #3 above).
+
   You will find the compiled EXEs and DLLs in a subfolder named "x64\Release"
   within the solution folder. You may replace the x86 EXEs and DLLs with these.
 

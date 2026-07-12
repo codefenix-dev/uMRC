@@ -3,7 +3,7 @@
 
 ## 💬 What is uMRC?
 
-uMRC is a full-featured, cross-platform [Multi-Relay Chat](https://status-na-multi.relaychat.net) client for BBSes. It runs as a native door on your system, letting you access Multi-Relay Chat without having to install and maintain a Mystic BBS instance or Python. In other words, as long as your BBS is capable of running 32-bit doors, then you and your users can participate in MRC.
+uMRC is a full-featured, cross-platform [Multi-Relay Chat](https://status-na-multi.relaychat.net) client for BBSes. It runs as a native door on your system, letting you access Multi-Relay Chat without having to install and maintain a Mystic BBS instance or Python. In other words, as long as your BBS is capable of running DOOR32.SYS doors, then you and your users can participate in MRC.
 
 
 <img width="949" height="694" alt="sschat" src="https://github.com/user-attachments/assets/e41b12b9-9383-49f5-b46e-d94b68159bec" />
@@ -85,7 +85,7 @@ basic instructions.
 
 3. Run **umrc-bridge**. This program is responsible for maintaining a
    connection to the MRC host and passing chat traffic back and forth
-   between the host and your BBS (called . It must run continuously in order for
+   between the host and your BBS. It must run continuously in order for
    umrc-client to work, so it's recommended to have this program
    launch on system startup. It will make automatic reconnection attempts
    as needed.
@@ -94,7 +94,7 @@ basic instructions.
    available umrc-bridge options.
 
 
-4. Set up a menu item to launch a 32-bit door on your BBS.
+4. Set up a menu item to launch a native door on your BBS.
 
    The command line syntax is:
 

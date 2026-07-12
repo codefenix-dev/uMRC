@@ -25,8 +25,8 @@ What is uMRC?
 uMRC is a full-featured, cross-platform Multi-Relay Chat client for BBSes. It
 runs as a native door on your system, letting you access Multi-Relay Chat
 without having to install and maintain a Mystic BBS instance with Python. In
-other words, as long as your BBS is capable of running 32-bit doors, then you
-and your users can participate in MRC.
+other words, as long as your BBS is capable of running DOOR32.SYS doors, then 
+you and your users can participate in MRC.
 
 It should be compatible with any DOOR32.SYS capable BBS such as EleBBS, WWIV,
 Synchronet, Mystic, and possibly others. Linux builds have been tested on
@@ -154,7 +154,7 @@ connections from the same BBS.
    The -W option can be used to specify the wait time between retries
    (e.g.: -W10 for 10 seconds). The default is 5 seconds.
 
-4. Set up a menu item to launch a 32-bit door on your BBS.
+4. Set up a menu item to launch a native door on your BBS.
 
    The command line syntax is:
 
@@ -274,6 +274,42 @@ The main menu shows a short list of options and the current status
 of the MRC Host as reported by umrc-bridge.
 
 
+Options:
+
+C Enter Chat:       Places the user into chat, automatically joining
+                    their default room.
+
+S Chatter Settings: Lets the user modify their options.
+
+I Instructions:     Shows a list of basic chat commands, as listed in
+                    the screens/help.ans file.
+
+Q Quit:             Exits back to the BBS.
+
+
+Basic Chat Usage:
+
+Upon entering chat, the user will be greeted with the message of the day
+and other messages from the MRC server.
+
+Anything the user types starting with a forward slash (/) will be treated
+as a chat command. For example, /help for a list of commands.
+
+Anything else the user types will be sent to the room as a chat message
+for others to read.
+
+Basic room stats are shown near the bottom of the screen above the user's
+text input, showing the current room, topic, user count, number of times
+the user was mentioned, latency, and input buffer (max input: 140). These
+stats update continuously throughout chat.
+
+The door should let the user remain in chat up to the number of minutes
+allowed by the BBS, and should not have an issue with any time spent
+idling.
+
+The user types /quit or /q to exit chat and return to the main menu.
+
+
 MRC Stats, as reported by umrc-bridge:
 
 State:    ONLINE or OFFLINE. 60 seconds or less since last ping = ONLINE
@@ -353,42 +389,6 @@ Bright white is used as the default foreground color, and black is the
 default background.   
 
 See the bitchx.ans or plate.ans files for example usage.
-
-
-Options:
-
-C Enter Chat:       Places the user into chat, automatically joining
-                    their default room.
-
-S Chatter Settings: Lets the user modify their options.
-
-I Instructions:     Shows a list of basic chat commands, as listed in
-                    the screens/help.ans file.
-
-Q Quit:             Exits back to the BBS.
-
-
-Basic Chat Usage:
-
-Upon entering chat, the user will be greeted with the message of the day
-and other messages from the MRC server.
-
-Anything the user types starting with a forward slash (/) will be treated
-as a chat command. For example, /help for a list of commands.
-
-Anything else the user types will be sent to the room as a chat message
-for others to read.
-
-Basic room stats are shown near the bottom of the screen above the user's
-text input, showing the current room, topic, user count, number of times
-the user was mentioned, latency, and input buffer (max input: 140). These
-stats update continuously throughout chat.
-
-The door should let the user remain in chat up to the number of minutes
-allowed by the BBS, and should not have an issue with any time spent
-idling.
-
-The user types /quit or /q to exit chat and return to the main menu.
 
 
 Meetups!

@@ -2,6 +2,8 @@ Change Log:
 
 v105 - TBA:
 
+  - Windows x86_64 build now ships with a 64-bit ODoors62.dll library file,
+    meaning the entire package is now 64-bit.
   - Added new client command: /cls
     Clears the visible chat area by inserting a screen's worth of rows to the 
     chat history.

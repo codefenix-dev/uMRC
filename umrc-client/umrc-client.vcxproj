@@ -154,6 +154,11 @@ xcopy ..\assets\themes ..\Release\themes /E /I /Y</Command>
       <AdditionalLibraryDirectories>..\lib\odoors\win-x64</AdditionalLibraryDirectories>
       <AdditionalDependencies>ODoorW.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>copy ..\lib\odoors\win-x64\*.dll ..\x64\Release /Y
+xcopy ..\assets\screens ..\x64\Release\screens /E /I /Y
+xcopy ..\assets\themes ..\x64\Release\themes /E /I /Y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\common\common.c" />
