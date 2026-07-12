@@ -94,6 +94,11 @@
       <AdditionalLibraryDirectories>..\lib\odoors\win-x86</AdditionalLibraryDirectories>
       <AdditionalDependencies>ODoorW.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>copy ..\lib\odoors\win-x86\*.dll ..\Debug /Y
+xcopy ..\assets\screens ..\Debug\screens /E /I /Y
+xcopy ..\assets\themes ..\Debug\themes /E /I /Y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -131,11 +136,16 @@ xcopy ..\assets\themes ..\Release\themes /E /I /Y</Command>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\lib\odoors\win-x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\lib\odoors\win-x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>ODoorW.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
     </Link>
+    <PostBuildEvent>
+      <Command>copy ..\lib\odoors\win-x64\*.dll ..\x64\Debug /Y
+xcopy ..\assets\screens ..\x64\Debug\screens /E /I /Y
+xcopy ..\assets\themes ..\x64\Debug\themes /E /I /Y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
