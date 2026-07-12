@@ -244,9 +244,9 @@ void getInputString(char* input, INT nMaxLength, unsigned char chMin, unsigned c
             else if (key >= chMin && key <= chMax) { // allowed characters
                 // Add the keystroke to the input string...            
                 if ((int)strlen(input) < nMaxLength-1) {
-                    char tmpipt[80] = "";
-                    _snprintf_s(tmpipt, sizeof(tmpipt), -1, "%s%c", input, key);
-                    strcpy_s(input, nMaxLength, tmpipt);
+                    int len = (int)strlen(input);
+                    input[len] = key;
+                    input[len + 1] = '\0';
                     updateInput = true;
                 }
             }
