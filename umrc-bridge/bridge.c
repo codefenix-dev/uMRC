@@ -102,7 +102,12 @@ struct latencyTracker lt[MAX_LATENCIES];
 
 
 int calculate_sha256_of_file(const char* filepath, char* output_hex_buf) {
-    FILE* file = fopen(filepath, "rb");
+	FILE* file;
+#if defined(WIN32) || defined(_MSC_VER)
+	fopen_s(&file, filepath, "rb");
+#else
+	file = fopen(filepath, "rb");
+#endif
     if (!file) {
         return -1;
     }

@@ -1,6 +1,6 @@
 Change Log:
 
-v105 - TBA:
+v105 - July 14, 2026:
 
   - Windows x86_64 build now ships with a 64-bit ODoors62.dll library file,
     meaning the entire package is now 64-bit.
@@ -17,6 +17,7 @@ v105 - TBA:
   - Modified OpenDoors library to add handling for ESC[F sequence sent from
     certain terminals when pressing the END key.
   - Fix for users who /join without supplying a room name.
+  - Reorganized the help file, getting it down to one page.
   - Various security and performance fixes (Claude AI assisted).
   - New theme contributed by Winzlo!
 
