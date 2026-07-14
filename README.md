@@ -9,7 +9,7 @@ uMRC is a full-featured, cross-platform [Multi-Relay Chat](https://status-na-mul
 <img width="949" height="694" alt="sschat" src="https://github.com/user-attachments/assets/e41b12b9-9383-49f5-b46e-d94b68159bec" />
 
 
-It should be compatible with any DOOR32.SYS capable BBS such as EleBBS, WWIV, Synchronet, Mystic, and others. It runs on Windows 7 and later.
+It should be compatible with any DOOR32.SYS capable BBS such as EleBBS, WWIV, Synchronet, Mystic, and others. It runs on Windows 7 and later, with a special Windows XP build also available.
 
 Pre-compiled Linux binaries are also available, or may be compiled from source using the Install Instructions below.
 
@@ -187,8 +187,9 @@ Type `/meetups` in chat for a current list of meetups.
 ## 💻 Technical Notes:
 
 uMRC is written in C, and was developed and compiled on Windows using
-Microsoft Visual Studio Community 2022. The Linux binaries were compiled on
-Ubuntu 22.04 using gcc.
+Microsoft Visual Studio Community 2022. The Windows XP build was compiled using
+Visual Studio 2017 and the v141_xp platform toolkit in order to specifically 
+target Windows XP. The Linux binaries were compiled on Ubuntu 22.04 using gcc.
 
 uMRC makes extensive use of threading, both in umrc-bridge and umrc-client.
 Separate threads are used for establishing connections to the MRC host,
@@ -198,7 +199,10 @@ handling user input while displaying incoming messages to the output window.
 Secure SSL sockets are implemented using [LibreSSL](https://www.libressl.org), a variant of OpenSSL. SSL
 is used only from the umrc-bridge to the MRC host, while local umrc-client
 connections to the umrc-bridge are made using standard TCP/IP sockets, using
-the same port number as selected in the Setup program.
+the same port number as selected in the Setup program. It's worth noting that
+a much older version of LibreSSL (2.5.5 from 2017) was used for the Windows XP
+build.
+
 
 You should NOT have ports 5000/5001 open on your firewall/router, since
 umrc-client makes OUTBOUND requests to the MRC host on ports 5000/5001.
