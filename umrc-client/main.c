@@ -23,6 +23,7 @@
 #pragma comment (lib, "AdvApi32.lib")
 #pragma comment (lib, "shell32.lib")
 
+CRITICAL_SECTION gChattersLock;
 #else
 
 #include <pthread.h>
@@ -31,7 +32,8 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <dirent.h>
-    
+
+static pthread_mutex_t gChattersLock = PTHREAD_MUTEX_INITIALIZER;
 #endif
 
 #include <sys/stat.h>
@@ -181,6 +183,20 @@ SOCKET mrcSock = INVALID_SOCKET;
 /**
  *  Pauses and waits for any key input from the user.
  */
+/**
+ * Converts pipe/MCI codes in str to ANSI and displays it via od_disp_emu(),
+ * then frees the converted string. pipeToAnsi() always returns a heap
+ * string the caller must free -- use this instead of calling
+ * od_disp_emu(pipeToAnsi(x), y) directly, which discarded the pointer and
+ * leaked it (and pipeToAnsi()'s internal intermediate allocations) on every
+ * single call.
+ */
+void dispEmuPipe(char* str, BOOL immediate) {
+    char* ansi = pipeToAnsi(str);
+    od_disp_emu(ansi, immediate);
+    free(ansi);
+}
+
 void doPause() {
     od_printf("\r\n `bright white`[`cyan`Press any key to continue`bright white`]`white` ");
     od_get_key(TRUE);
@@ -198,7 +214,7 @@ void getInputString(char* input, INT nMaxLength, unsigned char chMin, unsigned c
     tODInputEvent InputEvent;
 
     for (int i = 0; i < nMaxLength; i++) {
-        od_disp_emu(pipeToAnsi("|17 "), TRUE);
+        dispEmuPipe("|17 ", TRUE);
     }
     for (int i = 0; i < nMaxLength; i++) {
         od_putch('\b');
@@ -261,7 +277,7 @@ void getInputString(char* input, INT nMaxLength, unsigned char chMin, unsigned c
             }
         }
     }
-    od_disp_emu(pipeToAnsi("|16"), TRUE);
+    dispEmuPipe("|16", TRUE);
 }
 
 /**
@@ -288,7 +304,7 @@ void showPipeColors(int lo, int hi) {
     for (int i = lo; i <= hi; i++) {
         char c[15] = "";
         _snprintf_s(c, sizeof(c), -1, i < 17 ? "|%02d%02d " : "|00|%02d%02d ", i, i);
-        od_disp_emu(pipeToAnsi(c), TRUE);
+        dispEmuPipe(c, TRUE);
     }
 }
 
@@ -332,15 +348,15 @@ int editDisplayName(char* quitToWhere) {
         od_printf("``\r\n");
 
         od_printf("``Preview: ");
-        od_disp_emu(pipeToAnsi(gDisplayChatterName), TRUE);
+        dispEmuPipe(gDisplayChatterName, TRUE);
         od_printf("\r\n");
 
         od_printf("\r\n `bright magenta`P`bright white`) `white`Edit prefix `bright black`:           ``");
-        od_disp_emu(pipeToAnsi(prefixprev), TRUE);
+        dispEmuPipe(prefixprev, TRUE);
         od_printf("\r\n `bright magenta`C`bright white`) `white`Edit name color `bright black`:       ``");
-        od_disp_emu(pipeToAnsi(nameprev), TRUE);
+        dispEmuPipe(nameprev, TRUE);
         od_printf("\r\n `bright magenta`S`bright white`) `white`Edit suffix `bright black`:           ``");
-        od_disp_emu(pipeToAnsi(user.chatterNameSuffix), TRUE);
+        dispEmuPipe(user.chatterNameSuffix, TRUE);
 
         od_printf("``\r\n\r\n");
         od_printf(" `cyan`R`bright white`) `white`Randomize!");
@@ -706,7 +722,7 @@ void enterChatterSettings(char* quitToWhere) {
         od_printf("``\r\n");
 
         od_printf(" `bright magenta`1`bright white`) `white`Display name:  ");
-        od_disp_emu(pipeToAnsi(gDisplayChatterName), TRUE);
+        dispEmuPipe(gDisplayChatterName, TRUE);
         od_printf("``\r\n");
 
         od_printf(" `bright magenta`2`bright white`) `white`Default room:  `bright white`%s\r\n", user.defaultRoom);
@@ -714,17 +730,17 @@ void enterChatterSettings(char* quitToWhere) {
         od_printf(" `bright magenta`3`bright white`) `white`Text color:    ");
         char sampletext[80] = "";
         _snprintf_s(sampletext, sizeof(sampletext), -1, "|%02dSample text using color #%d...", user.textColor, user.textColor);
-        od_disp_emu(pipeToAnsi(sampletext), TRUE);
+        dispEmuPipe(sampletext, TRUE);
         od_printf("``\r\n");
 
         od_printf(" `bright magenta`4`bright white`) `white`Chat sounds:   `bright white`%s\r\n", user.chatSounds ? "ON" : "OFF");
 
         od_printf(" `bright magenta`5`bright white`) `white`Enter message: ");
-        od_disp_emu(pipeToAnsi(user.joinMessage), TRUE);
+        dispEmuPipe(user.joinMessage, TRUE);
         od_printf("``\r\n");
 
         od_printf(" `bright magenta`6`bright white`) `white`Exit message:  ");
-        od_disp_emu(pipeToAnsi(user.exitMessage), TRUE);
+        dispEmuPipe(user.exitMessage, TRUE);
         od_printf("``\r\n");
 
         od_printf(" `bright magenta`7`bright white`) `white`Theme:         `bright white`%s\r\n", user.theme);
@@ -924,9 +940,9 @@ void scrollToScrollbackSection(char** scrollLines, int start, int end, int heigh
         od_set_cursor(row, 1);
         od_clr_line();
         if (i == start) {
-            od_disp_emu(pipeToAnsi(startcolor), TRUE);
+            dispEmuPipe(startcolor, TRUE);
         }
-        od_disp_emu(pipeToAnsi(scrollLines[i]), TRUE);
+        dispEmuPipe(scrollLines[i], TRUE);
         row = row + 1;
     }
 }
@@ -1068,6 +1084,7 @@ void enterScrollBack(int initialScroll, int mode) {
             }
         }
     }
+    freeSplitResult(scrollLines, scrollLineCount);
 
     // refresh the scrollLines and re-display the latest lines when exiting scrollback, in 
     // case any were received while scrolling.
@@ -1077,7 +1094,7 @@ void enterScrollBack(int initialScroll, int mode) {
         scrollPos = 0;
     }
     scrollToScrollbackSection(scrollLines, scrollPos, scrollLineCount, height);
-    free(scrollLines); // needed?
+    freeSplitResult(scrollLines, scrollLineCount);
 
     isChatPaused = false;
     drawStatusBar();
@@ -1190,7 +1207,7 @@ void displayMessage(char* msg, bool mention) {
     if (!isChatPaused) {
         od_scroll(1, 1, od_control.user_screenwidth, od_control.user_screen_length - 3, countOfChars(dispMsg, '\n') +1, 0);
         od_set_cursor(od_control.user_screen_length - (2 + countOfChars(dispMsg, '\n') +1), 1);
-        od_disp_emu(pipeToAnsi(dispMsg), TRUE);
+        dispEmuPipe(dispMsg, TRUE);
     }
 }
 
@@ -1226,12 +1243,14 @@ void loadTwits() {
 
 bool checkTwit(char* twit) {
     bool isTwit = false;
+    EnterCriticalSection(&gChattersLock);
     for (int i = 0; i < gTwitCount; i++) {
         if (_stricmp(gTwits[i], twit) == 0) {
             isTwit = true;
             break;
         }
     }
+    LeaveCriticalSection(&gChattersLock);
     return isTwit;
 }
 
@@ -1385,7 +1404,7 @@ void displayPipeFile(char* filename) {
         char line[200] = "";
         while (fgets(line, sizeof(line), extFile)) {
             od_printf("\r"); // why???
-            od_disp_emu(pipeToAnsi(line), TRUE);
+            dispEmuPipe(line, TRUE);
 
             if (lineCounter >= od_control.user_screen_length - 2) {
                 doPause();
@@ -1500,7 +1519,7 @@ void processUserCommand(char* cmd, char* params) {
             scrollPos = 0;
         }
         scrollToScrollbackSection(scrollLines, scrollPos, scrollLineCount, height);
-        free(scrollLines); // needed?
+        freeSplitResult(scrollLines, scrollLineCount);
         isChatPaused = false;
         drawStatusBar();
         resetInputLine();
@@ -1519,7 +1538,7 @@ void processUserCommand(char* cmd, char* params) {
             scrollPos = 0;
         }
         scrollToScrollbackSection(scrollLines, scrollPos, scrollLineCount, height);
-        free(scrollLines); // needed?
+        freeSplitResult(scrollLines, scrollLineCount);
         isChatPaused = false;
         drawStatusBar();
         resetInputLine();
@@ -1595,7 +1614,7 @@ void processUserCommand(char* cmd, char* params) {
             scrollPos = 0;
         }
         scrollToScrollbackSection(scrollLines, scrollPos, scrollLineCount, height);
-        free(scrollLines); // needed?
+        freeSplitResult(scrollLines, scrollLineCount);
         isChatPaused = false;
         drawStatusBar();
         resetInputLine();
@@ -1633,7 +1652,7 @@ void processServerMessage(char* body, char* toUser) {
 
     if (cmdsep > 0) {
         getSubStr(body, cmd, 0, cmdsep);
-        getSubStr(body, params, cmdsep+1, strlen(body));
+        getSubStr(body, params, cmdsep+1, (int)strlen(body));
     }
     else {
         strncpy_s(cmd, sizeof(cmd), body, 140);
@@ -1696,8 +1715,18 @@ void processServerMessage(char* body, char* toUser) {
         writeToLog("Server is closing the connection.", PROGRAM, od_control.user_handle);
     }
     else if (strcmp(cmd, "USERLIST") == 0) {
-        gChatterCount = split(params, ',', &gChattersInRoom);
-        gUserCountChanged = true;
+		char** newChatters;
+		int newCount = split(params, ',', &newChatters);
+
+		EnterCriticalSection(&gChattersLock);
+		char** oldChatters = gChattersInRoom;
+		int oldCount = gChatterCount;
+		gChattersInRoom = newChatters;
+		gChatterCount = newCount;
+		LeaveCriticalSection(&gChattersLock);
+
+		freeSplitResult(oldChatters, oldCount);
+		gUserCountChanged = true;
     }
     else if (strcmp(cmd, "LATENCY") == 0) {
         strcpy_s(gLatency, sizeof(gLatency), params);
@@ -1715,7 +1744,7 @@ void processServerMessage(char* body, char* toUser) {
     else if (strlen(toUser) == 0 || _stricmp(toUser, user.chatterName) == 0) {
         queueIncomingMessage(body, false);
     }
-    od_sleep(5);
+    //od_sleep(5);
 }
 
 void processCtcpCommand(char* body, char* toUser, char* fromUser) {
@@ -1850,8 +1879,8 @@ void* handleIncomingMessages(void* lpArg) {
                     continue;                      // isn't a valid packet, so skip it.
                 }
 
-                char* fromUser = "", * fromSite = "", * fromRoom = "", * toUser = "", * msgExt = "", * toRoom = "", * body = "";
-                processPacket(packet, &fromUser, &fromSite, &fromRoom, &toUser, &msgExt, &toRoom, &body);
+                char fromUser[31] = "", fromSite[31] = "", fromRoom[31] = "", toUser[31] = "", msgExt[31] = "", toRoom[31] = "", body[256] = "";
+                processPacket(packet, fromUser, fromSite, fromRoom, toUser, msgExt, toRoom, body);
 
                 if (strcmp(fromUser, "SERVER") == 0 && (strcmp(toRoom, gRoom) == 0 || strlen(toRoom) == 0)) {
 
@@ -1915,10 +1944,8 @@ void* handleIncomingMessages(void* lpArg) {
 
                     // Standard message
                     else {
-                        //bool mentioned = false;
                         if (_stricmp(fromUser, user.chatterName) != 0 && strContainsStrI(body, user.chatterName)) {
                             gMentionCount = gMentionCount + 1;
-                            //mentioned = true;
                             gMentionCountChanged = true;
                             if (user.chatSounds) {
                                 od_putch(7);
@@ -2019,13 +2046,13 @@ void doChatRoutines(char* input) {
                     user.textColor = 15;
                 }
                 if ((int)strlen(input) >= (int)od_control.user_screenwidth - 3) {
-                    overfill = strlen(input) - (od_control.user_screenwidth - 4);
+                    overfill = ((int)strlen(input)) - ((int)od_control.user_screenwidth - 4);
                 }
                 _snprintf_s(pcol, sizeof(pcol), -1, "|%02d", user.textColor);
 
                 // Scroll the input string display if it's longer than the terminal width
                 od_set_cursor(od_control.user_screen_length, 1);
-                od_disp_emu(pipeToAnsi(pcol), TRUE);
+                dispEmuPipe(pcol, TRUE);
                 if (overfill > 0) {
                     od_disp_str(input + overfill - 1);
                 }
@@ -2045,13 +2072,13 @@ void doChatRoutines(char* input) {
                 }
 
                 if ((int)strlen(input) >= (int)od_control.user_screenwidth - 3) {
-                    overfill = strlen(input) - (od_control.user_screenwidth - 4);
+                    overfill = ((int)strlen(input)) - ((int)od_control.user_screenwidth - 4);
                 }
                 _snprintf_s(pcol, sizeof(pcol), -1, "|%02d", user.textColor);
 
                 // Scroll the input string display if it's longer than the terminal width
                 od_set_cursor(od_control.user_screen_length, 1);
-                od_disp_emu(pipeToAnsi(pcol), TRUE);
+                dispEmuPipe(pcol, TRUE);
                 if (overfill > 0) {
                     od_disp_str(input + overfill - 1);
                 }
@@ -2088,11 +2115,11 @@ void doChatRoutines(char* input) {
                 if (strlen(input) > 0) {
                     // Scroll the input string display if it's longer than the terminal width
                     if ((int)strlen(input) >= (int)od_control.user_screenwidth - 3) {
-                        overfill = strlen(input) - (od_control.user_screenwidth - 4);
+                        overfill = ((int)strlen(input)) - ((int)od_control.user_screenwidth - 4);
                     }              
                     od_set_cursor(od_control.user_screen_length, 1);
                     _snprintf_s(pcol, sizeof(pcol), -1, "|%02d", user.textColor);
-                    od_disp_emu(pipeToAnsi(pcol), TRUE);
+                    dispEmuPipe(pcol, TRUE);
                     if (overfill > 0) {
                         od_disp_str(input + overfill - 1);
                     }
@@ -2100,7 +2127,7 @@ void doChatRoutines(char* input) {
                         od_disp_str(input);
                     }
                     od_printf(CHAT_CURSOR, CURSOR_COLORS[user.textColor]);
-                    updateBuffer(strlen(input));
+                    updateBuffer((int)strlen(input));
                 }
                 break;
 
@@ -2113,11 +2140,11 @@ void doChatRoutines(char* input) {
                 if (strlen(input) > 0) {
                     // Scroll the input string display if it's longer than the terminal width
                     if ((int)strlen(input) >= (int)od_control.user_screenwidth - 3) {
-                        overfill = strlen(input) - (od_control.user_screenwidth - 4);
+                        overfill = ((int)strlen(input)) - ((int)od_control.user_screenwidth - 4);
                     }                 
                     od_set_cursor(od_control.user_screen_length, 1);
                     _snprintf_s(pcol, sizeof(pcol), -1, "|%02d", user.textColor);
-                    od_disp_emu(pipeToAnsi(pcol), TRUE);
+                    dispEmuPipe(pcol, TRUE);
                     if (overfill > 0) {
                         od_disp_str(input + overfill - 1);
                     }
@@ -2125,7 +2152,7 @@ void doChatRoutines(char* input) {
                         od_disp_str(input);
                     }
                     od_printf(CHAT_CURSOR, CURSOR_COLORS[user.textColor]);
-                    updateBuffer(strlen(input));
+                    updateBuffer((int)strlen(input));
                 }
                 gMentionCount = 0;
                 updateMentions();
@@ -2172,13 +2199,14 @@ void doChatRoutines(char* input) {
                 char tabSearch[140] = "";
                 // capture the typed portion after the last space or the beginning of the string,
                 // and use that as the user search string.
-                for (int i = strlen(input); i >= 0 && input[i] != ' '; i--) {
+                for (int i = (int)strlen(input); i >= 0 && input[i] != ' '; i--) {
                     if (input[i] != ' ') {
                         indexOfTabSearch = i;
                     }
                 }
                 strcpy_s(tabSearch, sizeof(tabSearch), input + indexOfTabSearch);
 
+				EnterCriticalSection(&gChattersLock);
                 for (int i = 0; i < gChatterCount; i++) {
                     if (_strnicmp(tabSearch, gChattersInRoom[i], strlen(tabSearch)) == 0 && _stricmp(gChattersInRoom[i], user.chatterName) != 0) {
                         strcpy_s(tabResult, sizeof(tabResult), gChattersInRoom[i]);
@@ -2188,6 +2216,7 @@ void doChatRoutines(char* input) {
                         break;
                     }
                 }
+				LeaveCriticalSection(&gChattersLock);
                 if (strlen(tabResult) == 0) { // if no match, just skip
                     continue;
                 }
@@ -2201,28 +2230,28 @@ void doChatRoutines(char* input) {
 
             int overfill = 0;
             if ((int)strlen(input) < (int)od_control.user_screenwidth - 3) {
-                endOfInput += strlen(input) - strlen(tabResult);
+                endOfInput += ((int)strlen(input)) - ((int)strlen(tabResult));
             }
             else {
                 // determine whether the input string is longer than the terminal width,
                 // so it can be displaying appropriately below
-                overfill = strlen(input) - (od_control.user_screenwidth - 4);
-                endOfInput = od_control.user_screenwidth - 1 + (key == 8 ? -1 : -2) - (strlen(tabResult) > 0 ? strlen(tabResult)-1: 0);
+                overfill = ((int)strlen(input)) - ((int)od_control.user_screenwidth - 4);
+                endOfInput = ((int)od_control.user_screenwidth) - 1 + (key == 8 ? -1 : -2) - (((int)strlen(tabResult)) > 0 ? ((int)strlen(tabResult))-1: 0);
             }
             _snprintf_s(pcol, sizeof(pcol), -1, "|%02d", user.textColor);
 
             // Scroll the input string display if it's longer than the terminal width
             if (overfill > 0) {
                 od_set_cursor(od_control.user_screen_length, 1);
-                od_disp_emu(pipeToAnsi(pcol), TRUE);
+                dispEmuPipe(pcol, TRUE);
                 od_disp_str(input + overfill - 1);
             }
             od_set_cursor(od_control.user_screen_length, endOfInput);
-            od_disp_emu(pipeToAnsi(pcol), TRUE);
+            dispEmuPipe(pcol, TRUE);
 
             if (key == 8) {              // Type the backspace...
                 if (strlen(input) > 0) {
-                    od_disp_emu(pipeToAnsi("|08|16"), TRUE);
+                    dispEmuPipe("|08|16", TRUE);
                     od_disp_str(" \b.\b"); // ugghh... I hate this, but it works.
                 }
                 else {
@@ -2249,7 +2278,7 @@ void doChatRoutines(char* input) {
                 }
             }
             od_printf(CHAT_CURSOR, CURSOR_COLORS[user.textColor]);
-            updateBuffer(strlen(input));
+            updateBuffer((int)strlen(input));
         }
     }
 }
@@ -2410,7 +2439,7 @@ bool enterChat() {
 
             if (spcidx > 0) {
                 getSubStr(input, cmd, 1, spcidx - 1);
-                getSubStr(input, params, spcidx+1, strlen(input));
+                getSubStr(input, params, spcidx+1, (int)strlen(input));
             }
             else {
                 strncpy_s(cmd, sizeof(cmd), input + 1, 14);
@@ -2491,6 +2520,7 @@ int main(int argc, char** argv)
     if (hIcon != NULL) {
         od_control.od_app_icon = hIcon;
     }
+    InitializeCriticalSection(&gChattersLock);
 #endif
 
     od_init();
@@ -2699,7 +2729,7 @@ int main(int argc, char** argv)
         
         od_set_cursor(13, 25);
         od_printf("`bright white`(`bright green`Q`bright white`) `bright white`Q`white`uit to `bright white`");
-        od_disp_emu(pipeToAnsi(cfg.name), TRUE); // display the bbs name it all its pipe code colorful glory :P
+        dispEmuPipe(cfg.name, TRUE); // display the bbs name it all its pipe code colorful glory :P
 
         time_t curtime;
         time(&curtime);
@@ -2745,7 +2775,7 @@ int main(int argc, char** argv)
             od_clr_scr();
             od_printf(DIVIDER);
             od_printf("`` ChatterName:          `bright white`%s``", user.chatterName);
-            od_printf("\r\n`` DisplayChatterName:   "); od_disp_emu(pipeToAnsi(gDisplayChatterName), true);
+            od_printf("\r\n`` DisplayChatterName:   "); dispEmuPipe(gDisplayChatterName, true);
             od_printf("\r\n`` FromSite:             `bright white`%s``", gFromSite);
             od_printf("\r\n`` user_num:             `bright white`%d``", od_control.user_num);
             od_printf("\r\n`` user_name:            `bright white`%s``", od_control.user_name);

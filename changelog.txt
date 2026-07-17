@@ -1,5 +1,11 @@
 Change Log:
 
+v106 - TBA:
+
+  - Various fixes all throughout to address potential crashes and 
+    memory leaks (Claude AI assisted).
+
+
 v105 - July 14, 2026:
 
   - Windows x86_64 build now ships with a 64-bit ODoors62.dll library file,

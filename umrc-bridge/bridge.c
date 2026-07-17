@@ -830,8 +830,8 @@ void mrcHostProcess(struct settings cfg) {
                     continue;
                 }    
 
-                char* fromUser = "", * fromSite = "", * fromRoom = "", * toUser = "", * msgExt = "", * toRoom = "", * body = "";
-                processPacket(packet, &fromUser, &fromSite, &fromRoom, &toUser, &msgExt, &toRoom, &body);        
+                char fromUser[31] = "", fromSite[31] = "", fromRoom[31] = "", toUser[31] = "", msgExt[31] = "", toRoom[31] = "", body[256] = "";
+                processPacket(packet, fromUser, fromSite, fromRoom, toUser, msgExt, toRoom, body);        
 
                 for (int iml = 0; iml < MAX_LATENCIES; iml++) {
                     if (lt[iml].packetSum == packetSum(packet) || (lt[iml].isStats == true && strstr(body, "STATS") != 0)) {
@@ -913,8 +913,8 @@ void mrcHostProcess(struct settings cfg) {
                         int act = 0;
                         char stats[30] = "";
                         strcpy_s(stats, sizeof(stats), body + 6);
-                        char* bbses, * rooms, * users, * activity;
-                        parseStats(stats, &bbses, &rooms, &users, &activity);
+                        char bbses[5]="", rooms[5]="", users[5]="", activity[5]="";
+                        parseStats(stats, bbses, rooms, users, activity);
                         if (activity != NULL) {
                             act = atoi(activity);
                         }

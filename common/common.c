@@ -115,6 +115,14 @@ int indexOfChar(char* s, char c) {
 	return ret;
 }
 
+void freeSplitResult(char** arr, int count) {
+    if (arr == NULL) return;
+    for (int i = 0; i < count; i++) {
+        free(arr[i]);
+    }
+    free(arr);
+}
+
 /**
  *
  * Splits a string into an array of `count` NUL-terminated tokens delimited
@@ -199,7 +207,7 @@ int split(const char* txt, char delim, char*** tokens)
 	return count;
 }
 
-void processPacket(char* packet, char** fromUser, char** fromSite, char** fromRoom, char** toUser, char** msgExt, char** toRoom, char** body)
+void processPacket(char* packet, char* fromUser, char* fromSite, char* fromRoom, char* toUser, char* msgExt, char* toRoom, char* body)
 {	
     // Default every field to a safe, non-NULL empty string first. If
 	// split() fails (allocation failure) or the packet doesn't contain
@@ -208,34 +216,36 @@ void processPacket(char* packet, char** fromUser, char** fromSite, char** fromRo
 	// initialize their own char* locals before calling this (bridge.c's
 	// clientProcess loop, for one) would pass those garbage pointers to
 	// strlen()/strcmp() further down.
-	static char empty[] = "";
-	*fromUser = *fromSite = *fromRoom = *toUser = *msgExt = *toRoom = *body = empty;
+	//static char empty[] = "";
+	//*fromUser = *fromSite = *fromRoom = *toUser = *msgExt = *toRoom = *body = empty;
 
 	char** field;
 	int fieldCount = split(packet, '~', &field);
 	if (fieldCount >= 7) {
-		*fromUser = field[0];
-		*fromSite = field[1];
-		*fromRoom = field[2];
-		*toUser = field[3];
-		*msgExt = field[4];
-		*toRoom = field[5];
-		*body = field[6];
+	    strcpy_s(fromUser, 31, field[0]);
+        strcpy_s(fromSite, 31, field[1]);
+        strcpy_s(fromRoom, 31, field[2]);
+        strcpy_s(toUser, 31, field[3]);
+        strcpy_s(msgExt, 31, field[4]);
+        strcpy_s(toRoom, 31, field[5]);
+        strcpy_s(body, 256, field[6]);
 	}
+    freeSplitResult(field, fieldCount);
 }
 
-void parseStats(char* stats, char** bbses, char** rooms, char** users, char** activity) {
-	static char empty[] = "";
-	*bbses = *rooms = *users = *activity = empty;
+void parseStats(char* stats, char* bbses, char* rooms, char* users, char* activity) {
+	//static char empty[] = "";
+	//*bbses = *rooms = *users = *activity = empty;
 
 	char** stat;
 	int statCount = split(stats, ' ', &stat);
 	if (statCount >= 4) {
-		*bbses = stat[0];
-		*rooms = stat[1];
-		*users = stat[2];
-		*activity = stat[3];
+        strcpy_s(bbses, 5, stat[0]);
+        strcpy_s(rooms, 5, stat[1]);
+        strcpy_s(users, 5, stat[2]);
+        strcpy_s(activity, 5, stat[3]);
 	}
+    freeSplitResult(stat, statCount);
 }
 
 char* createPacket(char* fromUser, char* fromSite, char* fromRoom, char* toUser, char* msgExt, char* toRoom, char* body) {
@@ -244,116 +254,88 @@ char* createPacket(char* fromUser, char* fromSite, char* fromRoom, char* toUser,
 	return _strdup(packet);
 }
 
+/**
+ * Converts pipe/MCI color codes ("|00".."|31") in str to their ANSI escape
+ * equivalents.
+ *
+ * IMPORTANT: the caller owns the returned string and must free() it -- every
+ * call site previously did `od_disp_emu(pipeToAnsi(x), TRUE)` without
+ * capturing or freeing the result, and internally this function replaced
+ * `str` with a freshly-strdup'd string (via strReplace()) on every matching
+ * code without ever freeing the previous value, so a single line of text
+ * with several distinct color codes could leak multiple intermediate
+ * allocations *in addition to* the final, never-freed return value. Called
+ * once per visible line on every scrollback keypress, that added up fast.
+ * Use the dispEmuPipe() wrapper in main.c for the common
+ * "convert, display, discard" pattern instead of calling this directly.
+ *
+ * `str`'s original value (the caller's pointer, which may be a string
+ * literal) is never freed -- only allocations this function makes itself
+ * are released before being replaced.
+ */
 char* pipeToAnsi(char* str) {
+    char* result = str;   // caller's original pointer -- never free this one
+    bool ownsResult = false;
 
-    if (strstr(str, "|00") != NULL) {
-        str = strReplace(str, "|00", BK);
+#define PIPE_REPLACE(code, ansi) \
+    if (strstr(result, code) != NULL) { \
+        char* next = strReplace(result, code, ansi); \
+        if (ownsResult) { free(result); } \
+        result = next; \
+        ownsResult = true; \
     }
-    if (strstr(str, "|01") != NULL) {
-        str = strReplace(str, "|01", BL);
-    }
-    if (strstr(str, "|02") != NULL) {
-        str = strReplace(str, "|02", GR);
-    }
-    if (strstr(str, "|03") != NULL) {
-        str = strReplace(str, "|03", CY);
-    }
-    if (strstr(str, "|04") != NULL) {
-        str = strReplace(str, "|04", RE);
-    }
-    if (strstr(str, "|05") != NULL) {
-        str = strReplace(str, "|05", MA);
-    }
-    if (strstr(str, "|06") != NULL) {
-        str = strReplace(str, "|06", BR);
-    }
-    if (strstr(str, "|07") != NULL) {
-        str = strReplace(str, "|07", GY);
-    }
+
+    PIPE_REPLACE("|00", BK);
+    PIPE_REPLACE("|01", BL);
+    PIPE_REPLACE("|02", GR);
+    PIPE_REPLACE("|03", CY);
+    PIPE_REPLACE("|04", RE);
+    PIPE_REPLACE("|05", MA);
+    PIPE_REPLACE("|06", BR);
+    PIPE_REPLACE("|07", GY);
 
     // bright colors
 
-    if (strstr(str, "|08") != NULL) {
-        str = strReplace(str, "|08", DG);
-    }
-    if (strstr(str, "|09") != NULL) {
-        str = strReplace(str, "|09", LB);
-    }
-    if (strstr(str, "|10") != NULL) {
-        str = strReplace(str, "|10", LG);
-    }
-    if (strstr(str, "|11") != NULL) {
-        str = strReplace(str, "|11", LC);
-    }
-    if (strstr(str, "|12") != NULL) {
-        str = strReplace(str, "|12", LR);
-    }
-    if (strstr(str, "|13") != NULL) {
-        str = strReplace(str, "|13", LM);
-    }
-    if (strstr(str, "|14") != NULL) {
-        str = strReplace(str, "|14", YE);
-    }
-    if (strstr(str, "|15") != NULL) {
-        str = strReplace(str, "|15", WH);
-    }
+    PIPE_REPLACE("|08", DG);
+    PIPE_REPLACE("|09", LB);
+    PIPE_REPLACE("|10", LG);
+    PIPE_REPLACE("|11", LC);
+    PIPE_REPLACE("|12", LR);
+    PIPE_REPLACE("|13", LM);
+    PIPE_REPLACE("|14", YE);
+    PIPE_REPLACE("|15", WH);
 
     // background colors
 
-    if (strstr(str, "|16") != NULL) {
-        str = strReplace(str, "|16", BBK);
-    }
-    if (strstr(str, "|17") != NULL) {
-        str = strReplace(str, "|17", BBL);
-    }
-    if (strstr(str, "|18") != NULL) {
-        str = strReplace(str, "|18", BGR);
-    }
-    if (strstr(str, "|19") != NULL) {
-        str = strReplace(str, "|19", BCY);
-    }
-    if (strstr(str, "|20") != NULL) {
-        str = strReplace(str, "|20", BRE);
-    }
-    if (strstr(str, "|21") != NULL) {
-        str = strReplace(str, "|21", BMA);
-    }
-    if (strstr(str, "|22") != NULL) {
-        str = strReplace(str, "|22", BBR);
-    }
-    if (strstr(str, "|23") != NULL) {
-        str = strReplace(str, "|23", BGY);
-    }
+    PIPE_REPLACE("|16", BBK);
+    PIPE_REPLACE("|17", BBL);
+    PIPE_REPLACE("|18", BGR);
+    PIPE_REPLACE("|19", BCY);
+    PIPE_REPLACE("|20", BRE);
+    PIPE_REPLACE("|21", BMA);
+    PIPE_REPLACE("|22", BBR);
+    PIPE_REPLACE("|23", BGY);
 
     // flashing colors, or "bright backgrounds" (aka iCE colors) 
     // depending on terminal mode...
     // these are annoying, so just treat them as normal colors.
-    if (strstr(str, "|24") != NULL) {
-        str = strReplace(str, "|24", DG); // except for this one.. we don't want black foregrounds on black backgrounds...
-    }
-    if (strstr(str, "|25") != NULL) {
-        str = strReplace(str, "|25", BL);
-    }
-    if (strstr(str, "|26") != NULL) {
-        str = strReplace(str, "|26", GR);
-    }
-    if (strstr(str, "|27") != NULL) {
-        str = strReplace(str, "|27", CY);
-    }
-    if (strstr(str, "|28") != NULL) {
-        str = strReplace(str, "|28", RE);
-    }
-    if (strstr(str, "|29") != NULL) {
-        str = strReplace(str, "|29", MA);
-    }
-    if (strstr(str, "|30") != NULL) {
-        str = strReplace(str, "|30", BR);
-    }
-    if (strstr(str, "|31") != NULL) {
-        str = strReplace(str, "|31", GY);
-    }
+    PIPE_REPLACE("|24", DG); // except for this one.. we don't want black foregrounds on black backgrounds...
+    PIPE_REPLACE("|25", BL);
+    PIPE_REPLACE("|26", GR);
+    PIPE_REPLACE("|27", CY);
+    PIPE_REPLACE("|28", RE);
+    PIPE_REPLACE("|29", MA);
+    PIPE_REPLACE("|30", BR);
+    PIPE_REPLACE("|31", GY);
 
-    return str;
+#undef PIPE_REPLACE
+
+    // Always hand back a string the caller can unconditionally free(), even
+    // when no codes were present and nothing was allocated above.
+    if (!ownsResult) {
+        result = _strdup(result);
+    }
+    return result;
 }
 
 int countOfChars(char* str, char c) {
