@@ -830,7 +830,7 @@ void mrcHostProcess(struct settings cfg) {
                     continue;
                 }    
 
-                char fromUser[31] = "", fromSite[31] = "", fromRoom[31] = "", toUser[31] = "", msgExt[31] = "", toRoom[31] = "", body[256] = "";
+                char fromUser[PACKET_FLD_LEN] = "", fromSite[PACKET_FLD_LEN] = "", fromRoom[PACKET_FLD_LEN] = "", toUser[PACKET_FLD_LEN] = "", msgExt[PACKET_FLD_LEN] = "", toRoom[PACKET_FLD_LEN] = "", body[PACKET_LEN] = "";
                 processPacket(packet, fromUser, fromSite, fromRoom, toUser, msgExt, toRoom, body);        
 
                 for (int iml = 0; iml < MAX_LATENCIES; iml++) {

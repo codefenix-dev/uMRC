@@ -222,13 +222,13 @@ void processPacket(char* packet, char* fromUser, char* fromSite, char* fromRoom,
 	char** field;
 	int fieldCount = split(packet, '~', &field);
 	if (fieldCount >= 7) {
-	    strcpy_s(fromUser, 31, field[0]);
-        strcpy_s(fromSite, 31, field[1]);
-        strcpy_s(fromRoom, 31, field[2]);
-        strcpy_s(toUser, 31, field[3]);
-        strcpy_s(msgExt, 31, field[4]);
-        strcpy_s(toRoom, 31, field[5]);
-        strcpy_s(body, 256, field[6]);
+	    strcpy_s(fromUser, PACKET_FLD_LEN, field[0]);
+        strcpy_s(fromSite, PACKET_FLD_LEN, field[1]);
+        strcpy_s(fromRoom, PACKET_FLD_LEN, field[2]);
+        strcpy_s(toUser, PACKET_FLD_LEN, field[3]);
+        strcpy_s(msgExt, PACKET_FLD_LEN, field[4]);
+        strcpy_s(toRoom, PACKET_FLD_LEN, field[5]);
+        strcpy_s(body, PACKET_LEN, field[6]);
 	}
     freeSplitResult(field, fieldCount);
 }

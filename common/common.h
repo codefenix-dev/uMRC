@@ -94,7 +94,7 @@ int _snprintf_s(char* buffer, size_t sizeOfBuffer, size_t count, const char* for
 #define UMRC_VERSION "106"
 #define YEAR_AND_AUTHOR "2026 Craig Hendricks (aka Codefenix)"
 #define AUTHOR_INITIALS "cf" // alias initials
-#define COMPILE_DATE "2026-07-17"
+#define COMPILE_DATE "2026-07-18"
 
 
 // These defaults should remain the same, and
@@ -104,6 +104,7 @@ int _snprintf_s(char* buffer, size_t sizeOfBuffer, size_t count, const char* for
 #define LOG_FILE "umrc.log"
 #define USER_DATA_DIR "userdata"
 #define MSG_LEN 141
+#define PACKET_FLD_LEN 31
 #define PACKET_LEN 513
 #define DATA_LEN 12228
 #define MAX_CLIENTS 50

@@ -181,9 +181,6 @@ SOCKET mrcSock = INVALID_SOCKET;
 
 
 /**
- *  Pauses and waits for any key input from the user.
- */
-/**
  * Converts pipe/MCI codes in str to ANSI and displays it via od_disp_emu(),
  * then frees the converted string. pipeToAnsi() always returns a heap
  * string the caller must free -- use this instead of calling
@@ -197,6 +194,9 @@ void dispEmuPipe(char* str, BOOL immediate) {
     free(ansi);
 }
 
+/**
+ *  Pauses and waits for any key input from the user.
+ */
 void doPause() {
     od_printf("\r\n `bright white`[`cyan`Press any key to continue`bright white`]`white` ");
     od_get_key(TRUE);
@@ -1879,7 +1879,7 @@ void* handleIncomingMessages(void* lpArg) {
                     continue;                      // isn't a valid packet, so skip it.
                 }
 
-                char fromUser[31] = "", fromSite[31] = "", fromRoom[31] = "", toUser[31] = "", msgExt[31] = "", toRoom[31] = "", body[256] = "";
+                char fromUser[PACKET_FLD_LEN] = "", fromSite[PACKET_FLD_LEN] = "", fromRoom[PACKET_FLD_LEN] = "", toUser[PACKET_FLD_LEN] = "", msgExt[PACKET_FLD_LEN] = "", toRoom[PACKET_FLD_LEN] = "", body[PACKET_LEN] = "";
                 processPacket(packet, fromUser, fromSite, fromRoom, toUser, msgExt, toRoom, body);
 
                 if (strcmp(fromUser, "SERVER") == 0 && (strcmp(toRoom, gRoom) == 0 || strlen(toRoom) == 0)) {
