@@ -252,7 +252,8 @@ bool sendCmdPacket(char* fromRoom, char* msgExt, const char* cmd, const char* cm
     strcpy_s(packet, PACKET_LEN, createPacket("CLIENT", gFromSite, fromRoom, "SERVER", msgExt, "", cmdstr));
 
     if (gVerboseLogging) {
-        _snprintf_s(logstring, sizeof(logstring), -1, "sendCmdPacket \"%s\" to host", strReplace(packet, "\n", ""));
+        _snprintf_s(logstring, sizeof(logstring), -1, "sendCmdPacket \"%s\" to host", packet);
+        removeChar(logstring, '\n');
         printDateTimeStamp();
         puts(logstring);
         writeToLog(logstring, PROGRAM, "");
@@ -289,7 +290,8 @@ bool sendMsgPacket(char* fromUser, char* fromSite, char* fromRoom, char* toUser,
     strcpy_s(packet, PACKET_LEN, createPacket(fromUser, fromSite, fromRoom, toUser, msgExt, toRoom, body));
     
     if (gVerboseLogging) {
-        _snprintf_s(logstring, sizeof(logstring), -1, "sendMsgPacket \"%s\" to host", strReplace(packet, "\n", ""));
+        _snprintf_s(logstring, sizeof(logstring), -1, "sendMsgPacket \"%s\" to host", packet);
+        removeChar(logstring, '\n');
         printDateTimeStamp();
         puts(logstring);
         writeToLog(logstring, PROGRAM, "");
@@ -324,7 +326,8 @@ bool sendHostPacket(char* packet) {
     int iResult;
     char logstring[512] = "";
     if (gVerboseLogging) {
-        _snprintf_s(logstring, sizeof(logstring), -1, "sendHostPacket \"%s\" to host", strReplace(packet, "\n", ""));
+        _snprintf_s(logstring, sizeof(logstring), -1, "sendHostPacket \"%s\" to host", packet);
+        removeChar(logstring, '\n');
         printDateTimeStamp();
         puts(logstring);
         writeToLog(logstring, PROGRAM, "");
@@ -361,7 +364,8 @@ bool sendClientPacket(SOCKET* sock, char* packet) {
     int iResult;
     char logstring[512] = "";
     if (gVerboseLogging) {
-        _snprintf_s(logstring, sizeof(logstring), -1, "sendClientPacket \"%s\" to socket %d", strReplace(packet, "\n", ""), (int)*sock);
+        _snprintf_s(logstring, sizeof(logstring), -1, "sendClientPacket \"%s\" to socket %d", packet, (int)*sock);
+        removeChar(logstring, '\n');
         printDateTimeStamp();
         puts(logstring);
         writeToLog(logstring, PROGRAM, "");
@@ -640,8 +644,8 @@ void mrcHostProcess(struct settings cfg) {
     struct addrinfo* mhResult = NULL, * ptrMh = NULL, mrcHost;
     int iResult;
     char logstring[512] = "";
-    char handshake[PACKET_LEN] = "";
-    _snprintf_s(handshake, PACKET_LEN, -1, "%s~%s/%s.%s/%s.%s", cfg.name, cfg.soft, PLATFORM, ARC, PROTOCOL_VERSION, UMRC_VERSION);
+    char handshake[256] = "";
+    _snprintf_s(handshake, 256, -1, "%s~%s/%s.%s/%s.%s", cfg.name, cfg.soft, PLATFORM, ARC, PROTOCOL_VERSION, UMRC_VERSION);
     printDateTimeStamp();
     puts("Starting up...");
 
@@ -760,7 +764,7 @@ void mrcHostProcess(struct settings cfg) {
         gRetry = 0;
     }   
 
-    char partialPacket[PACKET_LEN] = "";
+    char partialPacket[512] = "";
     // Main loop...
     //
     do {             
@@ -822,16 +826,26 @@ void mrcHostProcess(struct settings cfg) {
                         writeToLog("partial packet detected:", PROGRAM, "");
                         writeToLog(packet, PROGRAM, "");
                     }
-                    strcpy_s(partialPacket, sizeof(partialPacket), strReplace(packet, "\n", "")); // strip out the LF
+                    strcpy_s(partialPacket, sizeof(partialPacket), packet); 
+                    removeChar(partialPacket, '\n'); // strip out the LF
                     break;
                 }
 
                 if (strstr(packet, "~") == NULL) {
                     continue;
-                }    
+                }  
 
-                char fromUser[PACKET_FLD_LEN] = "", fromSite[PACKET_FLD_LEN] = "", fromRoom[PACKET_FLD_LEN] = "", toUser[PACKET_FLD_LEN] = "", msgExt[PACKET_FLD_LEN] = "", toRoom[PACKET_FLD_LEN] = "", body[PACKET_LEN] = "";
-                processPacket(packet, fromUser, fromSite, fromRoom, toUser, msgExt, toRoom, body);        
+                if (gVerboseLogging) {
+                    //Sleep(10);
+                    _snprintf_s(logstring, sizeof(logstring), -1, "received \"%s\" from host", packet);
+                    removeChar(logstring, '\n'); // strip out the LF
+                    printDateTimeStamp();
+                    puts(logstring);
+                    writeToLog(logstring, PROGRAM, "");
+                }  
+
+                char* fromUser = "", * fromSite = "", * fromRoom = "", * toUser = "", * msgExt = "", * toRoom = "", * body = "";
+                processPacket(packet, &fromUser, &fromSite, &fromRoom, &toUser, &msgExt, &toRoom, &body);
 
                 for (int iml = 0; iml < MAX_LATENCIES; iml++) {
                     if (lt[iml].packetSum == packetSum(packet) || (lt[iml].isStats == true && strstr(body, "STATS") != 0)) {
@@ -864,14 +878,6 @@ void mrcHostProcess(struct settings cfg) {
                 }                 
 
                 if (strcmp(fromUser, "SERVER") == 0) {
-
-                    if (gVerboseLogging) {
-                        Sleep(10);
-                        _snprintf_s(logstring, sizeof(logstring), -1, "received \"%s\" from host", strReplace(packet, "\n", ""));
-                        printDateTimeStamp();
-                        puts(logstring);
-                        writeToLog(logstring, PROGRAM, "");
-                    }
 
                     for (int ii = 0; packet[ii] != '\0'; ii++) { // replace control characters with underscores
                         if (packet[ii] > 6 && packet[ii] < 32 && packet[ii] != 10) { // all except for "card" characters and LF
@@ -913,8 +919,8 @@ void mrcHostProcess(struct settings cfg) {
                         int act = 0;
                         char stats[30] = "";
                         strcpy_s(stats, sizeof(stats), body + 6);
-                        char bbses[5]="", rooms[5]="", users[5]="", activity[5]="";
-                        parseStats(stats, bbses, rooms, users, activity);
+                        char* bbses, * rooms, * users, * activity;
+                        parseStats(stats, &bbses, &rooms, &users, &activity);
                         if (activity != NULL) {
                             act = atoi(activity);
                         }
@@ -1069,8 +1075,8 @@ int main(int argc, char** argv)
         }
         return -1;
     }
-
-    strcpy_s(gFromSite, sizeof(gFromSite), strReplace(cfg.name, "~", ""));
+    strcpy_s(gFromSite, sizeof(gFromSite), cfg.name);
+    removeChar(gFromSite, '~');
     stripPipeCodes(gFromSite);
     // Spaces must be replaced by _[underscore / chr(95)] when sent to server
     for (int i = 0; i < (int)strlen(gFromSite); i++) {

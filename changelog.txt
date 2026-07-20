@@ -2,8 +2,8 @@ Change Log:
 
 v106 - TBA:
 
-  - Various fixes all throughout to address potential crashes and 
-    memory leaks (Claude AI assisted).
+  - Various fixes to string management all throughout to address potential 
+    crashes and memory leaks (Claude AI assisted).
 
 
 v105 - July 14, 2026:

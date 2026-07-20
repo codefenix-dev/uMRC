@@ -94,7 +94,7 @@ int _snprintf_s(char* buffer, size_t sizeOfBuffer, size_t count, const char* for
 #define UMRC_VERSION "106"
 #define YEAR_AND_AUTHOR "2026 Craig Hendricks (aka Codefenix)"
 #define AUTHOR_INITIALS "cf" // alias initials
-#define COMPILE_DATE "2026-07-18"
+#define COMPILE_DATE "2026-07-20"
 
 
 // These defaults should remain the same, and
@@ -219,13 +219,16 @@ struct userdata {
 void writeToLog(char* msg, char* source, char* user);
 void stripPipeCodes(char* str);
 char* strReplace(char* orig, char* rep, char* with);
+void removeChar(char* str, char c);
+void replaceChar(char* str, char old, char new);
+void removeSubstr(char* str, const char* sub);
 void ustr(char* s);
 void lstr(char* s);
 int indexOfChar(char* s, char c);
 void freeSplitResult(char** arr, int count);
 int split(const char* txt, char delim, char*** tokens);
-void processPacket(char* packet, char* fromUser, char* fromSite, char* fromRoom, char* toUser, char* msgExt, char* toRoom, char* body);
-void parseStats(char* stats, char* bbses, char* rooms, char* users, char* activity);
+void processPacket(char* packet, char** fromUser, char** fromSite, char** fromRoom, char** toUser, char** msgExt, char** toRoom, char** body);
+void parseStats(char* stats, char** bbses, char** rooms, char** users, char** activity);
 char* createPacket(char* fromUser, char* fromSite, char* fromRoom, char* toUser, char* msgExt, char* toRoom, char* body);
 char* pipeToAnsi(char* str);
 int countOfChars(char* str, char c);

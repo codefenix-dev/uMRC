@@ -124,7 +124,7 @@ struct messageQueue mq;
 
 time_t gLastActTm;
 
-#define DEFAULT_BRACKETS_COUNT 20
+#define DEFAULT_BRACKETS_COUNT 28
 const char* DEFAULT_BRACKETS[DEFAULT_BRACKETS_COUNT] = {
     "<>",
     "{}",
@@ -142,10 +142,18 @@ const char* DEFAULT_BRACKETS[DEFAULT_BRACKETS_COUNT] = {
     "##",
     "$$",
     "**",
+    "::",
     "..",
     "][",
     ">>",
-    "&}"
+    "(>",
+    "[>",
+    "{>",
+    "@>",
+    "#>",
+    "%>",
+    "&>",
+    "}-"
 };
 
 const char* CURSOR_COLORS[16] = {
@@ -505,10 +513,14 @@ void loadTheme() {
 
             if (lineCount == 0) {
                 // strip out the CRs and LFs... in case someone uses a file with just one or the other...
-                strcpy_s(gStatusThemeLine1, sizeof(gStatusThemeLine1), strReplace(strReplace(line, "\r", ""), "\n", ""));
+                strcpy_s(gStatusThemeLine1, sizeof(gStatusThemeLine1), line);
+                removeChar(gStatusThemeLine1, '\n');
+                removeChar(gStatusThemeLine1, '\r');
             }
             else if (lineCount == 1) {
-                strcpy_s(gStatusThemeLine2, sizeof(gStatusThemeLine2), strReplace(strReplace(line, "\r", ""), "\n", ""));
+                strcpy_s(gStatusThemeLine2, sizeof(gStatusThemeLine2), line);
+                removeChar(gStatusThemeLine2, '\n');
+                removeChar(gStatusThemeLine2, '\r');
             }
             else if (lineCount > 1) {
 
@@ -1108,7 +1120,7 @@ void enterScrollBack(int initialScroll, int mode) {
  *   mode=1: mention history
  */
 void addToScrollBack(char* msg, int mode) {
-    const size_t a = strlen(mode==0 ? gScrollBack : gMentions);
+    const size_t a = strlen(mode == 0 ? gScrollBack : gMentions);
     const size_t b = strlen(msg);
     const size_t size_ab = a + b + 2;
     char* tmp = realloc(mode == 0 ? gScrollBack : gMentions, size_ab);
@@ -1353,7 +1365,8 @@ void listThemesInChat() {
         char line[200] = "";
         _snprintf_s(line, sizeof(line), -1, "|08* - |07%s", fdFile.cFileName);
         lstr(line);
-        displayMessage(strReplace(line, ".ans", ""), false);
+        removeSubstr(line, ".ans");
+        displayMessage(line, false);
     } while (FindNextFile(hFind, &fdFile));
     FindClose(hFind);
 #else
@@ -1368,7 +1381,8 @@ void listThemesInChat() {
             char line[200] = "";
             _snprintf_s(line, sizeof(line), -1, "|08* - |07%s", dir->d_name);
             lstr(line);
-            displayMessage(strReplace(line, ".ans", ""), false);
+            removeSubstr(line, ".ans");
+            displayMessage(line, false);
         }
     }
 #endif
@@ -1384,8 +1398,9 @@ void displayPipeFileInChat(char* filename) {
 #endif
     if (extFile != NULL) {
         char line[200] = "";
-        while (fgets(line, sizeof(line), extFile)) {            
-           displayMessage(strReplace(line, "\n", ""), false);
+        while (fgets(line, sizeof(line), extFile)) {  
+            removeChar(line, '\n');
+            displayMessage(line, false);
         }
         displayMessage("|08__", false);
         fclose(extFile);
@@ -1426,8 +1441,9 @@ void processUserCommand(char* cmd, char* params) {
     }
     else if (_stricmp(cmd, "join") == 0 || _stricmp(cmd, "j") == 0) {
         char newRoom[20] = "";
-        strcpy_s(newRoom, sizeof(newRoom), strReplace(params, "#", ""));  // no #
-        strcpy_s(newRoom, sizeof(newRoom), strReplace(newRoom, " ", "_")); // Single word
+        strcpy_s(newRoom, sizeof(newRoom), params); 
+        removeChar(newRoom, '#'); // no #
+        replaceChar(newRoom, ' ', '_'); // Single word
         stripPipeCodes(newRoom); // No pipe codes
 
         if (strlen(newRoom) == 0) {
@@ -1669,6 +1685,7 @@ void processServerMessage(char* body, char* toUser) {
         char banner[512] = "";
         _snprintf_s(banner, sizeof(banner), -1, (strcmp(cmd, "BANNER") == 0 ? "|14* |13<|15#|13> |15%s" : "|14* |14<|15!|14> |15%s"), params);
         queueIncomingMessage(banner, false);
+        addToScrollBack(banner, 2);
     }
     else if (strcmp(cmd, "ROOMTOPIC") == 0) {
         // ROOMTOPIC : Server will send new topic when changed
@@ -1783,6 +1800,7 @@ void processCtcpCommand(char* body, char* toUser, char* fromUser) {
         char repStr[80] = "";
 
         strcpy_s(cmdStr, sizeof(cmdStr), cmdStart);
+        removeChar(cmdStr, ' ');
 
         if (_strnicmp(cmdStr, "VERSION", 7) == 0) {
             _snprintf_s(repStr, sizeof(repStr), -1, "VERSION %s(%c) v%s.%s %s [%s]", TITLE, tolower(PLATFORM[0]), PROTOCOL_VERSION, UMRC_VERSION, COMPILE_DATE, AUTHOR_INITIALS);
@@ -1879,8 +1897,8 @@ void* handleIncomingMessages(void* lpArg) {
                     continue;                      // isn't a valid packet, so skip it.
                 }
 
-                char fromUser[PACKET_FLD_LEN] = "", fromSite[PACKET_FLD_LEN] = "", fromRoom[PACKET_FLD_LEN] = "", toUser[PACKET_FLD_LEN] = "", msgExt[PACKET_FLD_LEN] = "", toRoom[PACKET_FLD_LEN] = "", body[PACKET_LEN] = "";
-                processPacket(packet, fromUser, fromSite, fromRoom, toUser, msgExt, toRoom, body);
+                char* fromUser = "", * fromSite = "", * fromRoom = "", * toUser = "", * msgExt = "", * toRoom = "", * body = "";
+                processPacket(packet, &fromUser, &fromSite, &fromRoom, &toUser, &msgExt, &toRoom, &body);
 
                 if (strcmp(fromUser, "SERVER") == 0 && (strcmp(toRoom, gRoom) == 0 || strlen(toRoom) == 0)) {
 
@@ -2474,12 +2492,17 @@ bool enterChat() {
 }
 
 void displayTimeWarning(char* str) {
+    char wrn[80] = "";
+    strcpy_s(wrn, sizeof(wrn), _strdup(str));
     if (gIsInChat) {
-        displayMessage(strReplace(strReplace(str, "\r", ""), "\n", ""), false);
+
+        removeChar(wrn, '\r');
+        removeChar(wrn, '\n');
+        displayMessage(wrn, false);
     }
     else {
         od_set_cursor(15, 29);
-        od_printf(str);
+        od_printf(wrn);
     }
 }
 
@@ -2546,9 +2569,10 @@ int main(int argc, char** argv)
     else {
         strcpy_s(user.chatterName, sizeof(user.chatterName), strlen(od_control.user_handle) > 0 ? od_control.user_handle : od_control.user_name);
     }
-    strcpy_s(user.chatterName, sizeof(user.chatterName), strReplace(user.chatterName, " ", "_")); // spaces are disallowed; replace with underscores
-    strcpy_s(user.chatterName, sizeof(user.chatterName), strReplace(user.chatterName, "~", ""));  // tildes are disallowed; strip them out
-    strcpy_s(gFromSite, sizeof(gFromSite), strReplace(cfg.name, "~", ""));
+    replaceChar(user.chatterName, ' ', '_'); // spaces are disallowed; replace with underscores
+    removeChar(user.chatterName, '~'); // tildes are disallowed; strip them out
+    strcpy_s(gFromSite, sizeof(gFromSite), cfg.name);
+    removeChar(gFromSite, '~');
     stripPipeCodes(gFromSite);
     // Spaces must be replaced by _[underscore / chr(95)] when sent to server
     for (int i = 0; i < (int)strlen(gFromSite); i++) {
@@ -2611,8 +2635,8 @@ int main(int argc, char** argv)
             do {
                 getInputString(newchatname, 36, 32, 127);
                 if (strchr(newchatname, ' ') != NULL || strchr(newchatname, '~') != NULL) {
-                    strcpy_s(newchatname, sizeof(newchatname), strReplace(newchatname, " ", "_"));
-                    strcpy_s(newchatname, sizeof(newchatname), strReplace(newchatname, "~", ""));
+                    replaceChar(newchatname, ' ', '_'); // spaces are disallowed; replace with underscores
+                    removeChar(newchatname, '~'); // tildes are disallowed; strip them out
                 }
 
                 if (strstr(newchatname, "|") != NULL) {
@@ -2640,7 +2664,7 @@ int main(int argc, char** argv)
             od_printf("`bright white`\r\n\r\nOK, we'll leave it as-is!``\r\n\r\n");
         }
 
-        od_printf("``If you ever change your mind, your sysop will need to `bright white`reset`` \r\nyour uMRC settings.`` \r\n\r\n");
+        od_printf("``If you ever change your mind, your sysop will need to `bright white`reset`` your uMRC settings.``\r\n\r\n");
         defaultDisplayName();
         _snprintf_s(user.joinMessage, sizeof(user.joinMessage), -1, DEFAULT_JOIN_MSG, user.chatterName);
         _snprintf_s(user.exitMessage, sizeof(user.exitMessage), -1, DEFAULT_EXIT_MSG, user.chatterName);
@@ -2704,10 +2728,10 @@ int main(int argc, char** argv)
         if (stat(MRC_STATS_FILE, &file_stat) == 0) {
 #if defined(WIN32) || defined(_MSC_VER)  
             ctime_s(mrcStTm, 30, &file_stat.st_mtime);
-            strcpy_s(mrcStTm, sizeof(mrcStTm), strReplace(mrcStTm, "\n", ""));
 #else
-            strcpy_s(mrcStTm, sizeof(mrcStTm), strReplace(ctime(&file_stat.st_mtime), "\n", ""));
+            strcpy_s(mrcStTm, sizeof(mrcStTm), ctime(&file_stat.st_mtime));
 #endif
+            removeChar(mrcStTm, '\n');
         }
 
         od_set_cursor(3, 25);

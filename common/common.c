@@ -42,11 +42,13 @@ void writeToLog(char* msg, char* source, char* user) {
     logfile = fopen(LOG_FILE, "a");
 #endif
     if (logfile != NULL) {
+        //removeChar(msg, '\r');
+        //removeChar(msg, '\n');
         if (strlen(user) > 0) {
-            fprintf(logfile, "[%s] source=%s user=%s %s\n", tm_str, source, user, strReplace(strReplace(msg, "\r", ""), "\n", ""));
+            fprintf(logfile, "[%s] source=%s user=%s %s\n", tm_str, source, user, msg);
         }
         else {
-            fprintf(logfile, "[%s] source=%s %s\n", tm_str, source, strReplace(strReplace(msg, "\r", ""), "\n", ""));
+            fprintf(logfile, "[%s] source=%s %s\n", tm_str, source, msg);
         }
         fclose(logfile);
     }
@@ -90,6 +92,35 @@ char* strReplace(char* orig, char* rep, char* with) {
 		}
 	}
 	return _strdup(newstr);
+}
+
+void removeChar(char* str, char c) {
+    int readPos = 0, writePos = 0;
+    while (str[readPos] != '\0') {
+        if (str[readPos] != c) {
+            str[writePos++] = str[readPos];
+        }
+        readPos++;
+    }
+    str[writePos] = '\0';
+}
+
+void replaceChar(char* str, char old, char new) {
+    for (int i = 0; str[i] != '\0'; i++) {
+        if (str[i] == old) {
+            str[i] = new;
+            break;
+        }
+    }
+}
+
+void removeSubstr(char* str, const char* sub) {
+    char* match = strstr(str, sub); // Find first occurrence
+    if (match != NULL) {
+        size_t sub_len = strlen(sub);
+        // Shift trailing characters (including '\0') to fill the gap
+        memmove(match, match + sub_len, strlen(match + sub_len) + 1);
+    }
 }
 
 void ustr(char* s) {
@@ -207,43 +238,33 @@ int split(const char* txt, char delim, char*** tokens)
 	return count;
 }
 
-void processPacket(char* packet, char* fromUser, char* fromSite, char* fromRoom, char* toUser, char* msgExt, char* toRoom, char* body)
-{	
-    // Default every field to a safe, non-NULL empty string first. If
-	// split() fails (allocation failure) or the packet doesn't contain
-	// enough delimited fields, callers still get valid pointers instead
-	// of uninitialized/garbage ones -- previously, callers that didn't
-	// initialize their own char* locals before calling this (bridge.c's
-	// clientProcess loop, for one) would pass those garbage pointers to
-	// strlen()/strcmp() further down.
-	//static char empty[] = "";
-	//*fromUser = *fromSite = *fromRoom = *toUser = *msgExt = *toRoom = *body = empty;
-
+void processPacket(char* packet, char** fromUser, char** fromSite, char** fromRoom, char** toUser, char** msgExt, char** toRoom, char** body) {
+    static char empty[] = "";
+    *fromUser = *fromSite = *fromRoom = *toUser = *msgExt = *toRoom = *body = empty;
 	char** field;
 	int fieldCount = split(packet, '~', &field);
 	if (fieldCount >= 7) {
-	    strcpy_s(fromUser, PACKET_FLD_LEN, field[0]);
-        strcpy_s(fromSite, PACKET_FLD_LEN, field[1]);
-        strcpy_s(fromRoom, PACKET_FLD_LEN, field[2]);
-        strcpy_s(toUser, PACKET_FLD_LEN, field[3]);
-        strcpy_s(msgExt, PACKET_FLD_LEN, field[4]);
-        strcpy_s(toRoom, PACKET_FLD_LEN, field[5]);
-        strcpy_s(body, PACKET_LEN, field[6]);
+        *fromUser = _strdup(field[0]);
+        *fromSite = _strdup(field[1]);
+        *fromRoom = _strdup(field[2]);
+        *toUser = _strdup(field[3]);
+        *msgExt = _strdup(field[4]);
+        *toRoom = _strdup(field[5]);
+        *body = _strdup(field[6]);
 	}
     freeSplitResult(field, fieldCount);
 }
 
-void parseStats(char* stats, char* bbses, char* rooms, char* users, char* activity) {
-	//static char empty[] = "";
-	//*bbses = *rooms = *users = *activity = empty;
-
-	char** stat;
+void parseStats(char* stats, char** bbses, char** rooms, char** users, char** activity) {
+    static char empty[] = "";
+    *bbses = *rooms = *users = *activity = empty;
+    char** stat;
 	int statCount = split(stats, ' ', &stat);
 	if (statCount >= 4) {
-        strcpy_s(bbses, 5, stat[0]);
-        strcpy_s(rooms, 5, stat[1]);
-        strcpy_s(users, 5, stat[2]);
-        strcpy_s(activity, 5, stat[3]);
+        *bbses = _strdup(stat[0]);
+        *rooms = _strdup(stat[1]);
+        *users = _strdup(stat[2]);
+        *activity = _strdup(stat[3]);
 	}
     freeSplitResult(stat, statCount);
 }
