@@ -1890,6 +1890,12 @@ void* handleIncomingMessages(void* lpArg) {
             int pktCount = split(inboundData, '\n', &packets);
             for (int i = 0; i < pktCount; i++) {
 
+                // Check whether the incoming server command should
+                // terminate the session, breaking the loop.
+                if (!gIsInChat) {
+                    break;
+                }
+
                 char packet[PACKET_LEN] = "";
                 _snprintf_s(packet, PACKET_LEN, -1, "%s", packets[i]);
 
@@ -1903,12 +1909,6 @@ void* handleIncomingMessages(void* lpArg) {
                 if (strcmp(fromUser, "SERVER") == 0 && (strcmp(toRoom, gRoom) == 0 || strlen(toRoom) == 0)) {
 
                     processServerMessage(body, toUser);
-
-                    // Check whether the incoming server command should
-                    // terminate the session, breaking the loop.
-                    if (!gIsInChat) {
-                        break;
-                    }
                                         
                     // refresh the user list when the SERVER announces joins and exits
                     if (strstr(body, "Joining") != NULL ||
@@ -1946,6 +1946,14 @@ void* handleIncomingMessages(void* lpArg) {
                         (strlen(toRoom) == 0 && strlen(toUser) == 0)) {
 
                     if (checkTwit(fromUser)) {
+                        // cleanup these, since they were strdup'd
+                        free(fromUser);
+                        free(fromSite);
+                        free(fromRoom);
+                        free(toUser);
+                        free(msgExt);
+                        free(toRoom);
+                        free(body);
                         continue;
                     }
 
@@ -1972,6 +1980,15 @@ void* handleIncomingMessages(void* lpArg) {
                         queueIncomingMessage(body, gMentionCountChanged);
                     }
                 }
+
+                // cleanup these, since they were strdup'd
+                free(fromUser);
+                free(fromSite);
+                free(fromRoom);
+                free(toUser);
+                free(msgExt);
+                free(toRoom);
+                free(body);
 
                 od_sleep(0);
             }
@@ -2481,7 +2498,7 @@ bool enterChat() {
 
     free(gScrollBack);
     free(gMentions);
-    free(gTwits);
+    //free(gTwits);
     gMentionCount=0;
     strcpy_s(gRoom, sizeof(gRoom), "");
     strcpy_s(gTopic, sizeof(gTopic), "");
@@ -2504,6 +2521,7 @@ void displayTimeWarning(char* str) {
         od_set_cursor(15, 29);
         od_printf(wrn);
     }
+    free(wrn);
 }
 
 #if defined(WIN32) || defined(_MSC_VER)

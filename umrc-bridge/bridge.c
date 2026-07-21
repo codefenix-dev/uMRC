@@ -844,6 +844,16 @@ void mrcHostProcess(struct settings cfg) {
                     writeToLog(logstring, PROGRAM, "");
                 }  
 
+                if (countOfChars(packet, '~') < 6) { // invalid packets have fewer than 6 tildes
+                    if (gVerboseLogging) {
+                        printDateTimeStamp();
+                        printf("WARNING: invalid packet: \"%s\"\r\n", packet);
+                    }
+                    writeToLog("WARNING: invalid packet:", PROGRAM, "");
+                    writeToLog(packet, PROGRAM, "");
+                    continue;
+                }  
+
                 char* fromUser = "", * fromSite = "", * fromRoom = "", * toUser = "", * msgExt = "", * toRoom = "", * body = "";
                 processPacket(packet, &fromUser, &fromSite, &fromRoom, &toUser, &msgExt, &toRoom, &body);
 
@@ -863,17 +873,15 @@ void mrcHostProcess(struct settings cfg) {
                     }
                 } 
 
-                if (countOfChars(packet, '~') < 6) { // invalid packets have fewer than 6 tildes
-                    if (gVerboseLogging) {
-                        printDateTimeStamp();
-                        printf("WARNING: invalid packet: \"%s\"\r\n", packet);
-                    }
-                    writeToLog("WARNING: invalid packet:", PROGRAM, "");
-                    writeToLog(packet, PROGRAM, "");
-                    continue;
-                }  
-
                 if (strlen(body) == 0) {
+                    // cleanup these, since they were strdup'd
+                    free(fromUser);
+                    free(fromSite);
+                    free(fromRoom);
+                    free(toUser);
+                    free(msgExt);
+                    free(toRoom);
+                    free(body);
                     continue;
                 }                 
 
@@ -945,6 +953,15 @@ void mrcHostProcess(struct settings cfg) {
                     // these are CHAT messages FROM MRC; should go to all active local clients
                     sendToLocalClients(packet);
                 }
+
+                // cleanup these, since they were strdup'd
+                free(fromUser);
+                free(fromSite);
+                free(fromRoom);
+                free(toUser);
+                free(msgExt);
+                free(toRoom);
+                free(body);
             }
         }
         else if (iResult == 0) {

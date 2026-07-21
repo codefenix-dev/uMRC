@@ -42,8 +42,6 @@ void writeToLog(char* msg, char* source, char* user) {
     logfile = fopen(LOG_FILE, "a");
 #endif
     if (logfile != NULL) {
-        //removeChar(msg, '\r');
-        //removeChar(msg, '\n');
         if (strlen(user) > 0) {
             fprintf(logfile, "[%s] source=%s user=%s %s\n", tm_str, source, user, msg);
         }
@@ -109,17 +107,17 @@ void replaceChar(char* str, char old, char new) {
     for (int i = 0; str[i] != '\0'; i++) {
         if (str[i] == old) {
             str[i] = new;
-            break;
         }
     }
 }
 
 void removeSubstr(char* str, const char* sub) {
     char* match = strstr(str, sub); // Find first occurrence
-    if (match != NULL) {
+    while (match != NULL) {
         size_t sub_len = strlen(sub);
         // Shift trailing characters (including '\0') to fill the gap
         memmove(match, match + sub_len, strlen(match + sub_len) + 1);
+        match = strstr(str, sub);
     }
 }
 
@@ -244,7 +242,7 @@ void processPacket(char* packet, char** fromUser, char** fromSite, char** fromRo
 	char** field;
 	int fieldCount = split(packet, '~', &field);
 	if (fieldCount >= 7) {
-        *fromUser = _strdup(field[0]);
+        *fromUser = _strdup(field[0]); // _strdup ?
         *fromSite = _strdup(field[1]);
         *fromRoom = _strdup(field[2]);
         *toUser = _strdup(field[3]);
@@ -261,7 +259,7 @@ void parseStats(char* stats, char** bbses, char** rooms, char** users, char** ac
     char** stat;
 	int statCount = split(stats, ' ', &stat);
 	if (statCount >= 4) {
-        *bbses = _strdup(stat[0]);
+        *bbses = _strdup(stat[0]); // _strdup ?
         *rooms = _strdup(stat[1]);
         *users = _strdup(stat[2]);
         *activity = _strdup(stat[3]);
