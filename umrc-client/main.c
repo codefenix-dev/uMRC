@@ -1671,7 +1671,7 @@ void processServerMessage(char* body, char* toUser) {
         getSubStr(body, params, cmdsep+1, (int)strlen(body));
     }
     else {
-        strncpy_s(cmd, sizeof(cmd), body, 140);
+        strncpy_s(cmd, sizeof(cmd), body, -1);
     }
 
     // Implemented SERVER commands - notes provided from the MRC developer wiki on how each is handled:
@@ -1685,7 +1685,6 @@ void processServerMessage(char* body, char* toUser) {
         char banner[512] = "";
         _snprintf_s(banner, sizeof(banner), -1, (strcmp(cmd, "BANNER") == 0 ? "|14* |13<|15#|13> |15%s" : "|14* |14<|15!|14> |15%s"), params);
         queueIncomingMessage(banner, false);
-        addToScrollBack(banner, 2);
     }
     else if (strcmp(cmd, "ROOMTOPIC") == 0) {
         // ROOMTOPIC : Server will send new topic when changed
@@ -1706,7 +1705,7 @@ void processServerMessage(char* body, char* toUser) {
         // Client must enforce or routing will break.
         // This will be used to avoid delivery conflict in case 2 users with the same nick on 2 different BBSes are connected.
         // The server will append a number to the original nick to resolve the conflict.
-        strcpy_s(user.chatterName, sizeof(user.chatterName), params);
+        strncpy_s(user.chatterName, sizeof(user.chatterName), params, -1);
         _snprintf_s(gDisplayChatterName, sizeof(gDisplayChatterName), -1, "|%02d|%02d%c|%02d|%02d%s%s|16", user.chatterNamePrefixFgColor, user.chatterNamePrefixBgColor, user.chatterNamePrefix, user.chatterNameFgColor, user.chatterNameBgColor, user.chatterName, user.chatterNameSuffix);
         // inform the user of the change...
         char nicknotice[512] = "";
@@ -1746,7 +1745,7 @@ void processServerMessage(char* body, char* toUser) {
 		gUserCountChanged = true;
     }
     else if (strcmp(cmd, "LATENCY") == 0) {
-        strcpy_s(gLatency, sizeof(gLatency), params);
+        strncpy_s(gLatency, sizeof(gLatency), params, -1);
         gLatencyChanged = true;
     }
     else if (strcmp(cmd, "RECONNECT") == 0) {
@@ -2510,7 +2509,7 @@ bool enterChat() {
 
 void displayTimeWarning(char* str) {
     char wrn[80] = "";
-    strcpy_s(wrn, sizeof(wrn), _strdup(str));
+    strncpy_s(wrn, sizeof(wrn), (str), -1);
     if (gIsInChat) {
 
         removeChar(wrn, '\r');
@@ -2521,7 +2520,6 @@ void displayTimeWarning(char* str) {
         od_set_cursor(15, 29);
         od_printf(wrn);
     }
-    free(wrn);
 }
 
 #if defined(WIN32) || defined(_MSC_VER)

@@ -831,9 +831,9 @@ void mrcHostProcess(struct settings cfg) {
                     break;
                 }
 
-                if (strstr(packet, "~") == NULL) {
-                    continue;
-                }  
+                if (strstr(packet, "~") == NULL) { // Anything that doesn't contain a tilde 
+                    continue;                      // isn't a valid packet, so skip it.
+                }
 
                 if (gVerboseLogging) {
                     //Sleep(10);
@@ -932,6 +932,10 @@ void mrcHostProcess(struct settings cfg) {
                         if (activity != NULL) {
                             act = atoi(activity);
                         }
+                        free(bbses);
+                        free(rooms);
+                        free(users);
+                        free(activity);
 
                         FILE* mrcstats;
 #if defined(WIN32) || defined(_MSC_VER)
