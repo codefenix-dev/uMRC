@@ -617,7 +617,7 @@ void updateRoomTopic() {
         return;
     }
     char displayableTopic[65] = "";
-    strcpy_s(displayableTopic, 65 - (strlen(gRoom) + 2), gTopic);
+    strncpy_s(displayableTopic, 65 - (strlen(gRoom) + 2), gTopic, -1);
     od_set_cursor(od_control.user_screen_length - 2, 6); 
     od_printf("`%s %s`#`%s %s`%s`%s %s`:`%s %s`%s ", 
         gTopicFg2, gTopicBg2, 
@@ -1022,7 +1022,6 @@ void enterScrollBack(int initialScroll, int mode) {
 
     od_set_cursor(od_control.user_screen_length - 1, 2);
     od_printf("``");
-    //od_clr_line();
     od_printf("`flashing %s %s`%s``", gTopicFg1, gTopicBg1,
         "                           * * * CHAT PAUSED * * *                           ");
 
@@ -1031,7 +1030,7 @@ void enterScrollBack(int initialScroll, int mode) {
     while (!exitScrollback) {
 
         od_set_cursor(od_control.user_screen_length - 2, 18);
-        od_printf("`%s %s`%.0f`%s %s`%c`%s %s` ``",
+        od_printf("`%s %s`%3.0f`%s %s`%c`%s %s` ``",
             gTopicFg1, gTopicBg1,
             (scrollPos / (scrollMax + 0.1)) * 100,
             gTopicFg2, gTopicBg2, 
@@ -1272,7 +1271,10 @@ bool checkTwit(char* twit) {
  */
 void addTwit(char* twit) {
 
+    char result[140] = "";
     if (checkTwit(twit)) {
+        _snprintf_s(result, sizeof(result), -1, "|15* |14%s |07already in twit list.", twit);
+        displayMessage(result, false);
         return;
     }
 
@@ -1287,7 +1289,6 @@ void addTwit(char* twit) {
         fclose(tfile);
         loadTwits();
         if (checkTwit(twit)) {
-            char result[140] = "";
             _snprintf_s(result, sizeof(result), -1, "|15* |14%s |07added to twit list.", twit);
             displayMessage(result, false);
         }
@@ -1440,8 +1441,8 @@ void processUserCommand(char* cmd, char* params) {
         gIsInChat = false;
     }
     else if (_stricmp(cmd, "join") == 0 || _stricmp(cmd, "j") == 0) {
-        char newRoom[20] = "";
-        strcpy_s(newRoom, sizeof(newRoom), params); 
+        char newRoom[31] = "";
+        strncpy_s(newRoom, sizeof(newRoom), params, -1); 
         removeChar(newRoom, '#'); // no #
         replaceChar(newRoom, ' ', '_'); // Single word
         stripPipeCodes(newRoom); // No pipe codes
@@ -1456,13 +1457,12 @@ void processUserCommand(char* cmd, char* params) {
         // invalid, but we'll inform the user anyway. 
         if (_stricmp(newRoom, gRoom) == 0) {
             displayMessage("|15* |14Already in that room|07.", false);
-            return;
         }
 
-        char newRoomCmd[30] = "";
+        char newRoomCmd[80] = ""; // Needs to be long enough to hold the old room, new room, and NEWROOM command.
         _snprintf_s(newRoomCmd, sizeof(newRoomCmd), -1, "NEWROOM:%s:", gRoom); // include the OLD room as the first parameter...
         sendCmdPacket(&mrcSock, newRoomCmd, newRoom); // the NEW room will be included as the second parameter...
-        strcpy_s(gRoom, sizeof(gRoom), newRoom); 
+        strncpy_s(gRoom, sizeof(gRoom), newRoom, -1); 
         sendCmdPacket(&mrcSock, "USERLIST", ""); // Need a new user list after joining a different room
     }
     else if (_stricmp(cmd, "topic") == 0) {              
@@ -1652,87 +1652,72 @@ void processUserCommand(char* cmd, char* params) {
     }
 }
 
-void processServerMessage(char* body, char* toUser) {
+void processServerMessage(char* svrmsg, char* toUser) {
         
-    if (body == NULL) { // don't process if there's nothing to send..
+    if (svrmsg == NULL) { // don't process if there's nothing to process..
         return;
     }
-    if (strlen(body) == 0) {
+    if (strlen(svrmsg) == 0) {
         return;
     }
 
-    // Parse the body for command strings
-    char cmd[141] = "";
-    char params[512] = ""; // needs to be large enough to hold long lists of data, e.g.: USERLISTs
-    int cmdsep = indexOfChar(body, ':');
-
-    if (cmdsep > 0) {
-        getSubStr(body, cmd, 0, cmdsep);
-        getSubStr(body, params, cmdsep+1, (int)strlen(body));
-    }
-    else {
-        strncpy_s(cmd, sizeof(cmd), body, -1);
-    }
+    // SERVER commands have a colon after them, so we'll use
+    // that to determine the start of the parameter list.
+    int cmdsep = indexOfChar(svrmsg, ':');
+    int argpos = cmdsep + 1;
 
     // Implemented SERVER commands - notes provided from the MRC developer wiki on how each is handled:
     //
-    if (strcmp(cmd, "BANNER") == 0 || strcmp(cmd, "NOTIFY") == 0) {
+    if (strncmp(svrmsg, "BANNER", cmdsep) == 0 || strncmp(svrmsg, "NOTIFY", cmdsep) == 0) {
         // This client doesn't currently make special use of banners.
         // If a banner is ever sent, we simply display it in chat.
         //
         // Notification messages have the same structure as a 
         // BANNER packet, so we handle it the same way.
         char banner[512] = "";
-        _snprintf_s(banner, sizeof(banner), -1, (strcmp(cmd, "BANNER") == 0 ? "|14* |13<|15#|13> |15%s" : "|14* |14<|15!|14> |15%s"), params);
+        _snprintf_s(banner, sizeof(banner), -1, (strncmp(svrmsg, "BANNER", cmdsep) == 0 ? "|14* |13<|15#|13> |15%s" : "|14* |14<|15!|14> |15%s"), (svrmsg + argpos));
         queueIncomingMessage(banner, false);
     }
-    else if (strcmp(cmd, "ROOMTOPIC") == 0) {
+    else if (strncmp(svrmsg, "ROOMTOPIC", cmdsep) == 0) {
         // ROOMTOPIC : Server will send new topic when changed
         // - No pipe codes
         // - Room name cannot contain spaces
         // - Topic can contain spaces
-        strncpy_s(gTopic, sizeof(gTopic), params + strlen(gRoom) + 1, 54);
+        strncpy_s(gTopic, sizeof(gTopic), (svrmsg + argpos) + ((int)strlen(gRoom)) + 1, -1);
         gRoomTopicChanged = true;
     }
-    else if (strcmp(cmd, "USERROOM") == 0) {
+    else if (strncmp(svrmsg, "USERROOM", cmdsep) == 0) {
         // USERROOM: Server confirm the room user is in, usually sent after NEWROOM but may be the result of other reasons.[NEW in 1.3]
         // Client must enforce or routing will break
-        strncpy_s(gRoom, sizeof(gRoom), params, 29);
+        strncpy_s(gRoom, sizeof(gRoom), (svrmsg + argpos), -1);
         gRoomTopicChanged = true;
     }
-    else if (strcmp(cmd, "USERNICK") == 0) {
+    else if (strncmp(svrmsg, "USERNICK", cmdsep) == 0) {
         // USERNICK : Server confirm the nick user can use, usually sent after IAMHERE but may be the result of other reasons. [NEW in 1.3]
         // Client must enforce or routing will break.
         // This will be used to avoid delivery conflict in case 2 users with the same nick on 2 different BBSes are connected.
         // The server will append a number to the original nick to resolve the conflict.
-        strncpy_s(user.chatterName, sizeof(user.chatterName), params, -1);
+        strncpy_s(user.chatterName, sizeof(user.chatterName), (svrmsg + argpos), -1);
         _snprintf_s(gDisplayChatterName, sizeof(gDisplayChatterName), -1, "|%02d|%02d%c|%02d|%02d%s%s|16", user.chatterNamePrefixFgColor, user.chatterNamePrefixBgColor, user.chatterNamePrefix, user.chatterNameFgColor, user.chatterNameBgColor, user.chatterName, user.chatterNameSuffix);
         // inform the user of the change...
-        char nicknotice[512] = "";
+        char nicknotice[141] = "";
         _snprintf_s(nicknotice, sizeof(nicknotice), -1, "|15* |08(|14Notice|08) |07The MRC server has updated your name to |15%s|07.", user.chatterName);
         queueIncomingMessage(nicknotice, true);
         stripPipeCodes(nicknotice);
         writeToLog(nicknotice, PROGRAM, od_control.user_handle);
     }
-    else if (strcmp(cmd, "TERMINATE") == 0) {
+    else if (strncmp(svrmsg, "TERMINATE", cmdsep) == 0) {
         // TERMINATE: Server requests the client interface to terminate.[NEW in 1.3]
         // Client must enforce
         // This is to allow for the chat interface to gracefully terminate the connection.
-        gIsInChat = false;
-        displayMessage(params, true); // should be displayed immediately
+        queueIncomingMessage((svrmsg + argpos), true);
         writeToLog("User was terminated by the server", PROGRAM, od_control.user_handle);
-        writeToLog(params, PROGRAM, od_control.user_handle);
-    }
-    else if (strcmp(cmd, "GOODBYE") == 0) {
-        // GOODBYE : Server is gracefully closing connection. [NEW in 1.4]
-        // Sent only if client reports the CAPABILITY
+        writeToLog((svrmsg + cmdsep), PROGRAM, od_control.user_handle);
         gIsInChat = false;
-        displayMessage("Server is closing the connection.", true); // should be displayed immediately
-        writeToLog("Server is closing the connection.", PROGRAM, od_control.user_handle);
     }
-    else if (strcmp(cmd, "USERLIST") == 0) {
+    else if (strncmp(svrmsg, "USERLIST", cmdsep) == 0) {
 		char** newChatters;
-		int newCount = split(params, ',', &newChatters);
+		int newCount = split((svrmsg + argpos), ',', &newChatters);
 
 		EnterCriticalSection(&gChattersLock);
 		char** oldChatters = gChattersInRoom;
@@ -1744,11 +1729,11 @@ void processServerMessage(char* body, char* toUser) {
 		freeSplitResult(oldChatters, oldCount);
 		gUserCountChanged = true;
     }
-    else if (strcmp(cmd, "LATENCY") == 0) {
-        strncpy_s(gLatency, sizeof(gLatency), params, -1);
+    else if (strncmp(svrmsg, "LATENCY", cmdsep) == 0) {
+        strncpy_s(gLatency, sizeof(gLatency), (svrmsg + argpos), -1);
         gLatencyChanged = true;
     }
-    else if (strcmp(cmd, "RECONNECT") == 0) {
+    else if (strncmp(svrmsg, "RECONNECT", cmdsep) == 0) {
         queueIncomingMessage("|15* |08(|14Notice|08) |07MRC host connection re-established!", false);
         // Rejoin the room if re-connecting to the host
         sendCmdPacket(&mrcSock, "IAMHERE", "");
@@ -1758,9 +1743,8 @@ void processServerMessage(char* body, char* toUser) {
     // Just display the whole incoming server message if it's not a recognized command string,
     // since it's most likely an informational message from the SERVER.
     else if (strlen(toUser) == 0 || _stricmp(toUser, user.chatterName) == 0) {
-        queueIncomingMessage(body, false);
+        queueIncomingMessage(svrmsg, false);
     }
-    //od_sleep(5);
 }
 
 void processCtcpCommand(char* body, char* toUser, char* fromUser) {
@@ -1799,7 +1783,6 @@ void processCtcpCommand(char* body, char* toUser, char* fromUser) {
         char repStr[80] = "";
 
         strcpy_s(cmdStr, sizeof(cmdStr), cmdStart);
-        removeChar(cmdStr, ' ');
 
         if (_strnicmp(cmdStr, "VERSION", 7) == 0) {
             _snprintf_s(repStr, sizeof(repStr), -1, "VERSION %s(%c) v%s.%s %s [%s]", TITLE, tolower(PLATFORM[0]), PROTOCOL_VERSION, UMRC_VERSION, COMPILE_DATE, AUTHOR_INITIALS);
@@ -1836,6 +1819,98 @@ void processCtcpCommand(char* body, char* toUser, char* fromUser) {
         queueIncomingMessage(resp, false);
         od_sleep(20);
     }
+}
+
+void processPacket(char* packet) {
+    char* fromUser = "", * fromSite = "", * fromRoom = "", * toUser = "", * msgExt = "", * toRoom = "", * body = "";
+    char** field;
+    int fieldCount = split(packet, '~', &field);
+    if (fieldCount >= 7) {
+         fromUser = _strdup(field[0]);
+         fromSite = _strdup(field[1]);
+         fromRoom = _strdup(field[2]);
+         toUser   = _strdup(field[3]);
+         msgExt   = _strdup(field[4]);
+         toRoom   = _strdup(field[5]);
+         body     = _strdup(field[6]);
+
+        if (strcmp(fromUser, "SERVER") == 0 && (strcmp(toRoom, gRoom) == 0 || strlen(toRoom) == 0)) {
+
+            processServerMessage(body, toUser);
+
+            // refresh the user list when the SERVER announces joins and exits
+            if (strstr(body, "Joining") != NULL ||
+                strstr(body, "Leaving") != NULL ||
+                strstr(body, "Timeout") != NULL ||
+                strstr(body, "Rename") != NULL ||
+                strstr(body, "Linked") != NULL ||
+                strstr(body, "Unlink") != NULL) {
+
+                sendCmdPacket(&mrcSock, "USERLIST", "");
+            }
+
+            // should display SERVER messages to NOTME, if they're to or from the same room
+            if (strcmp(toUser, "NOTME") == 0) {
+                if ((_stricmp(fromRoom, gRoom) == 0 || strlen(fromRoom) == 0) &&
+                    (_stricmp(toRoom, gRoom) == 0 || strlen(toRoom) == 0)) {
+                    queueIncomingMessage(body, false);
+                }
+            }
+        }
+        else if (strcmp(toRoom, CTCP_ROOM) == 0 && strcmp(fromRoom, CTCP_ROOM) == 0) {
+            processCtcpCommand(body, toUser, fromUser);
+        }
+        else if (strcmp(toUser, "NOTME") == 0) {
+            if ((_stricmp(fromRoom, gRoom) == 0 || strlen(fromRoom) == 0) &&
+                (_stricmp(toRoom, gRoom) == 0 || strlen(toRoom) == 0)) {
+                queueIncomingMessage(body, false);
+                sendCmdPacket(&mrcSock, "USERLIST", "");
+            }
+        }
+        else if (
+            // messages addressed to the room or to the chatter
+            ((strcmp(gRoom, toRoom) == 0 || strlen(toRoom) == 0) && (strlen(toUser) == 0 || _stricmp(toUser, user.chatterName) == 0)) ||
+            // broadcast: messages addressed to everyone; no room and no user specified
+            (strlen(toRoom) == 0 && strlen(toUser) == 0)) {
+
+            if (checkTwit(fromUser)) {
+            //   do nothing
+            }
+
+            // Direct message (DirectMsg)
+            else if (strlen(toUser) != 0 && strlen(fromUser) != 0) {
+                gMentionCount = gMentionCount + 1;
+                gMentionCountChanged = true;
+                if (user.chatSounds) {
+                    od_putch(7);
+                }
+                queueIncomingMessage(body, true);
+                strcpy_s(gLastDirectMsgFrom, sizeof(gLastDirectMsgFrom), fromUser);
+            }
+
+            // Standard message
+            else {
+                if (_stricmp(fromUser, user.chatterName) != 0 && strContainsStrI(body, user.chatterName)) {
+                    gMentionCount = gMentionCount + 1;
+                    gMentionCountChanged = true;
+                    if (user.chatSounds) {
+                        od_putch(7);
+                    }
+                }
+                queueIncomingMessage(body, gMentionCountChanged);
+            }
+        }
+
+        // cleanup 
+        free(fromUser);
+        free(fromSite);
+        free(fromRoom);
+        free(toUser);
+        free(msgExt);
+        free(toRoom);
+        free(body);
+    }
+    freeSplitResult(field, fieldCount);
 }
 
 #if defined(WIN32) || defined(_MSC_VER)    
@@ -1902,93 +1977,7 @@ void* handleIncomingMessages(void* lpArg) {
                     continue;                      // isn't a valid packet, so skip it.
                 }
 
-                char* fromUser = "", * fromSite = "", * fromRoom = "", * toUser = "", * msgExt = "", * toRoom = "", * body = "";
-                processPacket(packet, &fromUser, &fromSite, &fromRoom, &toUser, &msgExt, &toRoom, &body);
-
-                if (strcmp(fromUser, "SERVER") == 0 && (strcmp(toRoom, gRoom) == 0 || strlen(toRoom) == 0)) {
-
-                    processServerMessage(body, toUser);
-                                        
-                    // refresh the user list when the SERVER announces joins and exits
-                    if (strstr(body, "Joining") != NULL ||
-                        strstr(body, "Leaving") != NULL ||
-                        strstr(body, "Timeout") != NULL ||
-                        strstr(body, "Rename") != NULL || 
-                        strstr(body, "Linked") != NULL ||
-                        strstr(body, "Unlink") != NULL) {
-
-                        sendCmdPacket(&mrcSock, "USERLIST", "");
-                    }
-
-                    // should display SERVER messages to NOTME, if they're to or from the same room
-                    if (strcmp(toUser, "NOTME") == 0) {
-                        if ((_stricmp(fromRoom, gRoom) == 0 || strlen(fromRoom) == 0) &&
-                            (_stricmp(toRoom, gRoom) == 0 || strlen(toRoom) == 0)) {
-                            queueIncomingMessage(body, false);
-                        }
-                    }
-                }                
-                else if (strcmp(toRoom, CTCP_ROOM) == 0 && strcmp(fromRoom, CTCP_ROOM) == 0) {
-                    processCtcpCommand(body, toUser, fromUser);
-                }
-                else if (strcmp(toUser, "NOTME") == 0) {
-                    if ((_stricmp(fromRoom, gRoom) == 0 || strlen(fromRoom) == 0) && 
-                        (_stricmp(toRoom, gRoom) == 0 || strlen(toRoom) == 0)) {
-                        queueIncomingMessage(body, false);
-                        sendCmdPacket(&mrcSock, "USERLIST", "");
-                    }
-                }
-                else if (
-                        // messages addressed to the room or to the chatter
-                        ((strcmp(gRoom, toRoom)==0 || strlen(toRoom)==0) && (strlen(toUser) == 0 || _stricmp(toUser, user.chatterName) == 0)) || 
-                        // broadcast: messages addressed to everyone; no room and no user specified
-                        (strlen(toRoom) == 0 && strlen(toUser) == 0)) {
-
-                    if (checkTwit(fromUser)) {
-                        // cleanup these, since they were strdup'd
-                        free(fromUser);
-                        free(fromSite);
-                        free(fromRoom);
-                        free(toUser);
-                        free(msgExt);
-                        free(toRoom);
-                        free(body);
-                        continue;
-                    }
-
-                    // Direct message (DirectMsg)
-                    else if (strlen(toUser) != 0 && strlen(fromUser) != 0) {
-                        gMentionCount = gMentionCount + 1;
-                        gMentionCountChanged = true;
-                        if (user.chatSounds) {
-                            od_putch(7);
-                        }
-                        queueIncomingMessage(body, true);
-                        strcpy_s(gLastDirectMsgFrom, sizeof(gLastDirectMsgFrom), fromUser);
-                    }
-
-                    // Standard message
-                    else {
-                        if (_stricmp(fromUser, user.chatterName) != 0 && strContainsStrI(body, user.chatterName)) {
-                            gMentionCount = gMentionCount + 1;
-                            gMentionCountChanged = true;
-                            if (user.chatSounds) {
-                                od_putch(7);
-                            }
-                        }
-                        queueIncomingMessage(body, gMentionCountChanged);
-                    }
-                }
-
-                // cleanup these, since they were strdup'd
-                free(fromUser);
-                free(fromSite);
-                free(fromRoom);
-                free(toUser);
-                free(msgExt);
-                free(toRoom);
-                free(body);
-
+                processPacket(packet);
                 od_sleep(0);
             }
         }

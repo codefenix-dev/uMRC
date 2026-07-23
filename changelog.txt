@@ -2,6 +2,9 @@ Change Log:
 
 v106 - TBA:
 
+  - Fix for properly handling GOODBYE packets.
+  - Fix for scrollback percentage indicator.
+  - Fix for joining long room names FROM other long room names.
   - Various fixes to string management all throughout to address potential 
     crashes and memory leaks (Claude AI assisted).
 

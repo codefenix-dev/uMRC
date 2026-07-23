@@ -112,6 +112,9 @@ void replaceChar(char* str, char old, char new) {
 }
 
 void removeSubstr(char* str, const char* sub) {
+    if (sub == NULL || strlen(sub) == 0) {
+        return; // exit if nothing to remove
+    }
     char* match = strstr(str, sub); // Find first occurrence
     while (match != NULL) {
         size_t sub_len = strlen(sub);
@@ -234,37 +237,6 @@ int split(const char* txt, char delim, char*** tokens)
 
 	*tokens = arr;
 	return count;
-}
-
-void processPacket(char* packet, char** fromUser, char** fromSite, char** fromRoom, char** toUser, char** msgExt, char** toRoom, char** body) {
-    static char empty[] = "";
-    *fromUser = *fromSite = *fromRoom = *toUser = *msgExt = *toRoom = *body = empty;
-	char** field;
-	int fieldCount = split(packet, '~', &field);
-	if (fieldCount >= 7) {
-        *fromUser = _strdup(field[0]); // _strdup ?
-        *fromSite = _strdup(field[1]);
-        *fromRoom = _strdup(field[2]);
-        *toUser = _strdup(field[3]);
-        *msgExt = _strdup(field[4]);
-        *toRoom = _strdup(field[5]);
-        *body = _strdup(field[6]);
-	}
-    freeSplitResult(field, fieldCount);
-}
-
-void parseStats(char* stats, char** bbses, char** rooms, char** users, char** activity) {
-    static char empty[] = "";
-    *bbses = *rooms = *users = *activity = empty;
-    char** stat;
-	int statCount = split(stats, ' ', &stat);
-	if (statCount >= 4) {
-        *bbses = _strdup(stat[0]); // _strdup ?
-        *rooms = _strdup(stat[1]);
-        *users = _strdup(stat[2]);
-        *activity = _strdup(stat[3]);
-	}
-    freeSplitResult(stat, statCount);
 }
 
 char* createPacket(char* fromUser, char* fromSite, char* fromRoom, char* toUser, char* msgExt, char* toRoom, char* body) {

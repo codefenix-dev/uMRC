@@ -53,13 +53,6 @@ typedef uint32_t  DWORD;
 #define PROGRAM "umrc-bridge"
 #define OK "|10OK|07\r\n"
 
-const char* ACTIVITY[4] = {
-    "NUL",
-    "LOW",
-    "MED",
-    "HI"
-};
-
 #pragma region GLOBALS
 
 bool gVerboseLogging = false;
@@ -81,6 +74,7 @@ struct pClientProc {
     SOCKET pSock;
     int pClientSlot;
 };
+struct settings cfg;
 
 bool usingSSL = false;
 SSL* mrcHostSsl;
@@ -487,13 +481,10 @@ void* waitProcess(void* lpArg) {
     struct addrinfo* liResult = NULL, * ptrLi = NULL, listener;
     char outboundPacket[PACKET_LEN] = "";
     int iResult; 
-    char* port;
 #if defined(WIN32) || defined(_MSC_VER)  
     HANDLE hClient[MAX_CLIENTS];  
-    port = *(char**)lpArg;
 #else
     pthread_t hClient[MAX_CLIENTS];  
-    port = (char*)lpArg;
 #endif
 
     DWORD clientThreadId[MAX_CLIENTS];
@@ -520,7 +511,7 @@ void* waitProcess(void* lpArg) {
     listener.ai_protocol = IPPROTO_TCP;
     listener.ai_flags = AI_PASSIVE;
     
-    iResult = getaddrinfo("localhost" , port, &listener, &liResult);
+    iResult = getaddrinfo("localhost", cfg.port, &listener, &liResult);
     if (iResult != 0) {
         printf("getaddrinfo (clients) failed with error: %d\n", iResult);
 #if defined(WIN32) || defined(_MSC_VER)  
@@ -637,7 +628,120 @@ SSL* performSslHandshake(SOCKET* sock) {
     return ssl;
 }
 
-void mrcHostProcess(struct settings cfg) {
+void processPacket(char* packet) {
+
+    char* fromUser = "", * fromSite = "", * fromRoom = "", * toUser = "", * msgExt = "", * toRoom = "", * body = "";
+    char** field;
+    int fieldCount = split(packet, '~', &field);
+    if (fieldCount >= 7) {
+        fromUser = _strdup(field[0]);
+        fromSite = _strdup(field[1]);
+        fromRoom = _strdup(field[2]);
+        toUser = _strdup(field[3]);
+        msgExt = _strdup(field[4]);
+        toRoom = _strdup(field[5]);
+        body = _strdup(field[6]);
+
+        for (int iml = 0; iml < MAX_LATENCIES; iml++) {
+            if (lt[iml].packetSum == packetSum(packet) || (lt[iml].isStats == true && strstr(body, "STATS") != 0)) {
+                gLatency = currentTimeMillis() - lt[iml].timeSent;
+                initializeLt();
+                char ltccmd[20] = "";
+                _snprintf_s(ltccmd, sizeof(ltccmd), -1, "LATENCY:%lld", gLatency);
+                sendToLocalClients(createPacket("SERVER", "", "", "CLIENT", "", "", ltccmd));
+                if (gVerboseLogging) {
+                    printDateTimeStamp();
+                    puts(ltccmd);
+                    writeToLog(ltccmd, PROGRAM, "");
+                }
+                break;
+            }
+        }
+
+        if (strcmp(fromUser, "SERVER") == 0) {
+
+            for (int ii = 0; packet[ii] != '\0'; ii++) { // replace control characters with underscores
+                if (packet[ii] > 6 && packet[ii] < 32 && packet[ii] != 10) { // all except for "card" characters and LF
+                    if (gVerboseLogging) {
+                        printDateTimeStamp();
+                        printf("replacing ascii %d (%c).\r\n", packet[ii], packet[ii]);
+                    }
+                    packet[ii] = '_';
+                }
+            }
+
+            // Server acknowledged our connection, so send the INFO packets.
+            if (strcmp(body, "HELLO") == 0) {
+                sendCmdPacket("", "", "INFOWEB:%s", cfg.web);
+                sendCmdPacket("", "", "INFOTEL:%s", cfg.tel);
+                sendCmdPacket("", "", "INFOSSH:%s", cfg.ssh);
+                sendCmdPacket("", "", "INFOSYS:%s", cfg.sys);
+                sendCmdPacket("", "", "INFODSC:%s", cfg.dsc);
+                sendCmdPacket(gProcessID, "", "IMALIVE:%s", cfg.name);
+                char capStr[50] = "";
+                _snprintf_s(capStr, sizeof(capStr), -1, "%s%s%s", "MCI", (cfg.ssl ? " SSL" : ""), " CTCP GOODBYE");
+                sendCmdPacket(gHash, "", "CAPABILITIES:%s", capStr);
+                Sleep(20);
+
+                // Inform the local clients that the reconnect occurred.
+                if (gReconnect) {
+                    sendToLocalClients(createPacket("SERVER", "", "", "CLIENT", "", "", "RECONNECT"));
+                    gReconnect = false;
+                }
+            }
+            // Server is checking whether we're still up, so let it know.
+            else if (_stricmp(body, "ping") == 0) {
+                char epochTime[20] = "";
+                _snprintf_s(epochTime, sizeof(epochTime), -1, "%lld", currentTimeMillis());
+                sendCmdPacket(gProcessID, epochTime, "IMALIVE:%s", cfg.name);
+                sendCmdPacket("", "", "STATS", ""); // As long as we're letting the server know IMALIVE, might as well request stats.             
+            }
+            else if (strncmp(body, "STATS:", 6) == 0) {
+                char stats[30] = "";
+                strcpy_s(stats, sizeof(stats), body + 6);
+                FILE* mrcstats;
+#if defined(WIN32) || defined(_MSC_VER)
+                fopen_s(&mrcstats, MRC_STATS_FILE, "w+");
+#else
+                mrcstats = fopen(MRC_STATS_FILE, "w+");
+#endif
+                if (mrcstats != NULL) {
+                    fprintf(mrcstats, "%s", stats);
+                    fclose(mrcstats);
+                }
+            }
+            else if (strcmp(body, "GOODBYE") == 0) {
+                // GOODBYE : Server is gracefully closing connection. [NEW in 1.4]
+                // Sent only if client reports the CAPABILITY
+                gConnectionIsDown = true;
+                printDateTimeStamp();
+                puts("Server is closing the connection.");
+                writeToLog("Server is closing the connection.", PROGRAM, "");
+            }
+            else {
+                // these are SERVER messages FROM MRC; should go to all active local clients
+                sendToLocalClients(packet);
+            }
+        }
+        else {
+            // these are CHAT messages FROM MRC; should go to all active local clients
+            sendToLocalClients(packet);
+        }
+        // cleanup
+        free(fromUser);
+        free(fromSite);
+        free(fromRoom);
+        free(toUser);
+        free(msgExt);
+        free(toRoom);
+        free(body);
+    }
+
+    freeSplitResult(field, fieldCount);
+}
+
+
+void mrcHostProcess() {
 #if defined(WIN32) || defined(_MSC_VER)    
     WSADATA wsaData;
 #endif    
@@ -765,6 +869,7 @@ void mrcHostProcess(struct settings cfg) {
     }   
 
     char partialPacket[512] = "";
+
     // Main loop...
     //
     do {             
@@ -773,6 +878,10 @@ void mrcHostProcess(struct settings cfg) {
         iResult = 0;
         char inboundData[DATA_LEN] = "";
         size_t bytesread = 0;
+              
+        if (gConnectionIsDown) {
+            break;
+        }
 
         // If a partial packet was captured in the last loop, place it in 
         // front of the next inbound data we read from the host.
@@ -800,10 +909,6 @@ void mrcHostProcess(struct settings cfg) {
         iResult = usingSSL ? SSL_read(mrcHostSsl, inboundData + bytesread, (int)maxRead) : recv(mrcHostSock, inboundData + bytesread, (int)maxRead, 0);
         if (iResult > 0) {
             inboundData[bytesread + iResult] = '\0'; // guarantee NUL-termination before treating this as a C string
-        }
-              
-        if (gConnectionIsDown) {
-            break;
         }
         
         if (iResult > 0) {
@@ -836,7 +941,6 @@ void mrcHostProcess(struct settings cfg) {
                 }
 
                 if (gVerboseLogging) {
-                    //Sleep(10);
                     _snprintf_s(logstring, sizeof(logstring), -1, "received \"%s\" from host", packet);
                     removeChar(logstring, '\n'); // strip out the LF
                     printDateTimeStamp();
@@ -854,118 +958,7 @@ void mrcHostProcess(struct settings cfg) {
                     continue;
                 }  
 
-                char* fromUser = "", * fromSite = "", * fromRoom = "", * toUser = "", * msgExt = "", * toRoom = "", * body = "";
-                processPacket(packet, &fromUser, &fromSite, &fromRoom, &toUser, &msgExt, &toRoom, &body);
-
-                for (int iml = 0; iml < MAX_LATENCIES; iml++) {
-                    if (lt[iml].packetSum == packetSum(packet) || (lt[iml].isStats == true && strstr(body, "STATS") != 0)) {
-                        gLatency = currentTimeMillis() - lt[iml].timeSent;      
-                        initializeLt();
-                        char ltccmd[20] = "";
-                        _snprintf_s(ltccmd, sizeof(ltccmd), -1, "LATENCY:%lld", gLatency);
-                        sendToLocalClients(createPacket("SERVER", "", "", "CLIENT", "", "", ltccmd));
-                        if (gVerboseLogging) {
-                            printDateTimeStamp();
-                            puts(ltccmd);
-                            writeToLog(ltccmd, PROGRAM, "");
-                        }
-                        break;
-                    }
-                } 
-
-                if (strlen(body) == 0) {
-                    // cleanup these, since they were strdup'd
-                    free(fromUser);
-                    free(fromSite);
-                    free(fromRoom);
-                    free(toUser);
-                    free(msgExt);
-                    free(toRoom);
-                    free(body);
-                    continue;
-                }                 
-
-                if (strcmp(fromUser, "SERVER") == 0) {
-
-                    for (int ii = 0; packet[ii] != '\0'; ii++) { // replace control characters with underscores
-                        if (packet[ii] > 6 && packet[ii] < 32 && packet[ii] != 10) { // all except for "card" characters and LF
-                            if (gVerboseLogging) {
-                                printDateTimeStamp();
-                                printf("replacing ascii %d (%c).\r\n", packet[ii], packet[ii]);
-                            }
-                            packet[ii] = '_';
-                        }
-                    }
-
-                    // Server acknowledged our connection, so send the INFO packets.
-                    if (strcmp(body, "HELLO") == 0) { 
-                        sendCmdPacket("", "", "INFOWEB:%s", cfg.web);
-                        sendCmdPacket("", "", "INFOTEL:%s", cfg.tel);
-                        sendCmdPacket("", "", "INFOSSH:%s", cfg.ssh);
-                        sendCmdPacket("", "", "INFOSYS:%s", cfg.sys);
-                        sendCmdPacket("", "", "INFODSC:%s", cfg.dsc);
-                        sendCmdPacket(gProcessID, "", "IMALIVE:%s", cfg.name);
-                        char capStr[50] = "";
-                        _snprintf_s(capStr, sizeof(capStr), -1, "%s%s%s", "MCI", (cfg.ssl ? " SSL" : ""), " CTCP GOODBYE");
-                        sendCmdPacket(gHash, "", "CAPABILITIES:%s", capStr);
-                        Sleep(20);
-
-                        // Inform the local clients that the reconnect occurred.
-                        if (gReconnect) {
-                            sendToLocalClients(createPacket("SERVER", "", "", "CLIENT", "", "", "RECONNECT"));
-                            gReconnect = false;
-                        }
-                    }
-                    // Server is checking whether we're still up, so let it know.
-                    else if (_stricmp(body, "ping") == 0) { 
-                        char epochTime[20] = "";
-                        _snprintf_s(epochTime, sizeof(epochTime), -1, "%lld", currentTimeMillis());
-                        sendCmdPacket(gProcessID, epochTime, "IMALIVE:%s", cfg.name);
-                        sendCmdPacket("", "", "STATS", ""); // As long as we're letting the server know IMALIVE, might as well request stats.             
-                    }
-                    else if (strncmp(body, "STATS:", 6) == 0) {
-                        int act = 0;
-                        char stats[30] = "";
-                        strcpy_s(stats, sizeof(stats), body + 6);
-                        char* bbses, * rooms, * users, * activity;
-                        parseStats(stats, &bbses, &rooms, &users, &activity);
-                        if (activity != NULL) {
-                            act = atoi(activity);
-                        }
-                        free(bbses);
-                        free(rooms);
-                        free(users);
-                        free(activity);
-
-                        FILE* mrcstats;
-#if defined(WIN32) || defined(_MSC_VER)
-                        fopen_s(&mrcstats, MRC_STATS_FILE, "w+");
-#else
-                        mrcstats=fopen(MRC_STATS_FILE, "w+");
-#endif
-                        if (mrcstats != NULL) {
-                            fprintf(mrcstats, "%s", stats);
-                            fclose(mrcstats);
-                        }
-                    }
-                    else {
-                        // these are SERVER messages FROM MRC; should go to all active local clients
-                        sendToLocalClients(packet);                            
-                    }
-                }
-                else {
-                    // these are CHAT messages FROM MRC; should go to all active local clients
-                    sendToLocalClients(packet);
-                }
-
-                // cleanup these, since they were strdup'd
-                free(fromUser);
-                free(fromSite);
-                free(fromRoom);
-                free(toUser);
-                free(msgExt);
-                free(toRoom);
-                free(body);
+                processPacket(packet);
             }
         }
         else if (iResult == 0) {
@@ -1024,7 +1017,6 @@ int main(int argc, char** argv)
 {
     int maxRetries = DEFAULT_MAX_RETRIES;
     int retryWaitSeconds = DEFAULT_RETRY_WAIT_SECONDS;
-    struct settings cfg;
     char* clientport;
 
 #if defined(WIN32) || defined(_MSC_VER)
@@ -1112,9 +1104,9 @@ int main(int argc, char** argv)
     // create a new thread for waiting for client connections.
     clientport = cfg.port;
 #if defined(WIN32) || defined(_MSC_VER)
-    hClient = CreateThread(NULL, 0, waitProcess, &clientport, 0, &clientThreadId);
+    hClient = CreateThread(NULL, 0, waitProcess, NULL, 0, &clientThreadId);
 #else
-    pthread_create(&hClient, NULL, waitProcess, (void*)clientport);
+    pthread_create(&hClient, NULL, waitProcess, NULL);
 #endif
 
     printDateTimeStamp();
@@ -1128,7 +1120,7 @@ int main(int argc, char** argv)
     // If we've connected successfully at least once, then the "maxRetries" takes effect,
     // otherwise give up after 10 attempts.
     while (gHasConnected ? (maxRetries > 0 ? (gRetry < maxRetries) : true) : (gRetry <10)) {
-        mrcHostProcess(cfg);    
+        mrcHostProcess();    
         Sleep(retryWaitSeconds * 1000);
         gRetry = gRetry + 1;
         printDateTimeStamp();
