@@ -1683,8 +1683,11 @@ void processServerMessage(char* svrmsg, char* toUser) {
         // - No pipe codes
         // - Room name cannot contain spaces
         // - Topic can contain spaces
-        strncpy_s(gTopic, sizeof(gTopic), (svrmsg + argpos) + ((int)strlen(gRoom)) + 1, -1);
-        gRoomTopicChanged = true;
+        char* topicStart = strchr(svrmsg + argpos, ':');
+        if (topicStart != NULL && *(topicStart + 1) != '\0') {
+            strncpy_s(gTopic, sizeof(gTopic), topicStart + 1, -1);
+            gRoomTopicChanged = true;
+        }
     }
     else if (strncmp(svrmsg, "USERROOM", cmdsep) == 0) {
         // USERROOM: Server confirm the room user is in, usually sent after NEWROOM but may be the result of other reasons.[NEW in 1.3]
