@@ -465,15 +465,12 @@ void* clientProcess(void* lpArg) {
                     free(tmppkt);
                 }
                 freeSplitResult(field, fieldCount);
-            }
-                    
+            }                    
             if (strstr(clientPacket, "~LOGOFF~") != 0) {
                 cleanLogoff = true;
             }
-
             sendHostPacket(clientPacket);
         }
-
     } while (iResult > 0);
 
     // inform the server that the user was disconnected.
@@ -490,9 +487,7 @@ void* clientProcess(void* lpArg) {
     if (gVerboseLogging) {
         writeToLog(logstring, PROGRAM, "");
     }
-
     free(lpArg);
-
     return 0;
 }
 

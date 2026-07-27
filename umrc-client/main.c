@@ -2745,8 +2745,8 @@ int main(int argc, char** argv)
         od_send_file("screens/intro.ans");
 #endif
         int act = 0;
-        char* bbses="", * rooms = "", * users = "", * activity = "";
-        char mrcStTm[30]="";
+        char bbses[6] = "", rooms[6] = "", users[6] = "", activity[2] = "";
+        char mrcStTm[30] = "";
         FILE* mrcstats;
 #if defined(WIN32) || defined(_MSC_VER)  
         fopen_s(&mrcstats, MRC_STATS_FILE, "r");
@@ -2759,11 +2759,11 @@ int main(int argc, char** argv)
 
             char** stat;
             int statCount = split(stats, ' ', &stat);
-            if (statCount >= 5) {
-                bbses = stat[0];
-                rooms = stat[1];
-                users = stat[2];
-                activity = stat[3];
+            if (statCount >= 3) {
+                strcpy_s(bbses, sizeof(bbses), stat[0]);
+                strcpy_s(rooms, sizeof(rooms), stat[1]);
+                strcpy_s(users, sizeof(users), stat[2]);
+                strcpy_s(activity, sizeof(activity), stat[3]);
             }
             act = atoi(activity);
             fclose(mrcstats);

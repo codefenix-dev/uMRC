@@ -17,6 +17,8 @@ HANDLE hCon; // needed for setting console colors and clearing screen
 
 #if defined(__APPLE__)
 #define PLATFORM "macOS"
+#elif defined(__FreeBSD__)
+#define PLATFORM "FreeBSD"
 #else
 #define PLATFORM "Linux"
 #endif

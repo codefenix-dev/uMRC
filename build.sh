@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 
 plat="linux"
 arc="x64"
@@ -10,6 +10,9 @@ assetpath=$plat-$arc
 if [[ $OSTYPE == darwin* ]]; then
     plat="macos"
     assetpath=$plat 
+fi
+if [[ $OSTYPE == freebsd* ]]; then
+    plat="freebsd"
 fi
 
 mkdir -p bin
@@ -35,7 +38,7 @@ cd ..
 
 echo -n "Building umrc-bridge..."
 cd umrc-bridge
-gcc bridge.c ../common/common.c -o umrc-bridge -lssl -lcrypto
+gcc bridge.c ../common/common.c -o umrc-bridge -lssl -lcrypto -pthread
 if [ $? -eq 0 ]; then
     echo -e "\033[32;1mOK\033[0m"
 else
@@ -49,7 +52,7 @@ cd ..
 
 echo -n "Building umrc-client..."
 cd umrc-client
-gcc main.c func.c ../common/common.c -o umrc-client -L ../lib/odoors/$plat-$arc -lODoors
+gcc main.c func.c ../common/common.c -o umrc-client -pthread -L ../lib/odoors/$plat-$arc -lODoors
 if [ $? -eq 0 ]; then
     echo -e "\033[32;1mOK\033[0m"
 else
