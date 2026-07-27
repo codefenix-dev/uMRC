@@ -68,7 +68,13 @@ char gHash[65] = "";
 #define DEFAULT_RETRY_WAIT_SECONDS 5
 
 SOCKET mrcHostSock = INVALID_SOCKET;
-SOCKET clientSocks[MAX_CLIENTS];
+//SOCKET clientSocks[MAX_CLIENTS];
+
+struct client {
+	SOCKET sock;
+	char chatter[36];
+};
+struct client clients[MAX_CLIENTS];
 
 struct pClientProc {
     SOCKET pSock;
@@ -403,10 +409,15 @@ bool sendClientPacket(SOCKET* sock, char* packet) {
 /**
  * Sends a packet string to all connected local client sockets.
  */
-void sendToLocalClients(char* packet) {
+void sendToLocalClients(char* packet, char* toUser) {
     for (int c = 0; c < MAX_CLIENTS; c++) {
-        if (clientSocks[c] != INVALID_SOCKET) {
-            sendClientPacket(&clientSocks[c], packet);
+        if (clients[c].sock != INVALID_SOCKET && 
+            (_stricmp(toUser, clients[c].chatter) == 0 || // DirectMSG
+             _stricmp(toUser, "CLIENT") == 0 ||           // SERVER messages for any client
+             _stricmp(toUser, "NOTME") == 0 ||            // Notification messages
+             _stricmp(toUser, "ALL") == 0 ||              // Some clients still send "ALL"
+             strlen(toUser) == 0)) {                      // Messages from anyone to anyone
+            sendClientPacket(&clients[c].sock, packet);
         }
     }
 }
@@ -451,6 +462,7 @@ void* clientProcess(void* lpArg) {
 
                 if (fieldCount >= 7) {
                     strcpy_s(thisUser, sizeof(thisUser), field[0]);
+					strcpy_s(clients[pSlot].chatter, sizeof(clients[pSlot].chatter), thisUser);
                     printDateTimeStamp();
 
                     _snprintf_s(logstring, sizeof(logstring), -1, "%s entered chat (slot #%d occupied).", thisUser, pSlot);
@@ -476,11 +488,13 @@ void* clientProcess(void* lpArg) {
     // inform the server that the user was disconnected.
     if (strlen(thisUser) > 0 && !cleanLogoff) {
         char disconnMsg[MSG_LEN] = "";
-        _snprintf_s(disconnMsg, MSG_LEN, -1, "|08- %s has disconnected.", thisUser);
+        _snprintf_s(disconnMsg, MSG_LEN, -1, "|08- %s was disconnected.", thisUser);
         sendMsgPacket(thisUser, gFromSite, "", "NOTME", "", "", disconnMsg);
     }
 
-    clientSocks[pSlot] = INVALID_SOCKET;
+    clients[pSlot].sock = INVALID_SOCKET;
+    strcpy_s(clients[pSlot].chatter, sizeof(clients[pSlot].chatter), "");
+
     printDateTimeStamp();
     _snprintf_s(logstring, sizeof(logstring), -1, "%s has left chat (slot #%d cleared).", thisUser, pSlot);
     puts(logstring);
@@ -587,8 +601,8 @@ void* waitProcess(void* lpArg) {
             
             // Add the client in the first available empty slot.
             for (int i = 0; i < MAX_CLIENTS; i++) {
-                if (clientSocks[i] == INVALID_SOCKET) {
-                    clientSocks[i] = newSock;
+                if (clients[i].sock == INVALID_SOCKET) {
+                    clients[i].sock = newSock;
                     struct pClientProc *pC;
 
 #if defined(WIN32) || defined(_MSC_VER)    
@@ -670,7 +684,7 @@ void processPacket(char* packet) {
                 char ltccmd[20] = "";
                 _snprintf_s(ltccmd, sizeof(ltccmd), -1, "LATENCY:%lld", gLatency);
                 char* tmppkt = createPacket("SERVER", "", "", "CLIENT", "", "", ltccmd);
-                sendToLocalClients(tmppkt);
+                sendToLocalClients(tmppkt, "");
                 free(tmppkt);
                 if (gVerboseLogging) {
                     printDateTimeStamp();
@@ -709,7 +723,7 @@ void processPacket(char* packet) {
                 // Inform the local clients that the reconnect occurred.
                 if (gReconnect) {
                     char* tmppkt = createPacket("SERVER", "", "", "CLIENT", "", "", "RECONNECT");
-                    sendToLocalClients(tmppkt);
+                    sendToLocalClients(tmppkt, "");
                     free(tmppkt);
                     gReconnect = false;
                 }
@@ -744,13 +758,13 @@ void processPacket(char* packet) {
                 writeToLog("Server is closing the connection.", PROGRAM, "");
             }
             else {
-                // these are SERVER messages FROM MRC; should go to all active local clients
-                sendToLocalClients(packet);
+                // these are SERVER messages FROM MRC; should go to all applicable active local clients
+                sendToLocalClients(packet, toUser);
             }
         }
         else {
-            // these are CHAT messages FROM MRC; should go to all active local clients
-            sendToLocalClients(packet);
+            // these are CHAT messages FROM MRC USERS; should go to all applicable active local clients
+            sendToLocalClients(packet, toUser);
         }
         // cleanup
         free(fromUser);
@@ -1060,7 +1074,8 @@ int main(int argc, char** argv)
 #endif
 
     for (int i = 0; i < MAX_CLIENTS; i++) {
-        clientSocks[i] = INVALID_SOCKET;
+        clients[i].sock = INVALID_SOCKET;
+        strcpy_s(clients[i].chatter, sizeof(clients[i].chatter), "");
     }
 
     initializeLt();

@@ -75,6 +75,49 @@ macOS (arm64):
 
 
 
+FreeBSD (x64):
+
+  Follow these steps to compile FreeBSD x64 binaries:
+
+  1. First make sure gcc is installed on the system.
+
+     Open a Terminal and run:
+
+	   pkg install lang/gcc
+
+
+  2. Make the build.sh script executable:
+
+       chmod +x build.sh
+
+
+  3. Finally, run the build.sh script:
+
+       ./build.sh
+
+
+  When done, you will find the compiled binaries and other necessary files
+  in a subdirectory named "bin".
+
+  [bin]:
+  - [screens]
+  - [themes]
+  - setup
+  - umrc-bridge
+  - umrc-client
+
+  umrc-client has some visible issues at the time of this writing, such as a
+  screen pause while displaying the intro ANSI, as well as some user default
+  properties not being properly set in -LOCAL mode (e.g.: name, screen columns,
+  sysop name, and system name). These are probably OpenDoors problems.
+  
+  FreeBSD is the only targeted BSD at this time. OpenBSD and NetBSD would need
+  their own compiled OpenDoors library, and the above steps may work but have
+  not been tested.
+  
+
+
+
 Windows (x86 & x64):
 
   Follow these steps to compile Windows x86 or x64 executables:
