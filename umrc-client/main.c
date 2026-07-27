@@ -859,7 +859,9 @@ bool sendCmdPacket(SOCKET* sock, char* cmd, char* cmdArg) {
     else {
         strcpy_s(cmdstr, MSG_LEN, cmd);
     }
-    strcpy_s(packet, PACKET_LEN, createPacket(user.chatterName, gFromSite, gRoom, "SERVER", "", "", cmdstr));
+    char* tmppkt = createPacket(user.chatterName, gFromSite, gRoom, "SERVER", "", "", cmdstr);
+    strcpy_s(packet, PACKET_LEN, tmppkt);
+    free(tmppkt);
     iResult = send(*sock, packet, (int)strlen(packet), 0);
     if (iResult == SOCKET_ERROR) {
         char logstring[1024] = "";
@@ -877,7 +879,9 @@ bool sendCtcpPacket(SOCKET* sock, char* target, char* p, char* data) {
     char ctcpstr[MSG_LEN] = "";
     char packet[PACKET_LEN] = "";
     _snprintf_s(ctcpstr, MSG_LEN, -1, "%s %s %s", p, user.chatterName, data);
-    strcpy_s(packet, PACKET_LEN, createPacket(user.chatterName, gFromSite, CTCP_ROOM, target, "", CTCP_ROOM, ctcpstr));
+    char* tmppkt = createPacket(user.chatterName, gFromSite, CTCP_ROOM, target, "", CTCP_ROOM, ctcpstr);
+    strcpy_s(packet, PACKET_LEN, tmppkt);
+    free(tmppkt);
     iResult = send(*sock, packet, (int)strlen(packet), 0);
     if (iResult == SOCKET_ERROR) {
         char logstring[1024] = "";
@@ -893,7 +897,9 @@ bool sendCtcpPacket(SOCKET* sock, char* target, char* p, char* data) {
 bool sendMsgPacket(SOCKET* sock, char* toUser, char* msgExt, char* toRoom, char* body) {
     int iResult;
     char packet[PACKET_LEN] = "";
-    strcpy_s(packet, PACKET_LEN, createPacket(user.chatterName, gFromSite, gRoom, toUser, msgExt, toRoom, body));
+    char* tmppkt = createPacket(user.chatterName, gFromSite, gRoom, toUser, msgExt, toRoom, body);
+    strcpy_s(packet, PACKET_LEN, tmppkt);
+    free(tmppkt);
     iResult = send(*sock, packet, (int)strlen(packet), 0);
     if (iResult == SOCKET_ERROR) {
         char logstring[1024] = "";
@@ -1135,14 +1141,35 @@ void addToScrollBack(char* msg, int mode) {
     }
 }
 
+/**
+ * Appends src to dest, tracking a running write offset (*destlen) so a
+ * sequence of appends is O(n) in total instead of the O(n^2) that repeated
+ * strcat_s() calls would produce -- each strcat_s() call re-scans dest from
+ * the start to find where to write, which adds up over the many small
+ * appends a word-wrap pass makes. Always leaves dest NUL-terminated and
+ * never writes past destsize, silently truncating if src doesn't fit.
+ */
+static void wrapAppend(char* dest, size_t destsize, size_t* destlen, const char* src) {
+    if (*destlen >= destsize - 1) {
+        return; // no room left at all
+    }
+    size_t srclen = strlen(src);
+    size_t remaining = destsize - *destlen - 1;
+    size_t copylen = (srclen < remaining) ? srclen : remaining;
+    memcpy(dest + *destlen, src, copylen);
+    *destlen += copylen;
+    dest[*destlen] = '\0';
+}
+
 void displayMessage(char* msg, bool mention) {
     // A size of 512 allows for the standard 140 char message, plus line wraps, pipe codes, and the timestamp.
     char copyMsg[512] = ""; // This holds a copy of the source message while we're processing it.
     char dispMsg[512] = ""; // This will be the final message after adding line wraps.
     char timeStamp[30] = ""; // This holds the message timestamp.
-
+    char* tmpstmp = getTimestamp();
+    _snprintf_s(timeStamp, sizeof(timeStamp), -1, (mention ? "|00|23%s|26\x1b[5m\376\x1b[0m|07" : "|08%s|07 "), tmpstmp);
+    free(tmpstmp);
     strcpy_s(copyMsg, sizeof(copyMsg), msg);
-    _snprintf_s(timeStamp, sizeof(timeStamp), -1, (mention ? "|00|23%s|26\x1b[5m\376\x1b[0m|07" : "|08%s|07 "), getTimestamp());
 
     if (strLenWithoutPipecodes(copyMsg) >= (od_control.user_screenwidth - 7)) {
 
@@ -1158,7 +1185,8 @@ void displayMessage(char* msg, bool mention) {
         int linelen = 0;
         int tokencnt = 0;
         int tokenLen = 0;
-        char wrappedMsg[512] = ""; 
+        char wrappedMsg[512] = "";
+        size_t wrappedLen = 0; // running write offset into wrappedMsg, for wrapAppend()
         char* token;
         char* context = NULL;
         token = strtok_s(copyMsg, " ", &context);
@@ -1172,35 +1200,44 @@ void displayMessage(char* msg, bool mention) {
                 linelen = linelen + tokenLen + 1;
             }
             if (!breakUpLongToken && (linelen > (od_control.user_screenwidth - 8))) {
-                strcat_s(wrappedMsg, sizeof(wrappedMsg), "\r\n      \300");
+                wrapAppend(wrappedMsg, sizeof(wrappedMsg), &wrappedLen, "\r\n      \300");
                 linelen = 3 + (tokenLen + 1);
             }
-            if (breakUpLongToken) { 
-                char tkn1[100] = "", tkn2[100] = "";
-                int breakPoint = (od_control.user_screenwidth - linelen - 7);
-                strncpy_s(tkn1, sizeof(tkn1), token, breakPoint);
-                strcpy_s(tkn2, sizeof(tkn2), token + breakPoint);
-                strcat_s(wrappedMsg, sizeof(wrappedMsg), " ");
-                strcat_s(wrappedMsg, sizeof(wrappedMsg), tkn1);
-                strcat_s(wrappedMsg, sizeof(wrappedMsg), "\r\n      \300 ");
-                if (strLenWithoutPipecodes(tkn2) > od_control.user_screenwidth - 8) {
-                    char tkn3[100]="";
-                    breakPoint = (od_control.user_screenwidth - 9);
-                    strcpy_s(tkn3, sizeof(tkn3), tkn2 + breakPoint);
-                    tkn2[breakPoint] = '\0';
-                    strcat_s(wrappedMsg, sizeof(wrappedMsg), tkn2);
-                    strcat_s(wrappedMsg, sizeof(wrappedMsg), "\r\n      \300 ");
-                    strcat_s(wrappedMsg, sizeof(wrappedMsg), tkn3);
+            if (breakUpLongToken) {
+                // A single token wider than a full line needs breaking into
+                // as many chunks as it takes to fit, not just the one or two
+                // the old code assumed -- a long enough token (or a narrow
+                // enough terminal) could need more than that. Each chunk
+                // always starts on its own fresh line rather than using
+                // whatever's left over from the current line: besides being
+                // simpler, that avoids the old breakPoint = width - linelen - 7
+                // arithmetic, which depended on an undocumented, easy-to-break
+                // exact relationship between this function's -7 and -8
+                // margins to avoid ever going non-positive.
+                //
+                // MSG_LEN comfortably covers the longest a single token can
+                // ever be (the whole message, if it contains no spaces at
+                // all), so no chunk buffer here can be under-sized the way
+                // the old 100-byte tkn1/tkn2/tkn3 buffers could be.
+                wrapAppend(wrappedMsg, sizeof(wrappedMsg), &wrappedLen, "\r\n      \300 ");
+                char* remainder = token;
+                int chunkWidth = od_control.user_screenwidth - 9;
+                if (chunkWidth < 1) { chunkWidth = 1; } // pathologically narrow terminal -- always make progress
+                while (strLenWithoutPipecodes(remainder) > chunkWidth) {
+                    char chunk[MSG_LEN] = "";
+                    strncpy_s(chunk, sizeof(chunk), remainder, chunkWidth);
+                    wrapAppend(wrappedMsg, sizeof(wrappedMsg), &wrappedLen, chunk);
+                    wrapAppend(wrappedMsg, sizeof(wrappedMsg), &wrappedLen, "\r\n      \300 ");
+                    remainder += chunkWidth;
                 }
-                else {
-                    strcat_s(wrappedMsg, sizeof(wrappedMsg), tkn2);
-                }
+                wrapAppend(wrappedMsg, sizeof(wrappedMsg), &wrappedLen, remainder);
+                linelen = 3 + (int)strlen(remainder) + 1;
             }
             else {
                 if (tokencnt > 0) {
-                    strcat_s(wrappedMsg, sizeof(wrappedMsg), " ");
+                    wrapAppend(wrappedMsg, sizeof(wrappedMsg), &wrappedLen, " ");
                 }
-                strcat_s(wrappedMsg, sizeof(wrappedMsg), token);
+                wrapAppend(wrappedMsg, sizeof(wrappedMsg), &wrappedLen, token);
             }
             tokencnt = tokencnt + 1;
             token = strtok_s(NULL, " ", &context);
@@ -1983,6 +2020,7 @@ void* handleIncomingMessages(void* lpArg) {
                 processPacket(packet);
                 od_sleep(0);
             }
+            freeSplitResult(packets, pktCount);
         }
         else if (iResult == 0) {
             displayMessage("|12* |14Connection closed", true);
@@ -2489,7 +2527,6 @@ bool enterChat() {
 
     free(gScrollBack);
     free(gMentions);
-    //free(gTwits);
     gMentionCount=0;
     strcpy_s(gRoom, sizeof(gRoom), "");
     strcpy_s(gTopic, sizeof(gTopic), "");
@@ -2730,6 +2767,7 @@ int main(int argc, char** argv)
             }
             act = atoi(activity);
             fclose(mrcstats);
+            freeSplitResult(stat, statCount);
         }
 
         struct stat file_stat;

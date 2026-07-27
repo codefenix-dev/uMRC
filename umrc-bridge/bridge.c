@@ -85,6 +85,7 @@ SSL_CTX* ctx;
 int64_t gLatency;
 struct latencyTracker {
     int packetSum;
+    int packetLen;
     int64_t timeSent;
     bool isStats;
 };
@@ -95,7 +96,7 @@ struct latencyTracker lt[MAX_LATENCIES];
 
 
 
-int calculate_sha256_of_file(const char* filepath, char* output_hex_buf) {
+int calculate_sha256_of_file(const char* filepath, char* output_hex_buf, size_t output_hex_buf_size) {
 	FILE* file;
 #if defined(WIN32) || defined(_MSC_VER)
 	fopen_s(&file, filepath, "rb");
@@ -136,9 +137,19 @@ int calculate_sha256_of_file(const char* filepath, char* output_hex_buf) {
         return -1;
     }
 
+    // hash_len*2 hex characters plus a NUL terminator must fit in the
+    // caller's actual buffer -- checked against output_hex_buf_size (passed
+    // in explicitly by the caller), not sizeof(output_hex_buf), which would
+    // only ever measure the pointer itself here, not the real destination.
+    if (((size_t)hash_len * 2) + 1 > output_hex_buf_size) {
+        EVP_MD_CTX_free(mdctx);
+        fclose(file);
+        return -1;
+    }
+
     // Convert raw binary hash to hex string
     for (unsigned int i = 0; i < hash_len; i++) {
-        _snprintf_s(output_hex_buf + (i * 2), sizeof(output_hex_buf), -1, "%02x", hash[i]);
+        _snprintf_s(output_hex_buf + (i * 2), output_hex_buf_size - (i * 2), -1, "%02x", hash[i]);
     }
     output_hex_buf[hash_len * 2] = '\0';
 
@@ -196,13 +207,15 @@ char* getDateTimeStamp() {
 }
 
 void printDateTimeStamp() {
-    printPipeCodeString(getDateTimeStamp());
+    char* ts = getDateTimeStamp();
+    printPipeCodeString(ts);
+    free(ts);
 }
 
 /**
  * Returns the sum of the character values in a string.
- * Used for latency tracking, to identify the matching inbound
- * packet for the last outbound packet.
+ * Used for latency tracking, to help identify the matching
+ * inbound packet for the last outbound packet.
  */
 int packetSum(const char* str) {
     int sum = 0;
@@ -218,6 +231,7 @@ int packetSum(const char* str) {
 void initializeLt() {
     for (int j = 0; j < MAX_LATENCIES; j++) {
         lt[j].packetSum = -1;
+        lt[j].packetLen = -1;
         lt[j].timeSent = -1;
         lt[j].isStats = false;
     }
@@ -243,7 +257,9 @@ bool sendCmdPacket(char* fromRoom, char* msgExt, const char* cmd, const char* cm
     else {
         strcpy_s(cmdstr, MSG_LEN, cmd);
     }
-    strcpy_s(packet, PACKET_LEN, createPacket("CLIENT", gFromSite, fromRoom, "SERVER", msgExt, "", cmdstr));
+    char* tmppkt = createPacket("CLIENT", gFromSite, fromRoom, "SERVER", msgExt, "", cmdstr);
+    strcpy_s(packet, PACKET_LEN, tmppkt);
+    free(tmppkt);
 
     if (gVerboseLogging) {
         _snprintf_s(logstring, sizeof(logstring), -1, "sendCmdPacket \"%s\" to host", packet);
@@ -263,8 +279,9 @@ bool sendCmdPacket(char* fromRoom, char* msgExt, const char* cmd, const char* cm
         return false;
     } else {
         for (int i = 0; i < MAX_LATENCIES; i++) {
-            if (lt[i].packetSum == -1) {
+            if (lt[i].packetSum == -1 && lt[i].packetLen == -1) {
                 lt[i].packetSum = packetSum(packet);
+                lt[i].packetLen = (int)strlen(packet);
                 lt[i].timeSent = currentTimeMillis();
                 lt[i].isStats = strcmp(cmd, "STATS") == 0 ? true : false;
                 break;
@@ -281,7 +298,9 @@ bool sendMsgPacket(char* fromUser, char* fromSite, char* fromRoom, char* toUser,
     int iResult;
     char packet[PACKET_LEN] = "";
     char logstring[512] = "";
-    strcpy_s(packet, PACKET_LEN, createPacket(fromUser, fromSite, fromRoom, toUser, msgExt, toRoom, body));
+    char* tmppkt = createPacket(fromUser, fromSite, fromRoom, toUser, msgExt, toRoom, body);
+    strcpy_s(packet, PACKET_LEN, tmppkt);
+    free(tmppkt);
     
     if (gVerboseLogging) {
         _snprintf_s(logstring, sizeof(logstring), -1, "sendMsgPacket \"%s\" to host", packet);
@@ -302,8 +321,9 @@ bool sendMsgPacket(char* fromUser, char* fromSite, char* fromRoom, char* toUser,
     }
     else {
         for (int i = 0; i < MAX_LATENCIES; i++) {
-            if (lt[i].packetSum == -1) {
+            if (lt[i].packetSum == -1 && lt[i].packetLen == -1) {
                 lt[i].packetSum = packetSum(packet);
+                lt[i].packetLen = (int)strlen(packet);
                 lt[i].timeSent = currentTimeMillis(); 
                 lt[i].isStats = false;
                 break;
@@ -339,8 +359,9 @@ bool sendHostPacket(char* packet) {
     else {
         if (strstr(packet, "~NOTME~") == NULL) {
             for (int i = 0; i < MAX_LATENCIES; i++) {
-                if (lt[i].packetSum == -1) {
+                if (lt[i].packetSum == -1 && lt[i].packetLen == -1) {
                     lt[i].packetSum = packetSum(packet);
+                    lt[i].packetLen = (int)strlen(packet);
                     lt[i].timeSent = currentTimeMillis();
                     lt[i].isStats = false;
                     break;
@@ -439,8 +460,11 @@ void* clientProcess(void* lpArg) {
                     }
                     char ltccmd[20] = "";
                     _snprintf_s(ltccmd, sizeof(ltccmd), -1, "LATENCY:%lld", gLatency);
-                    sendClientPacket(&pSock, createPacket("SERVER", "", "", "CLIENT", "", "", ltccmd));
+                    char* tmppkt = createPacket("SERVER", "", "", "CLIENT", "", "", ltccmd);
+                    sendClientPacket(&pSock, tmppkt);
+                    free(tmppkt);
                 }
+                freeSplitResult(field, fieldCount);
             }
                     
             if (strstr(clientPacket, "~LOGOFF~") != 0) {
@@ -466,6 +490,8 @@ void* clientProcess(void* lpArg) {
     if (gVerboseLogging) {
         writeToLog(logstring, PROGRAM, "");
     }
+
+    free(lpArg);
 
     return 0;
 }
@@ -643,12 +669,14 @@ void processPacket(char* packet) {
         body = _strdup(field[6]);
 
         for (int iml = 0; iml < MAX_LATENCIES; iml++) {
-            if (lt[iml].packetSum == packetSum(packet) || (lt[iml].isStats == true && strstr(body, "STATS") != 0)) {
+            if ((lt[iml].packetSum == packetSum(packet) && lt[iml].packetLen == (int)strlen(packet)) || (lt[iml].isStats == true && strstr(body, "STATS") != 0)) {
                 gLatency = currentTimeMillis() - lt[iml].timeSent;
                 initializeLt();
                 char ltccmd[20] = "";
                 _snprintf_s(ltccmd, sizeof(ltccmd), -1, "LATENCY:%lld", gLatency);
-                sendToLocalClients(createPacket("SERVER", "", "", "CLIENT", "", "", ltccmd));
+                char* tmppkt = createPacket("SERVER", "", "", "CLIENT", "", "", ltccmd);
+                sendToLocalClients(tmppkt);
+                free(tmppkt);
                 if (gVerboseLogging) {
                     printDateTimeStamp();
                     puts(ltccmd);
@@ -685,7 +713,9 @@ void processPacket(char* packet) {
 
                 // Inform the local clients that the reconnect occurred.
                 if (gReconnect) {
-                    sendToLocalClients(createPacket("SERVER", "", "", "CLIENT", "", "", "RECONNECT"));
+                    char* tmppkt = createPacket("SERVER", "", "", "CLIENT", "", "", "RECONNECT");
+                    sendToLocalClients(tmppkt);
+                    free(tmppkt);
                     gReconnect = false;
                 }
             }
@@ -960,6 +990,8 @@ void mrcHostProcess() {
 
                 processPacket(packet);
             }
+
+            freeSplitResult(packets, pktCount);
         }
         else if (iResult == 0) {
             int errcode = usingSSL ? SSL_get_error(mrcHostSsl, iResult) : WSAGetLastError();            
@@ -1025,11 +1057,11 @@ int main(int argc, char** argv)
     hCon = GetStdHandle(STD_OUTPUT_HANDLE);
     if (hCon == INVALID_HANDLE_VALUE) return 1;
     _snprintf_s(gProcessID, sizeof(gProcessID), -1, "%d", GetCurrentProcessId());
-    calculate_sha256_of_file("umrc-bridge.exe", gHash);
+    calculate_sha256_of_file("umrc-bridge.exe", gHash, sizeof(gHash));
 #else 
     pthread_t hClient;
     _snprintf_s(gProcessID, sizeof(gProcessID), -1, "%d", getpid());
-    calculate_sha256_of_file("umrc-bridge", gHash);
+    calculate_sha256_of_file("umrc-bridge", gHash, sizeof(gHash));
 #endif
 
     for (int i = 0; i < MAX_CLIENTS; i++) {
