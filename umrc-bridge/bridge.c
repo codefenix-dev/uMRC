@@ -68,7 +68,6 @@ char gHash[65] = "";
 #define DEFAULT_RETRY_WAIT_SECONDS 5
 
 SOCKET mrcHostSock = INVALID_SOCKET;
-//SOCKET clientSocks[MAX_CLIENTS];
 
 struct client {
 	SOCKET sock;
@@ -409,12 +408,13 @@ bool sendClientPacket(SOCKET* sock, char* packet) {
 /**
  * Sends a packet string to all connected local client sockets.
  */
-void sendToLocalClients(char* packet, char* toUser) {
+void sendToLocalClients(char* packet, char* toUser, char* fromUser) {
     for (int c = 0; c < MAX_CLIENTS; c++) {
-        if (clients[c].sock != INVALID_SOCKET && 
+        if (clients[c].sock != INVALID_SOCKET &&          // Active socket
             (_stricmp(toUser, clients[c].chatter) == 0 || // DirectMSG
              _stricmp(toUser, "CLIENT") == 0 ||           // SERVER messages for any client
-             _stricmp(toUser, "NOTME") == 0 ||            // Notification messages
+             (_stricmp(toUser, "NOTME") == 0 &&           // Include all NOTME messages
+              _stricmp(fromUser, clients[c].chatter) != 0) || // not from this user
              _stricmp(toUser, "ALL") == 0 ||              // Some clients still send "ALL"
              strlen(toUser) == 0)) {                      // Messages from anyone to anyone
             sendClientPacket(&clients[c].sock, packet);
@@ -481,6 +481,33 @@ void* clientProcess(void* lpArg) {
             if (strstr(clientPacket, "~LOGOFF~") != 0) {
                 cleanLogoff = true;
             }
+            if (strstr(clientPacket, "~NICKCHANGED:") != 0) {
+
+                // The client on this socket received a USERNICK packet, 
+                // which changed the chatter name, and it's informing the 
+                // bridge here that the name change occurred, so the bridge 
+                // needs to update so routing can continue.
+                char** field;
+                int fieldCount = split(clientPacket, '~', &field);
+
+                int cmdsep = indexOfChar(field[6], ':');
+                int argpos = cmdsep + 1;
+                strcpy_s(thisUser, sizeof(thisUser), field[6] + argpos);
+                strcpy_s(clients[pSlot].chatter, sizeof(clients[pSlot].chatter), thisUser);
+
+                _snprintf_s(logstring, sizeof(logstring), -1, "chatter name on slot #%d updated to %s.", pSlot, thisUser);
+                puts(logstring);
+                if (gVerboseLogging) {
+                    writeToLog(logstring, PROGRAM, "");
+                }
+
+                freeSplitResult(field, fieldCount);
+
+                // Since NICKCHANGED is an internal packet from the client
+                // to the bridge, don't send it up to the host.
+                continue;
+            }
+
             sendHostPacket(clientPacket);
         }
     } while (iResult > 0);
@@ -684,7 +711,7 @@ void processPacket(char* packet) {
                 char ltccmd[20] = "";
                 _snprintf_s(ltccmd, sizeof(ltccmd), -1, "LATENCY:%lld", gLatency);
                 char* tmppkt = createPacket("SERVER", "", "", "CLIENT", "", "", ltccmd);
-                sendToLocalClients(tmppkt, "");
+                sendToLocalClients(tmppkt, "", "SERVER");
                 free(tmppkt);
                 if (gVerboseLogging) {
                     printDateTimeStamp();
@@ -723,7 +750,7 @@ void processPacket(char* packet) {
                 // Inform the local clients that the reconnect occurred.
                 if (gReconnect) {
                     char* tmppkt = createPacket("SERVER", "", "", "CLIENT", "", "", "RECONNECT");
-                    sendToLocalClients(tmppkt, "");
+                    sendToLocalClients(tmppkt, "", "SERVER");
                     free(tmppkt);
                     gReconnect = false;
                 }
@@ -759,12 +786,12 @@ void processPacket(char* packet) {
             }
             else {
                 // these are SERVER messages FROM MRC; should go to all applicable active local clients
-                sendToLocalClients(packet, toUser);
+                sendToLocalClients(packet, toUser, fromUser);
             }
         }
         else {
             // these are CHAT messages FROM MRC USERS; should go to all applicable active local clients
-            sendToLocalClients(packet, toUser);
+            sendToLocalClients(packet, toUser, fromUser);
         }
         // cleanup
         free(fromUser);

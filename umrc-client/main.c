@@ -18,6 +18,7 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <shellapi.h>
+#include <sys/timeb.h>
 #pragma comment (lib, "Ws2_32.lib")
 #pragma comment (lib, "Mswsock.lib")
 #pragma comment (lib, "AdvApi32.lib")
@@ -32,12 +33,12 @@ CRITICAL_SECTION gChattersLock;
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <dirent.h>
+#include <sys/time.h>
 
 static pthread_mutex_t gChattersLock = PTHREAD_MUTEX_INITIALIZER;
 #endif
 
 #include <sys/stat.h>
-#include <sys/timeb.h>
 
 #include "OpenDoor.h"
 #include "../common/common.h"
@@ -1739,12 +1740,16 @@ void processServerMessage(char* svrmsg, char* toUser) {
         // The server will append a number to the original nick to resolve the conflict.
         strncpy_s(user.chatterName, sizeof(user.chatterName), (svrmsg + argpos), -1);
         _snprintf_s(gDisplayChatterName, sizeof(gDisplayChatterName), -1, "|%02d|%02d%c|%02d|%02d%s%s|16", user.chatterNamePrefixFgColor, user.chatterNamePrefixBgColor, user.chatterNamePrefix, user.chatterNameFgColor, user.chatterNameBgColor, user.chatterName, user.chatterNameSuffix);
+        
         // inform the user of the change...
         char nicknotice[141] = "";
         _snprintf_s(nicknotice, sizeof(nicknotice), -1, "|15* |08(|14Notice|08) |07The MRC server has updated your name to |15%s|07.", user.chatterName);
         queueIncomingMessage(nicknotice, true);
         stripPipeCodes(nicknotice);
         writeToLog(nicknotice, PROGRAM, od_control.user_handle);
+
+        // Inform the bridge of the username change, so it can continue to route messages
+        sendCmdPacket(&mrcSock, "NICKCHANGED:", user.chatterName);
     }
     else if (strncmp(svrmsg, "TERMINATE", cmdsep) == 0) {
         // TERMINATE: Server requests the client interface to terminate.[NEW in 1.3]
@@ -2606,7 +2611,8 @@ int main(int argc, char** argv)
     od_clr_scr();
 
     userNumber = od_control.user_num;
-    if (0 == userNumber && strcmp(od_control.user_name, "Sysop") == 0) {
+    //if (0 == userNumber && strcmp(od_control.user_name, "Sysop") == 0) {
+    if (od_control.od_force_local) {
         od_printf("`bright yellow`***`bright white`LOCAL MODE`bright yellow`***``\r\n\r\n");
         strcpy_s(user.chatterName, sizeof(user.chatterName), od_control.user_name);
         od_control.user_timelimit = 1000;
@@ -2861,6 +2867,7 @@ int main(int argc, char** argv)
             od_printf("\r\n`` system_name:          `bright white`%s``", od_control.system_name);
             od_printf("\r\n`` od_maxtime:           `bright white`%d``", od_control.od_maxtime);
             od_printf("\r\n`` od_inactivity:        `bright white`%d``", od_control.od_inactivity);
+            od_printf("\r\n`` od_force_local:       `bright white`%d``", od_control.od_force_local);
 
             od_printf("\r\n");
             od_printf(DIVIDER);

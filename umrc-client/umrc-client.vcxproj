@@ -97,7 +97,9 @@
     <PostBuildEvent>
       <Command>copy ..\lib\odoors\win-x86\*.dll ..\Debug /Y
 xcopy ..\assets\screens ..\Debug\screens /E /I /Y
-xcopy ..\assets\themes ..\Debug\themes /E /I /Y</Command>
+xcopy ..\assets\themes ..\Debug\themes /E /I /Y
+xcopy ..\assets\screens ..\umrc-client\screens /E /I /Y
+xcopy ..\assets\themes ..\umrc-client\themes /E /I /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -121,7 +123,8 @@ xcopy ..\assets\themes ..\Debug\themes /E /I /Y</Command>
       <Command>copy ..\lib\odoors\win-x86\*.dll ..\Release /Y
 xcopy ..\assets\screens ..\Release\screens /E /I /Y
 xcopy ..\assets\themes ..\Release\themes /E /I /Y
-xcopy ..\assets\screens ..\umrc-client\screens /E /I /Y</Command>
+xcopy ..\assets\screens ..\umrc-client\screens /E /I /Y
+xcopy ..\assets\themes ..\umrc-client\themes /E /I /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -145,7 +148,9 @@ xcopy ..\assets\screens ..\umrc-client\screens /E /I /Y</Command>
     <PostBuildEvent>
       <Command>copy ..\lib\odoors\win-x64\*.dll ..\x64\Debug /Y
 xcopy ..\assets\screens ..\x64\Debug\screens /E /I /Y
-xcopy ..\assets\themes ..\x64\Debug\themes /E /I /Y</Command>
+xcopy ..\assets\themes ..\x64\Debug\themes /E /I /Y
+xcopy ..\assets\screens ..\umrc-client\screens /E /I /Y
+xcopy ..\assets\themes ..\umrc-client\themes /E /I /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -169,7 +174,8 @@ xcopy ..\assets\themes ..\x64\Debug\themes /E /I /Y</Command>
       <Command>copy ..\lib\odoors\win-x64\*.dll ..\x64\Release /Y
 xcopy ..\assets\screens ..\x64\Release\screens /E /I /Y
 xcopy ..\assets\themes ..\x64\Release\themes /E /I /Y
-xcopy ..\assets\screens ..\umrc-client\screens /E /I /Y</Command>
+xcopy ..\assets\screens ..\umrc-client\screens /E /I /Y
+xcopy ..\assets\themes ..\umrc-client\themes /E /I /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
