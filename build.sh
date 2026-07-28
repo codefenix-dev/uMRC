@@ -1,6 +1,9 @@
 #!/bin/bash
 
 plat="linux"
+if [[ "$(uname)" = "FreeBSD" ]]; then
+    plat="freebsd"
+fi
 arc="x64"
 arch=$(uname -m)
 if [[ "$arch" == arm* ]] || [[ "$arch" == aarch64 ]]; then
@@ -10,9 +13,6 @@ assetpath=$plat-$arc
 if [[ $OSTYPE == darwin* ]]; then
     plat="macos"
     assetpath=$plat 
-fi
-if [[ $OSTYPE == freebsd* ]]; then
-    plat="freebsd"
 fi
 
 mkdir -p bin

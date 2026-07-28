@@ -86,14 +86,21 @@ FreeBSD (x64):
 	   pkg install lang/gcc
 
 
-  2. Make the build.sh script executable:
+  2. Next make sure bash is installed on the system.
+
+     In the Terminal, run:
+
+	   pkg install bash
+
+
+  3. Make the build.sh script executable:
 
        chmod +x build.sh
 
 
-  3. Finally, run the build.sh script:
+  4. Finally, run the build.sh script:
 
-       ./build.sh
+       bash build.sh
 
 
   When done, you will find the compiled binaries and other necessary files
