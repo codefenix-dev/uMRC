@@ -500,7 +500,6 @@ void* clientProcess(void* lpArg) {
                 if (gVerboseLogging) {
                     writeToLog(logstring, PROGRAM, "");
                 }
-
                 freeSplitResult(field, fieldCount);
 
                 // Since NICKCHANGED is an internal packet from the client
@@ -705,6 +704,10 @@ void processPacket(char* packet) {
         body = _strdup(field[6]);
 
         for (int iml = 0; iml < MAX_LATENCIES; iml++) {
+            if (lt[iml].packetSum == -1 && lt[iml].packetLen == -1) {
+                break;
+            }
+
             if ((lt[iml].packetSum == packetSum(packet) && lt[iml].packetLen == (int)strlen(packet)) || (lt[iml].isStats == true && strstr(body, "STATS") != 0)) {
                 gLatency = currentTimeMillis() - lt[iml].timeSent;
                 initializeLt();

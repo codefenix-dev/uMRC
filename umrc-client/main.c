@@ -1431,12 +1431,12 @@ void listThemesInChat() {
     displayMessage("|08__", false);
 }
 
-void displayPipeFileInChat(char* filename) {
+void displayFileInChat(char* filename) {
     FILE* extFile;
 #if defined(WIN32) || defined(_MSC_VER)  
-    fopen_s(&extFile, filename, "r");
+    fopen_s(&extFile, filename, "rb");
 #else
-    extFile = fopen(filename, "r");
+    extFile = fopen(filename, "rb");
 #endif
     if (extFile != NULL) {
         char line[200] = "";
@@ -1449,20 +1449,19 @@ void displayPipeFileInChat(char* filename) {
     }
 }
 
-void displayPipeFile(char* filename) {
+void displayFile(char* filename, bool autopause) {
     FILE* extFile;
 #if defined(WIN32) || defined(_MSC_VER)  
-    fopen_s(&extFile, filename, "r");
+    fopen_s(&extFile, filename, "rb");
 #else
-    extFile=fopen(filename, "r");
+    extFile=fopen(filename, "rb");
 #endif            
     int lineCounter = 0;
     if (extFile != NULL) {
         char line[200] = "";
         while (fgets(line, sizeof(line), extFile)) {
-            od_printf("\r"); // why???
             dispEmuPipe(line, TRUE);
-            if (lineCounter >= od_control.user_screen_length - 2) {
+            if (autopause && (lineCounter >= ((int)od_control.user_screen_length) - 2)) {
                 doPause();
                 lineCounter = 0;
             }
@@ -1563,7 +1562,9 @@ void processUserCommand(char* cmd, char* params) {
     }
     else if (_stricmp(cmd, "nick") == 0) {
         isChatPaused = true;
+        od_disp_emu("\x1b[?25h", TRUE); // re-enable the blinking cursor..
         editDisplayName("chat");
+        od_disp_emu("\x1b[?25l", TRUE); // disable the blinking cursor
         // refresh the scrollLines and re-display the latest lines when exiting scrollback, in 
         // case any were received while editing.
         char** scrollLines;
@@ -1582,7 +1583,9 @@ void processUserCommand(char* cmd, char* params) {
     }
     else if (_stricmp(cmd, "set") == 0) {
         isChatPaused = true;
+        od_disp_emu("\x1b[?25h", TRUE); // re-enable the blinking cursor..
         enterChatterSettings("chat");
+        od_disp_emu("\x1b[?25l", TRUE); // disable the blinking cursor
         // refresh the scrollLines and re-display the latest lines when exiting scrollback, in 
         // case any were received while editing.
         char** scrollLines;
@@ -1617,13 +1620,13 @@ void processUserCommand(char* cmd, char* params) {
         }
         else if (_stricmp(params, "list") == 0) {
             displayMessage("|09___ |15Twit List|09___", false);
-            displayPipeFileInChat(gTwitFile);
+            displayFileInChat(gTwitFile);
         }
     }
     else if (_stricmp(cmd, "help") == 0) {
         char helpfile[30] = "";
         _snprintf_s(helpfile, sizeof(helpfile), -1, "screens%chelp%s.txt", PATH_SEP, strlen(params) > 0 ? params : "");
-        displayPipeFileInChat(helpfile);
+        displayFileInChat(helpfile);
     }
     else if (_stricmp(cmd, "quote") == 0) {
         sendCmdPacket(&mrcSock, params, "");
@@ -2747,9 +2750,9 @@ int main(int argc, char** argv)
 
         od_clr_scr();
 #if defined(WIN32) || defined(_MSC_VER)  
-        od_send_file("screens\\intro.ans");
+        displayFile("screens\\intro.ans", false);
 #else
-        od_send_file("screens/intro.ans");
+        displayFile("screens/intro.ans", false);
 #endif
         int act = 0;
         char bbses[6] = "", rooms[6] = "", users[6] = "", activity[2] = "";
@@ -2841,9 +2844,9 @@ int main(int argc, char** argv)
 
             od_clr_scr();
 #if defined(WIN32) || defined(_MSC_VER)  
-            displayPipeFile("screens\\help.txt");
+            displayFile("screens\\help.txt", true);
 #else
-            displayPipeFile("screens/help.txt");
+            displayFile("screens/help.txt", true);
 #endif
             doPause();
             break;
