@@ -1458,8 +1458,9 @@ void displayFile(char* filename, bool autopause) {
 #endif            
     int lineCounter = 0;
     if (extFile != NULL) {
-        char line[200] = "";
+        char line[250] = "";
         while (fgets(line, sizeof(line), extFile)) {
+            od_printf("\r"); // why???
             dispEmuPipe(line, TRUE);
             if (autopause && (lineCounter >= ((int)od_control.user_screen_length) - 2)) {
                 doPause();
