@@ -478,10 +478,10 @@ void* clientProcess(void* lpArg) {
                 }
                 freeSplitResult(field, fieldCount);
             }                    
-            if (strstr(clientPacket, "~LOGOFF~") != 0) {
+            if (strstr(clientPacket, "~SERVER~~~LOGOFF~") != 0) {
                 cleanLogoff = true;
             }
-            if (strstr(clientPacket, "~NICKCHANGED:") != 0) {
+            if (strstr(clientPacket, "~SERVER~~~NICKCHANGED:") != 0) {
 
                 // The client on this socket received a USERNICK packet, 
                 // which changed the chatter name, and it's informing the 

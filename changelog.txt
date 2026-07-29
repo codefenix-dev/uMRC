@@ -3,6 +3,7 @@ Change Log:
 v106 - TBA:
 
   - Improved message routing from umrc-bridge to local umrc-client instances.
+  - Sort theme name listings on 'Nix systems.
   - Fix for properly handling GOODBYE packets.
   - Fix for scrollback percentage indicator.
   - Fix for joining long room names FROM other long room names.

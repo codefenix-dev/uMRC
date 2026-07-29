@@ -414,9 +414,13 @@ int editDisplayName(char* quitToWhere) {
     return changeCount;
 }
 
-void pickTheme(char* pickedTheme) {
-    bool validEntry = false;
-    int pickedOption = -1;
+int compareThemeNames(const void* a, const void* b) {
+    return _stricmp(*(const char* const*)a, *(const char* const*)b);
+}
+
+int getThemes(char*** themeList) {
+
+
     int count = 0;
     char themeFiles[1000] = "";
 #if defined(WIN32) || defined(_MSC_VER) 
@@ -426,7 +430,6 @@ void pickTheme(char* pickedTheme) {
     if ((hFind = FindFirstFile("themes\\*.ans", &fdFile)) == INVALID_HANDLE_VALUE) {
         od_printf("Path not found: [%s]\r\n", "themes");
         doPause();
-        return;
     }
 
     do {
@@ -440,12 +443,12 @@ void pickTheme(char* pickedTheme) {
     } while (FindNextFile(hFind, &fdFile));
     FindClose(hFind);
 #else
-    DIR *d;
-    struct dirent *dir;
+    DIR* d;
+    struct dirent* dir;
     d = opendir("themes");
     if (d) {
-        while ((dir=readdir(d)) != NULL) {
-            if (strstr(dir->d_name, ".ans")==NULL) {
+        while ((dir = readdir(d)) != NULL) {
+            if (strstr(dir->d_name, ".ans") == NULL) {
                 continue;
             }
             if (count == 0) {
@@ -457,18 +460,34 @@ void pickTheme(char* pickedTheme) {
             }
             count = count + 1;
         }
-    } else {
+    }
+    else {
         od_printf("Path not found: [%s]\r\n", "themes");
         doPause();
-        return;
-	}
+    }
 #endif
 
+    //char** themeList;
+    count = split(themeFiles, '|', themeList);
+
+    return count;
+
+}
+
+void pickTheme(char* pickedTheme) {
+    bool validEntry = false;
+    int pickedOption = -1;
+
     char** themeList;
-    count = split(themeFiles, '|', &themeList);
+    int count = getThemes(&themeList);
+    qsort(themeList, count, sizeof(char*), compareThemeNames);
 
     for (int i = 0; i < count; i++) {
-        od_printf("``%d`bright black`: `bright white`%s``\r\n", i + 1, themeList[i]);
+        char line[100] = "";
+        _snprintf_s(line, sizeof(line), -1, "%s", themeList[i]);
+        lstr(line);
+        removeSubstr(line, ".ans");
+        od_printf("``%2d`bright black`: `bright white`%s``\r\n", i + 1, line);
     }
     while (!validEntry) {
         od_printf("``\r\n\r\nPick a theme (%d-%d): ", 1, count);
@@ -478,6 +497,7 @@ void pickTheme(char* pickedTheme) {
         validEntry = (pickedOption >= 1 && pickedOption <= count);
     }
     strcpy_s(pickedTheme, 20,  themeList[pickedOption - 1]);
+    freeSplitResult(themeList, count);
 }
 
 void loadTheme() {
@@ -540,7 +560,7 @@ void loadTheme() {
                 token = strtok_s(line, " ", &context);
                 while (token != NULL) {
                     if (tokencnt == 0) {
-                        strcpy_s(colorname, sizeof(colorname), token);
+                        strncpy_s(colorname, sizeof(colorname), token, -1);
                     }
                     else if (tokencnt >= 1) {
                         removeNonAlphanumeric(token);
@@ -1392,39 +1412,22 @@ void queueIncomingMessage(char* msg, bool mention) {
 }
 
 void listThemesInChat() {
-#if defined(WIN32) || defined(_MSC_VER) 
-    WIN32_FIND_DATA fdFile;
-    HANDLE hFind = NULL;
-    if ((hFind = FindFirstFile("themes\\*.ans", &fdFile)) == INVALID_HANDLE_VALUE) {
-        displayMessage("|07 Theme path not found", false);
-        return;
-    }
     displayMessage("|15* Pick a theme with |09/theme |10name", false);
-    do {
-        char line[200] = "";
-        _snprintf_s(line, sizeof(line), -1, "|08* - |07%s", fdFile.cFileName);
+
+    char** themeList;
+    int count = getThemes(&themeList);
+    qsort(themeList, count, sizeof(char*), compareThemeNames);
+
+    for (int i = 0; i < count; i++) {
+
+        char line[100] = "";
+        _snprintf_s(line, sizeof(line), -1, "|08* - |07%s", themeList[i]);
         lstr(line);
         removeSubstr(line, ".ans");
         displayMessage(line, false);
-    } while (FindNextFile(hFind, &fdFile));
-    FindClose(hFind);
-#else
-    DIR *d;
-    struct dirent *dir;
-    d = opendir("themes");
-    if (d) {
-        while ((dir=readdir(d)) != NULL) {
-            if (strstr(dir->d_name, ".ans")==NULL) {
-                continue;
-            }
-            char line[200] = "";
-            _snprintf_s(line, sizeof(line), -1, "|08* - |07%s", dir->d_name);
-            lstr(line);
-            removeSubstr(line, ".ans");
-            displayMessage(line, false);
-        }
     }
-#endif
+    freeSplitResult(themeList, count);
+
     displayMessage("|08__", false);
 }
 
@@ -1459,12 +1462,10 @@ void displayPipeFile(char* filename) {
         while (fgets(line, sizeof(line), extFile)) {
             od_printf("\r"); // why???
             dispEmuPipe(line, TRUE);
-
             if (lineCounter >= od_control.user_screen_length - 2) {
                 doPause();
                 lineCounter = 0;
             }
-
             lineCounter = lineCounter + 1;
         }
         fclose(extFile);
