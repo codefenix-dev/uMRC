@@ -89,16 +89,24 @@ int strLenWithoutPipecodes(char* str) {
 }
 
 /**
- * Checks if a string contains another string. Case-insensitive.
+ * function likes trstr() that ignores upper or lower case
  */
-bool strContainsStrI(char* str, char* contains) {
-    char s[512] = "";
-    char c[512] = "";
-    strcpy_s(s, sizeof(s), str);
-    strcpy_s(c, sizeof(c), contains);
-    lstr(c);
-    lstr(s);
-    return strstr(s, c) != NULL;
+
+char* stristr(const char* haystack, const char* needle) {
+    if (!*needle) return (char*)haystack;
+
+    for (; *haystack; haystack++) {
+        if (tolower((unsigned char)*haystack) == tolower((unsigned char)*needle)) {
+            const char* h = haystack;
+            const char* n = needle;
+            while (*h && *n && tolower((unsigned char)*h) == tolower((unsigned char)*n)) {
+                h++;
+                n++;
+            }
+            if (!*n) return (char*)haystack;
+        }
+    }
+    return NULL;
 }
 
 /**

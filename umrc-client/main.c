@@ -419,8 +419,6 @@ int compareThemeNames(const void* a, const void* b) {
 }
 
 int getThemes(char*** themeList) {
-
-
     int count = 0;
     char themeFiles[1000] = "";
 #if defined(WIN32) || defined(_MSC_VER) 
@@ -430,14 +428,15 @@ int getThemes(char*** themeList) {
     if ((hFind = FindFirstFile("themes\\*.ans", &fdFile)) == INVALID_HANDLE_VALUE) {
         od_printf("Path not found: [%s]\r\n", "themes");
         doPause();
+        return 0;
     }
-
     do {
         if (count == 0) {
-            _snprintf_s(themeFiles, sizeof(themeFiles), -1, "%s", fdFile.cFileName);
+            strcpy_s(themeFiles, sizeof(themeFiles), fdFile.cFileName);
         }
         else {
-            _snprintf_s(themeFiles, sizeof(themeFiles), -1, "%s|%s", themeFiles, fdFile.cFileName);
+            strcat_s(themeFiles, sizeof(themeFiles), "|");
+            strcat_s(themeFiles, sizeof(themeFiles), fdFile.cFileName);
         }
         count = count + 1;
     } while (FindNextFile(hFind, &fdFile));
@@ -464,14 +463,11 @@ int getThemes(char*** themeList) {
     else {
         od_printf("Path not found: [%s]\r\n", "themes");
         doPause();
+        return 0;
     }
 #endif
-
-    //char** themeList;
     count = split(themeFiles, '|', themeList);
-
     return count;
-
 }
 
 void pickTheme(char* pickedTheme) {
@@ -480,6 +476,9 @@ void pickTheme(char* pickedTheme) {
 
     char** themeList;
     int count = getThemes(&themeList);
+    if (count == 0) {
+        return;
+    }
     qsort(themeList, count, sizeof(char*), compareThemeNames);
 
     for (int i = 0; i < count; i++) {
@@ -564,7 +563,7 @@ void loadTheme() {
                     }
                     else if (tokencnt >= 1) {
                         removeNonAlphanumeric(token);
-                        if (strlen(token) + strlen(colorvalue) < sizeof(colorvalue)) {
+                        if ((strlen(token) + strlen(colorvalue)) < strlen(colorvalue) ) {
                             strcat_s(colorvalue, sizeof(colorvalue), token);
                         }
                     }
@@ -1940,7 +1939,7 @@ void processPacket(char* packet) {
 
             // Standard message
             else {
-                if (_stricmp(fromUser, user.chatterName) != 0 && strContainsStrI(body, user.chatterName)) {
+                if (_stricmp(fromUser, user.chatterName) != 0 && stristr(body, user.chatterName) != NULL) {
                     gMentionCount = gMentionCount + 1;
                     gMentionCountChanged = true;
                     if (user.chatSounds) {
