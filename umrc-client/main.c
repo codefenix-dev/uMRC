@@ -563,7 +563,7 @@ void loadTheme() {
                     }
                     else if (tokencnt >= 1) {
                         removeNonAlphanumeric(token);
-                        if ((strlen(token) + strlen(colorvalue)) < strlen(colorvalue) ) {
+                        if ((strlen(token) + strlen(colorvalue)) < 20 ) {
                             strcat_s(colorvalue, sizeof(colorvalue), token);
                         }
                     }
