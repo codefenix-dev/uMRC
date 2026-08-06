@@ -2,6 +2,10 @@ Change Log:
 
 v106 - TBA:
 
+  - Fix for termsizes beyond 80x25, such as 132x37. This is dependent on the
+    drop file used though; CHAIN.TXT reports *both* the user's terminal rows
+	and columns, while others report only the rows, and others don't report 
+	either, in which case 80x24 is used as the default.
   - Improved message routing from umrc-bridge to local umrc-client instances.
   - Sort theme name listings on 'Nix systems.
   - Fix for properly handling GOODBYE packets.

@@ -28,6 +28,7 @@ If you use NetFoss to start up your DOS-based BBS, then the NFU utility bundled 
 - [CTCP command](https://en.wikipedia.org/wiki/Client-to-client_protocol) support
 - Sysop-editable ANSI status bar themes
 - Twit filter
+- Support for termsizes up to 132 columns (dropfile dependent)
 
 
 ## 📄 Common Files Included:
@@ -96,7 +97,11 @@ basic instructions.
 
 4. Set up a menu item to launch a native door on your BBS.
 
-   The command line syntax is:
+   DOOR32.SYS is the standard drop file to use in most cases, but other drop file
+   formats like DOOR.SYS or CHAIN.TXT may be used and may actually be preferable 
+   reasons explained further below.
+
+   The basic DOOR32.SYS command line syntax is:
 
      Windows: `umrc-client -D c:\path\to\DOOR32.SYS`
 
@@ -134,6 +139,17 @@ basic instructions.
 
    NOTE: It will only run as user number 1 (Sysop) in local mode.
 
+   umrc-client honors the termsize reported by the drop file. Some drop files,
+   like CHAIN.TXT report both the terminal's available columns and rows to the 
+   door, allowing umrc-client to run at any termsize, such as 132x37.
+
+   ```
+   umrc-client -D c:\path\to\CHAIN.TXT
+   ```
+   
+   The standard termsize of 80x24 gets used if no row and/or column size 
+   information is given in the drop file, as well as in local mode.
+
 
 <img width="948" height="696" alt="ssmenu" src="https://github.com/user-attachments/assets/ec982775-5553-4b2d-911f-3e4144e2a163" />
 
@@ -169,11 +185,6 @@ Type `/meetups` in chat for a current list of meetups.
 
 ## 🚩 Known Issues & Limitations:
 
-- Height and width are limited to 80 columns by 24 rows. OpenDoors has
-  a default maximum row limit of 23, but umrc-client is hard-coded with
-  this setting adjusted to 24. As far as I know, OpenDoors cannot
-  automatically detect the terminal's height and width.
-
 - The font size of the local window in Windows cannot be adjusted. This
   seems to be an internal limitation of the OpenDoors kit.
 
@@ -203,7 +214,6 @@ the same port number as selected in the Setup program. It's worth noting that
 a much older version of LibreSSL (2.5.5 from 2017) was used for the Windows XP
 build.
 
-
 You should NOT have ports 5000/5001 open on your firewall/router, since
 umrc-client makes OUTBOUND requests to the MRC host on ports 5000/5001.
 If you leave these ports open on your end, then you may occasionally see
@@ -223,10 +233,6 @@ Thanks to **StackFault** at **The Bottomless Abyss BBS**, MRC HQ!
 
 **StingRay** of A-**Net Online**
 
-StingRay offers a wide array of BBSes and BBS-related services that all sysops
-should avail themselves of. The main links here will get you on the path to
-everything he offers.
-
 - https://a-net-online.lol/bbs/
 - telnet://a-net-online.lol
 - ssh://a-net-online.lol
@@ -234,21 +240,12 @@ everything he offers.
 
 **X-Bit** of **x-bit.org**
 
-xbit is a veteran sysop and league coordinator of the X-League (777) Inter-BBS
-network which re-launched in 2025. If you're interested in joining the network,
-check out these links below:
-
 - https://x-bit.org
 - telnet://x-bit.org
 - ssh://x-bit.org:22222
 
-xbit also contributed the "l33t" and "stars" themes!
-
 
 **Exodus** of **The Titantic BBS**
-
-Exodus is the network coordinator of MetroNet and maintains Renegade BBS. He was
-instrumental in confirming uMRC could run on DOS-based systems like Renegade.
 
 - https://www.rgbbs.info
 - telnet://ttb.rgbbs.info
@@ -256,12 +253,8 @@ instrumental in confirming uMRC could run on DOS-based systems like Renegade.
 
 **Shurato** of **Shurato's Heavenly Sphere**
 
-Shurato runs perhaps the most unique and customized instance of EleBBS anywhere,
-and is always happy to try running new things on his board.
-
 - https://shsbbs.net
 - telnet://shsbbs.net
-- for SSH, see: https://shsbbs.net/faq.html
 
 
 

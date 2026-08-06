@@ -1,5 +1,5 @@
  uMRC  ┌──── ▄█▀▀▀▀▀█▄ ───┬───┬───┬─┐
- v105┌──── ▄██ ▄███ ▀▀█▄ ·────────┐ ┤
+ v106┌──── ▄██ ▄███ ▀▀█▄ ·────────┐ ┤
    ┌──── ▄█▀▀ ▐█▀ ▀ █ ██  ▄ ▄ ▄ · │ │
  ┌──── ▄█▀ ▄██▄▀█▄▄██ ██  █████ · │ ┤
 ┌─── ▄█▀ ▐██▀▀█▌ ▀▀▀ ▄█▀  ▐▄█▄▌   │ │
@@ -161,7 +161,11 @@ connections from the same BBS.
 
 4. Set up a menu item to launch a native door on your BBS.
 
-   The command line syntax is:
+   DOOR32.SYS is the standard drop file to use in most cases, but other drop
+   file formats like DOOR.SYS or CHAIN.TXT may be used and may actually be 
+   preferable reasons explained further below.
+
+   The basic DOOR32.SYS command line syntax is:
 
      ./umrc-client -D /path/to/DOOR32.SYS
 
@@ -209,6 +213,17 @@ connections from the same BBS.
      ./umrc-client -L
 
    NOTE: It will only run as user number 1 (Sysop) in local mode.
+
+   umrc-client honors the termsize reported by the drop file. Some drop files,
+   like CHAIN.TXT report both the terminal's available columns and rows to the
+   door, allowing umrc-client to run at any termsize, suchg as 132x37.
+
+   ```
+   umrc-client -D c:\path\to\CHAIN.TXT
+   ```
+   
+   The standard termsize of 80x24 gets used if no row and/or column size 
+   information is given in the drop file, as well as in local mode.
 
   At this point, you should be ready to launch the door and join chat.
 
@@ -410,11 +425,6 @@ Type /meetups in chat for a current list of meetups.
 
 
 Known Issues & Limitations:
-
-Height and width are limited to 80 columns by 24 rows. OpenDoors has
-a default maximum row limit of 23, but umrc-client is hard-coded with
-this setting adjusted to 24. As far as I know, OpenDoors cannot
-automatically detect the terminal's height and width.
 
 At the time of this writing, when using the !ddial command, the MRC
 host returns extraneous packets missing the BODY field. uMRC treats

@@ -170,3 +170,36 @@ void cleanUpFilename(char* str) {
         strcat_s(str, 36, "_"); // append a character to make it allowed
     }
 }
+
+int compareThemeNames(const void* a, const void* b) {
+    return _stricmp(*(const char* const*)a, *(const char* const*)b);
+}
+
+void xorEncryptDecrypt(char *str, const char *key) {
+    int len = (int)strlen(str);
+    int keyLen = (int)strlen(key);
+    for (int i = 0; i < len; i++) {
+        str[i] = str[i] ^ key[i % keyLen];
+    }
+}
+
+/**
+ * Returns a pointer into buf, positioned at the start of roughly the last
+ * n lines. Used to bound how much of gScrollBack a caller needs to
+ * split()/scan, instead of re-parsing the whole accumulated history on
+ * every call. No allocation -- the returned pointer aliases buf.
+ */
+char* lastNLines(char* buf, int n) {
+    char* p = buf + strlen(buf);
+    int newlines = 0;
+    while (p > buf) {
+        p--;
+        if (*p == '\n') {
+            newlines++;
+            if (newlines > n) {
+                return p + 1;
+            }
+        }
+    }
+    return buf;
+}

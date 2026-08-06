@@ -414,10 +414,6 @@ int editDisplayName(char* quitToWhere) {
     return changeCount;
 }
 
-int compareThemeNames(const void* a, const void* b) {
-    return _stricmp(*(const char* const*)a, *(const char* const*)b);
-}
-
 int getThemes(char*** themeList) {
     int count = 0;
     char themeFiles[1000] = "";
@@ -1273,9 +1269,16 @@ void displayMessage(char* msg, bool mention) {
         addToScrollBack(dispMsg, 1);
     }
     if (!isChatPaused) {
-        od_scroll(1, 1, od_control.user_screenwidth, od_control.user_screen_length - 3, countOfChars(dispMsg, '\n') +1, 0);
-        od_set_cursor(od_control.user_screen_length - (2 + countOfChars(dispMsg, '\n') +1), 1);
-        dispEmuPipe(dispMsg, TRUE);
+        int height = od_control.user_screen_length - 2;
+        char* tail = lastNLines(gScrollBack, height + 1); // small margin for the scroll math
+        char** scrollLines;
+        int scrollLineCount = split(tail, '\n', &scrollLines);
+        int scrollPos = scrollLineCount - height;
+        if (scrollPos < 0) {
+            scrollPos = 0;
+        }
+        scrollToScrollbackSection(scrollLines, scrollPos, scrollLineCount, height);
+        freeSplitResult(scrollLines, scrollLineCount);
     }
 }
 
@@ -2607,10 +2610,14 @@ int main(int argc, char** argv)
         od_exit(-1, FALSE);
     }
 
-    od_control.od_inactivity = 0;     
-    od_control.od_maxtime = 0;           
-    od_control.user_ansi = TRUE;
-    od_control.user_screen_length = 24;
+    od_control.od_inactivity = 0;
+    od_control.od_maxtime = 0;
+
+    //od_control.user_ansi = TRUE; // Probably don't need this
+    
+    if (od_control.user_screen_length == 23) {
+        od_control.user_screen_length = 24;
+    }
 
     od_clr_scr();
 
