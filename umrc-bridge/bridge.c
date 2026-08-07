@@ -28,8 +28,15 @@
 #pragma comment(lib, "../lib/x64/ssl.lib") 
 #pragma comment(lib, "../lib/x64/crypto.lib")
 #elif defined(i386) || defined(__i386__) || defined(__i386) || defined(_M_IX86)
+#if defined(WINDOWSXP)
+#pragma comment(lib, "../lib/winxp/x86/libssl-43.lib") 
+#pragma comment(lib, "../lib/winxp/x86/libcrypto-41.lib")
+#define EVP_MD_CTX_new() EVP_MD_CTX_create()
+#define EVP_MD_CTX_free(ctx) EVP_MD_CTX_destroy(ctx)
+#else
 #pragma comment(lib, "../lib/x86/ssl.lib") 
 #pragma comment(lib, "../lib/x86/crypto.lib")
+#endif
 #endif
 
 #else

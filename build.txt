@@ -172,5 +172,24 @@ Windows (x86 & x64):
   The only notable differences in the x64 executables are:
     - "Windows.x86_64" will be shown in your BBS's /info screen.
 	- umrc-bridge uses the 64-bit LibreSSL libraries.
+	
+  If you wish to compile for Windows XP, an older version of Visual Studio 
+  is required. You will need Visual Studio 2017 and the v141_xp toolset along
+  with it. Once installed, the steps are the same as above for Visual Studio
+  2022, except you'll select "Release (WinXP)" from the Platforms dropdown,
+  then rebuild the solution. You'll find the compiled EXEx and DLLs in a 
+  subfolder named "Release (WinXP)".
+    
+  [Release (WinXP]:
+  - [screens]
+  - [themes]
+  - libcrypto-41.dll
+  - libssl-43.dll
+  - ODoors62.dll
+  - setup.exe
+  - umrc-bridge.exe
+  - umrc-client.exe
 
+  Note that the Windows XP build of umrc-bridge.exe uses a much older version
+  of the libcrypto and libsll libraries to ensure compatibility.
 
