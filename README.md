@@ -6,8 +6,7 @@
 uMRC is a full-featured, cross-platform [Multi-Relay Chat](https://status-na-multi.relaychat.net) client for BBSes. It runs as a native door on your system, letting you access Multi-Relay Chat without having to install and maintain a Mystic BBS instance or Python. In other words, as long as your BBS is capable of running DOOR32.SYS doors, then you and your users can participate in MRC.
 
 
-<img width="949" height="694" alt="sschat" src="https://github.com/user-attachments/assets/e41b12b9-9383-49f5-b46e-d94b68159bec" />
-
+<img width="638" height="474" alt="sschat" src="https://github.com/user-attachments/assets/723dc2fe-b379-4ea4-a846-8b5769c938b1" />
 
 It should be compatible with any DOOR32.SYS capable BBS such as EleBBS, WWIV, Synchronet, Mystic, and others. It runs on Windows 7 and later, with a special Windows XP build also available.
 
@@ -28,7 +27,7 @@ If you use NetFoss to start up your DOS-based BBS, then the NFU utility bundled 
 - [CTCP command](https://en.wikipedia.org/wiki/Client-to-client_protocol) support
 - Sysop-editable ANSI status bar themes
 - Twit filter
-- Support for termsizes up to 132 columns (dropfile dependent)
+- Support for termsizes beyond 80x25 (dropfile dependent)
 
 
 ## 📄 Common Files Included:
@@ -127,13 +126,13 @@ basic instructions.
    to both the BBS and its own local Window, especially while paging through
    the chat scrollback.
 
-   ```
+   ```cmd
    umrc-client -D c:\path\to\DOOR32.SYS -SILENT
    ```
 
    To run the client locally from the command line, use the -L option:
 
-   ```
+   ```cmd
    umrc-client -L
    ```
 
@@ -143,15 +142,15 @@ basic instructions.
    like CHAIN.TXT report both the terminal's available columns and rows to the 
    door, allowing umrc-client to run at any termsize, such as 132x37.
 
-   ```
+   ```cmd
    umrc-client -D c:\path\to\CHAIN.TXT
    ```
    
-   The standard termsize of 80x24 gets used if no row and/or column size 
-   information is given in the drop file, as well as in local mode.
+   The standard termsize of 80x24 gets used by default if no row and/or column 
+   size information is given in the drop file, as well as in local mode.
 
 
-<img width="948" height="696" alt="ssmenu" src="https://github.com/user-attachments/assets/ec982775-5553-4b2d-911f-3e4144e2a163" />
+<img width="637" height="473" alt="ssmenu" src="https://github.com/user-attachments/assets/1833241d-4c05-4e73-928b-973131495f3e" />
 
 
 ## 📖 uMRC Client Usage:
@@ -161,6 +160,8 @@ to confirm the user name that was detected, or enter a custom one (in case the
 BBS passed the user's real name to the door). After the user confirms their
 name, they'll be given a short list of options to configure, after which point
 they'll be taken to the main menu. This is explained further in **readme.txt**.
+
+<img width="637" height="472" alt="sssettings" src="https://github.com/user-attachments/assets/95105cf0-f9d9-406f-8e12-241fda6eef50" />
 
 User settings are saved the userdata subdirectory. One file per user,
 named using their alias or username on the BBS. If a user's settings
@@ -186,7 +187,7 @@ Type `/meetups` in chat for a current list of meetups.
 ## 🚩 Known Issues & Limitations:
 
 - The font size of the local window in Windows cannot be adjusted. This
-  seems to be an internal limitation of the OpenDoors kit.
+  is an internal limitation of the OpenDoors kit.
 
 - At the time of this writing, when using the `!ddial` command, the MRC
   host returns extraneous packets missing the BODY field. uMRC treats
