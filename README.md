@@ -98,7 +98,7 @@ basic instructions.
 
    DOOR32.SYS is the standard drop file to use in most cases, but other drop file
    formats like DOOR.SYS or CHAIN.TXT may be used and may actually be preferable 
-   reasons explained further below.
+   for reasons explained further below.
 
    The basic DOOR32.SYS command line syntax is:
 
@@ -141,9 +141,13 @@ basic instructions.
    umrc-client honors the termsize reported by the drop file. Some drop files,
    like CHAIN.TXT report both the terminal's available columns and rows to the 
    door, allowing umrc-client to run at any termsize, such as 132x37.
+   
+   If you're using any drop file type other than DOOR32.SYS, you may also need
+   to pass the socket handle using the `-SOCKET` parameter. Check your BBS
+   documentation for usage.
 
    ```cmd
-   umrc-client -D c:\path\to\CHAIN.TXT
+   umrc-client -D c:\path\to\CHAIN.TXT -SILENT -SOCKET <socket_handle>
    ```
    
    The standard termsize of 80x24 gets used by default if no row and/or column 

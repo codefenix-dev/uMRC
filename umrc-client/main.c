@@ -1269,16 +1269,23 @@ void displayMessage(char* msg, bool mention) {
         addToScrollBack(dispMsg, 1);
     }
     if (!isChatPaused) {
-        int height = od_control.user_screen_length - 2;
-        char* tail = lastNLines(gScrollBack, height + 1); // small margin for the scroll math
-        char** scrollLines;
-        int scrollLineCount = split(tail, '\n', &scrollLines);
-        int scrollPos = scrollLineCount - height;
-        if (scrollPos < 0) {
-            scrollPos = 0;
+        if (od_control.user_screenwidth <= 80) {
+            od_scroll(1, 1, od_control.user_screenwidth, od_control.user_screen_length - 3, countOfChars(dispMsg, '\n') + 1, 0);
+            od_set_cursor(od_control.user_screen_length - (2 + countOfChars(dispMsg, '\n') + 1), 1);
+            dispEmuPipe(dispMsg, TRUE);
         }
-        scrollToScrollbackSection(scrollLines, scrollPos, scrollLineCount, height);
-        freeSplitResult(scrollLines, scrollLineCount);
+        else {
+            int height = od_control.user_screen_length - 2;
+            char* tail = lastNLines(gScrollBack, height + 1); // small margin for the scroll math
+            char** scrollLines;
+            int scrollLineCount = split(tail, '\n', &scrollLines);
+            int scrollPos = scrollLineCount - height;
+            if (scrollPos < 0) {
+                scrollPos = 0;
+            }
+            scrollToScrollbackSection(scrollLines, scrollPos, scrollLineCount, height);
+            freeSplitResult(scrollLines, scrollLineCount);            
+        }
     }
 }
 
@@ -2612,8 +2619,6 @@ int main(int argc, char** argv)
 
     od_control.od_inactivity = 0;
     od_control.od_maxtime = 0;
-
-    //od_control.user_ansi = TRUE; // Probably don't need this
     
     if (od_control.user_screen_length == 23) {
         od_control.user_screen_length = 24;
@@ -2622,7 +2627,6 @@ int main(int argc, char** argv)
     od_clr_scr();
 
     userNumber = od_control.user_num;
-    //if (0 == userNumber && strcmp(od_control.user_name, "Sysop") == 0) {
     if (od_control.od_force_local) {
         od_printf("`bright yellow`***`bright white`LOCAL MODE`bright yellow`***``\r\n\r\n");
         strcpy_s(user.chatterName, sizeof(user.chatterName), od_control.user_name);

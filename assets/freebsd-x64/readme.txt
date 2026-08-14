@@ -28,8 +28,11 @@ without having to install and maintain a Mystic BBS instance with Python. In
 other words, as long as your BBS is capable of running DOOR32.SYS doors, then 
 you and your users can participate in MRC.
 
-It should be compatible with any DOOR32.SYS capable BBS such as EleBBS, WWIV,
-Synchronet, Mystic, and possibly others.
+It should be compatible with any DOOR32.SYS capable BBS, however the FreeBSD
+build has not actually been tested on a real FreeBSD BBS as of the time of this
+writing. I personally have only been able to confirm it runs on a FreeBSD guest
+on VirtualBox. If you decide to try it out, please let me know how it works for
+you so I can update this documentation.
 
 
 Features:
@@ -157,7 +160,7 @@ connections from the same BBS.
 
    DOOR32.SYS is the standard drop file to use in most cases, but other drop
    file formats like DOOR.SYS or CHAIN.TXT may be used and may actually be 
-   preferable reasons explained further below.
+   preferable for reasons explained further below.
 
    The basic DOOR32.SYS command line syntax is:
 
@@ -210,10 +213,12 @@ connections from the same BBS.
    umrc-client honors the termsize reported by the drop file. Some drop files,
    like CHAIN.TXT report both the terminal's available columns and rows to the
    door, allowing umrc-client to run at any termsize, suchg as 132x37.
+   
+   If you're using any drop file type other than DOOR32.SYS, you may also need
+   to pass the socket handle using the `-SOCKET` parameter. Check your BBS
+   documentation for usage.
 
-   ```
-   umrc-client -D c:\path\to\CHAIN.TXT
-   ```
+   umrc-client -D c:\path\to\CHAIN.TXT -SILENT -SOCKET <socket_handle>
    
    The standard termsize of 80x24 gets used if no row and/or column size 
    information is given in the drop file, as well as in local mode.
