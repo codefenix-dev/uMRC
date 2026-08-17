@@ -56,6 +56,7 @@ bool gRoomTopicChanged = false;
 bool gLatencyChanged = false;
 bool gUserCountChanged = false;
 bool gMentionCountChanged = false;
+bool gServerStatsChanged = false;
 
 bool gIsInChat = false;
 bool isChatPaused = false;
@@ -63,6 +64,10 @@ bool isChatPaused = false;
 int gMentionCount = 0;
 int gChatterCount = 0;
 int gTwitCount = 0;
+int gBBSes = 0;
+int gRooms = 0;
+int gUsers = 0;
+int gActivity = 0;
 char gDisplayChatterName[80] = "";
 char gRoom[30] = "";
 char gTopic[55] = "";
@@ -683,7 +688,6 @@ void updateMentions() {
 void updateBuffer(int typed) {
     od_set_cursor(od_control.user_screen_length - 1, 68);
     od_printf(
-
         "`%s %s`%03d`%s %s`/`%s %s`%03d``"
 
         , typed >= 135 ? "bright red" : (typed >= 120 ? "bright yellow" : gBufferFg1 )
@@ -697,6 +701,19 @@ void updateBuffer(int typed) {
         , gBufferBg1
         
         , MSG_LEN - 1);
+}
+
+void updateServerStats() {
+    if (od_control.user_screenwidth > 130) {
+        od_set_cursor(od_control.user_screen_length - 1, 90);
+        od_printf("%s", ACTIVITY[gActivity]);
+
+        od_set_cursor(od_control.user_screen_length - 1, 105);
+        od_printf("`%s %s`%-3d``", gUserCountFg, gUserCountBg, gBBSes);
+
+        od_set_cursor(od_control.user_screen_length - 1, 122);
+        od_printf("`%s %s`%-3d``", gUserCountFg, gUserCountBg, gRooms);
+    }
 }
 
 void drawStatusBar() {
@@ -1500,13 +1517,6 @@ void processUserCommand(char* cmd, char* params) {
             return;
         }
 
-        // Let the user know they're trying to join a room they're already in.
-        // Not necessarily needed, since the server doesn't consider the action
-        // invalid, but we'll inform the user anyway. 
-        if (_stricmp(newRoom, gRoom) == 0) {
-            displayMessage("|15* |14Already in that room|07.", false);
-        }
-
         char newRoomCmd[80] = ""; // Needs to be long enough to hold the old room, new room, and NEWROOM command.
         _snprintf_s(newRoomCmd, sizeof(newRoomCmd), -1, "NEWROOM:%s:", gRoom); // include the OLD room as the first parameter...
         sendCmdPacket(&mrcSock, newRoomCmd, newRoom); // the NEW room will be included as the second parameter...
@@ -1705,7 +1715,7 @@ void processUserCommand(char* cmd, char* params) {
 }
 
 void processServerMessage(char* svrmsg, char* toUser) {
-        
+
     if (svrmsg == NULL) { // don't process if there's nothing to process..
         return;
     }
@@ -1754,7 +1764,7 @@ void processServerMessage(char* svrmsg, char* toUser) {
         // The server will append a number to the original nick to resolve the conflict.
         strncpy_s(user.chatterName, sizeof(user.chatterName), (svrmsg + argpos), -1);
         _snprintf_s(gDisplayChatterName, sizeof(gDisplayChatterName), -1, "|%02d|%02d%c|%02d|%02d%s%s|16", user.chatterNamePrefixFgColor, user.chatterNamePrefixBgColor, user.chatterNamePrefix, user.chatterNameFgColor, user.chatterNameBgColor, user.chatterName, user.chatterNameSuffix);
-        
+
         // inform the user of the change...
         char nicknotice[141] = "";
         _snprintf_s(nicknotice, sizeof(nicknotice), -1, "|15* |08(|14Notice|08) |07The MRC server has updated your name to |15%s|07.", user.chatterName);
@@ -1775,18 +1785,18 @@ void processServerMessage(char* svrmsg, char* toUser) {
         gIsInChat = false;
     }
     else if (strncmp(svrmsg, "USERLIST", cmdsep) == 0) {
-		char** newChatters;
-		int newCount = split((svrmsg + argpos), ',', &newChatters);
+        char** newChatters;
+        int newCount = split((svrmsg + argpos), ',', &newChatters);
 
-		EnterCriticalSection(&gChattersLock);
-		char** oldChatters = gChattersInRoom;
-		int oldCount = gChatterCount;
-		gChattersInRoom = newChatters;
-		gChatterCount = newCount;
-		LeaveCriticalSection(&gChattersLock);
+        EnterCriticalSection(&gChattersLock);
+        char** oldChatters = gChattersInRoom;
+        int oldCount = gChatterCount;
+        gChattersInRoom = newChatters;
+        gChatterCount = newCount;
+        LeaveCriticalSection(&gChattersLock);
 
-		freeSplitResult(oldChatters, oldCount);
-		gUserCountChanged = true;
+        freeSplitResult(oldChatters, oldCount);
+        gUserCountChanged = true;
     }
     else if (strncmp(svrmsg, "LATENCY", cmdsep) == 0) {
         strncpy_s(gLatency, sizeof(gLatency), (svrmsg + argpos), -1);
@@ -1799,6 +1809,20 @@ void processServerMessage(char* svrmsg, char* toUser) {
         sendCmdPacket(&mrcSock, "NEWROOM::", gRoom);
         writeToLog("MRC host connection re-established", PROGRAM, od_control.user_handle);
     }
+    else if (strncmp(svrmsg, "STATS", cmdsep) == 0)
+    {
+        int act = 0;
+        char** stat;
+        int statCount = split(svrmsg+6, ' ', &stat);
+        if (statCount >= 3) {
+            gBBSes = atoi(stat[0]);
+            gRooms = atoi(stat[1]);
+            gUsers = atoi(stat[2]);
+            gActivity = atoi(stat[3]);
+            gServerStatsChanged = true;
+        }
+        freeSplitResult(stat, statCount);
+    }    
     // Just display the whole incoming server message if it's not a recognized command string,
     // since it's most likely an informational message from the SERVER.
     else if (strlen(toUser) == 0 || _stricmp(toUser, user.chatterName) == 0) {
@@ -2096,6 +2120,10 @@ void doChatRoutines(char* input) {
         if (gMentionCountChanged) {
             updateMentions();
             gMentionCountChanged = false;
+        }
+        if (gServerStatsChanged) {
+            updateServerStats();
+            gServerStatsChanged = false;
         }
         if (od_get_input(&InputEvent, 1, GETIN_NORMAL) == FALSE) {    
             od_sleep(0);

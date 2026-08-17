@@ -785,6 +785,7 @@ void processPacket(char* packet) {
                     fprintf(mrcstats, "%s", stats);
                     fclose(mrcstats);
                 }
+                sendToLocalClients(packet, toUser, fromUser);
             }
             else if (strcmp(body, "GOODBYE") == 0) {
                 // GOODBYE : Server is gracefully closing connection. [NEW in 1.4]
