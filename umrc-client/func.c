@@ -150,7 +150,6 @@ void cleanUpFilename(char* str) {
             str[readPos] == '\\' ||
             str[readPos] == '|' ||
             str[readPos] == '?' ||
-            str[readPos] == '|' ||
             str[readPos] == '*') {
             str[writePos++] = '_';
         }

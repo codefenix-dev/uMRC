@@ -752,8 +752,8 @@ void processPacket(char* packet) {
                 sendCmdPacket("", "", "INFOSYS:%s", cfg.sys);
                 sendCmdPacket("", "", "INFODSC:%s", cfg.dsc);
                 sendCmdPacket(gProcessID, "", "IMALIVE:%s", cfg.name);
-                char capStr[50] = "";
-                _snprintf_s(capStr, sizeof(capStr), -1, "%s%s%s", "MCI", (cfg.ssl ? " SSL" : ""), " CTCP GOODBYE");
+                char capStr[100] = "";
+                _snprintf_s(capStr, sizeof(capStr), -1, "%s%s%s", "MCI", (cfg.ssl ? " SSL" : ""), " CTCP GOODBYE USERROOM");
                 sendCmdPacket(gHash, "", "CAPABILITIES:%s", capStr);
                 Sleep(20);
 

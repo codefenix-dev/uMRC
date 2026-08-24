@@ -13,7 +13,7 @@
 
 
 #if defined(WIN32) || defined(_MSC_VER)
-
+#define OD_WINDOWS_CONSOLE
 #define WIN32_LEAN_AND_MEAN
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -182,10 +182,10 @@ const char* CURSOR_COLORS[16] = {
 };
 
 const char* ACTIVITY[4] = {
-    "`bright black`NUL``",
-    "`bright yellow`LOW``",
-    "`bright green`MED``",
-    "`bright red`HI``"
+  "\x1b[30;1mNUL",   /*"`bright black`NUL``",*/
+  "\x1b[33;1mLOW",   /*"`bright yellow`LOW``",*/
+  "\x1b[32;1mMED",   /*"`bright green`MED``",*/
+  "\x1b[31;1mHI"     /*"`bright red`HI``"*/
 };
 
 struct settings cfg;
@@ -706,13 +706,12 @@ void updateBuffer(int typed) {
 void updateServerStats() {
     if (od_control.user_screenwidth > 130) {
         od_set_cursor(od_control.user_screen_length - 1, 90);
-        od_printf("%s", ACTIVITY[gActivity]);
-
+        od_printf("`%s %s`", gUserCountFg, gUserCountBg);
+        od_disp_emu(ACTIVITY[gActivity], TRUE);
         od_set_cursor(od_control.user_screen_length - 1, 105);
-        od_printf("`%s %s`%-3d``", gUserCountFg, gUserCountBg, gBBSes);
-
-        od_set_cursor(od_control.user_screen_length - 1, 122);
-        od_printf("`%s %s`%-3d``", gUserCountFg, gUserCountBg, gRooms);
+        od_printf("`%s %s`%3d``", gUserCountFg, gUserCountBg, gBBSes);
+        od_set_cursor(od_control.user_screen_length - 1, 121);
+        od_printf("`%s %s`%3d``", gUserCountFg, gUserCountBg, gRooms);
     }
 }
 
@@ -730,6 +729,7 @@ void drawStatusBar() {
     updateLatency();
     updateMentions();
     updateBuffer(0);
+    updateServerStats();
 }
 
 /**
@@ -998,6 +998,19 @@ void scrollToScrollbackSection(char** scrollLines, int start, int end, int heigh
     }
 }
 
+void scrollToLatest() {
+    int height = od_control.user_screen_length - 2;
+    char* tail = lastNLines(gScrollBack, height + 1); // small margin for the scroll math
+    char** scrollLines;
+    int scrollLineCount = split(tail, '\n', &scrollLines);
+    int scrollPos = scrollLineCount - height;
+    if (scrollPos < 0) {
+        scrollPos = 0;
+    }
+    scrollToScrollbackSection(scrollLines, scrollPos, scrollLineCount, height);
+    freeSplitResult(scrollLines, scrollLineCount);
+}
+
 /**
  *
  * initialScroll:
@@ -1138,14 +1151,7 @@ void enterScrollBack(int initialScroll, int mode) {
 
     // refresh the scrollLines and re-display the latest lines when exiting scrollback, in 
     // case any were received while scrolling.
-    scrollLineCount = split(gScrollBack, '\n', &scrollLines);
-    scrollPos = scrollLineCount - height;
-    if (scrollPos < 0) {
-        scrollPos = 0;
-    }
-    scrollToScrollbackSection(scrollLines, scrollPos, scrollLineCount, height);
-    freeSplitResult(scrollLines, scrollLineCount);
-
+    scrollToLatest();
     isChatPaused = false;
     drawStatusBar();
     resetInputLine();
@@ -1286,23 +1292,14 @@ void displayMessage(char* msg, bool mention) {
         addToScrollBack(dispMsg, 1);
     }
     if (!isChatPaused) {
-        if (od_control.user_screenwidth <= 80) {
+        //if (od_control.user_screenwidth <= 80 && od_control.user_screen_length <= 24) {
             od_scroll(1, 1, od_control.user_screenwidth, od_control.user_screen_length - 3, countOfChars(dispMsg, '\n') + 1, 0);
             od_set_cursor(od_control.user_screen_length - (2 + countOfChars(dispMsg, '\n') + 1), 1);
             dispEmuPipe(dispMsg, TRUE);
-        }
-        else {
-            int height = od_control.user_screen_length - 2;
-            char* tail = lastNLines(gScrollBack, height + 1); // small margin for the scroll math
-            char** scrollLines;
-            int scrollLineCount = split(tail, '\n', &scrollLines);
-            int scrollPos = scrollLineCount - height;
-            if (scrollPos < 0) {
-                scrollPos = 0;
-            }
-            scrollToScrollbackSection(scrollLines, scrollPos, scrollLineCount, height);
-            freeSplitResult(scrollLines, scrollLineCount);            
-        }
+        //}
+        //else {
+        //    scrollToLatest();
+        //}
     }
 }
 
@@ -1445,7 +1442,6 @@ void listThemesInChat() {
     qsort(themeList, count, sizeof(char*), compareThemeNames);
 
     for (int i = 0; i < count; i++) {
-
         char line[100] = "";
         _snprintf_s(line, sizeof(line), -1, "|08* - |07%s", themeList[i]);
         lstr(line);
@@ -1587,15 +1583,7 @@ void processUserCommand(char* cmd, char* params) {
         od_disp_emu("\x1b[?25l", TRUE); // disable the blinking cursor
         // refresh the scrollLines and re-display the latest lines when exiting scrollback, in 
         // case any were received while editing.
-        char** scrollLines;
-        int height = od_control.user_screen_length - 2;
-        int scrollLineCount = split(gScrollBack, '\n', &scrollLines);
-        int scrollPos = scrollLineCount - height;
-        if (scrollPos < 0) {
-            scrollPos = 0;
-        }
-        scrollToScrollbackSection(scrollLines, scrollPos, scrollLineCount, height);
-        freeSplitResult(scrollLines, scrollLineCount);
+        scrollToLatest();
         isChatPaused = false;
         drawStatusBar();
         resetInputLine();
@@ -1608,15 +1596,7 @@ void processUserCommand(char* cmd, char* params) {
         od_disp_emu("\x1b[?25l", TRUE); // disable the blinking cursor
         // refresh the scrollLines and re-display the latest lines when exiting scrollback, in 
         // case any were received while editing.
-        char** scrollLines;
-        int height = od_control.user_screen_length - 2;
-        int scrollLineCount = split(gScrollBack, '\n', &scrollLines);
-        int scrollPos = scrollLineCount - height;
-        if (scrollPos < 0) {
-            scrollPos = 0;
-        }
-        scrollToScrollbackSection(scrollLines, scrollPos, scrollLineCount, height);
-        freeSplitResult(scrollLines, scrollLineCount);
+        scrollToLatest();
         isChatPaused = false;
         drawStatusBar();
         resetInputLine();
@@ -1684,15 +1664,7 @@ void processUserCommand(char* cmd, char* params) {
         }
         // refresh the scrollLines and re-display the latest lines when exiting scrollback, in 
         // case any were received while editing.
-        char** scrollLines;
-        int height = od_control.user_screen_length - 2;
-        int scrollLineCount = split(gScrollBack, '\n', &scrollLines);
-        int scrollPos = scrollLineCount - height;
-        if (scrollPos < 0) {
-            scrollPos = 0;
-        }
-        scrollToScrollbackSection(scrollLines, scrollPos, scrollLineCount, height);
-        freeSplitResult(scrollLines, scrollLineCount);
+        scrollToLatest();
         isChatPaused = false;
         drawStatusBar();
         resetInputLine();
@@ -2496,8 +2468,7 @@ bool enterChat() {
 #else
 	pthread_t incomingThreadID;
     pthread_create(&incomingThreadID, NULL, handleIncomingMessages, NULL);
-#endif   
-
+#endif
     time(&gLastActTm);
 
     // Send some initial packets to the server...
@@ -2571,15 +2542,12 @@ bool enterChat() {
 #if defined(WIN32) || defined(_MSC_VER)  
     WSACleanup();
 #endif
-
     free(gScrollBack);
     free(gMentions);
     gMentionCount=0;
     strcpy_s(gRoom, sizeof(gRoom), "");
     strcpy_s(gTopic, sizeof(gTopic), "");
-
     od_disp_emu("\x1b[?25h", TRUE); // re-enable the blinking cursor..
-
     return true;
 }
 
@@ -2587,7 +2555,6 @@ void displayTimeWarning(char* str) {
     char wrn[80] = "";
     strncpy_s(wrn, sizeof(wrn), (str), -1);
     if (gIsInChat) {
-
         removeChar(wrn, '\r');
         removeChar(wrn, '\n');
         displayMessage(wrn, false);
@@ -2598,24 +2565,14 @@ void displayTimeWarning(char* str) {
     }
 }
 
-#if defined(WIN32) || defined(_MSC_VER)
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int nCmdShow)
-{
-    char** argv;
-    int argc = split(lpszCmdLine, ' ', &argv);
-#else
 int main(int argc, char** argv)
 {
-#endif
-
     bool exit = false;
     int userNumber = -1;
 
-#if defined WIN32
-    od_parse_cmd_line(lpszCmdLine);
-#else
+    od_control.od_default_personality = PER_OD_ONEROW;
+
     od_parse_cmd_line(argc, argv);
-#endif
 
     for (int i = 0; i < argc; i++) {
         if (_strnicmp(argv[i], "-IP", 3) == 0) {
@@ -2631,10 +2588,12 @@ int main(int argc, char** argv)
     strcpy_s(od_control.od_prog_copyright, sizeof(od_control.od_prog_copyright), YEAR_AND_AUTHOR);
 
 #if defined(WIN32) || defined(_MSC_VER)
-    HICON hIcon = (HICON)LoadImage(NULL, "icon.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED);
-    if (hIcon != NULL) {
-        od_control.od_app_icon = hIcon;
-    }
+    // The icon file probably isn't even needed anymore now that we're
+    // compiling a Windows Console app...
+    //HICON hIcon = (HICON)LoadImage(NULL, "icon.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED);
+    //if (hIcon != NULL) {
+    //    od_control.od_app_icon = hIcon;
+    //}
     InitializeCriticalSection(&gChattersLock);
 #endif
 
@@ -2648,10 +2607,6 @@ int main(int argc, char** argv)
     od_control.od_inactivity = 0;
     od_control.od_maxtime = 0;
     
-    if (od_control.user_screen_length == 23) {
-        od_control.user_screen_length = 24;
-    }
-
     od_clr_scr();
 
     userNumber = od_control.user_num;
@@ -2793,7 +2748,6 @@ int main(int argc, char** argv)
 #else
         displayFile("screens/intro.ans", false);
 #endif
-        int act = 0;
         char bbses[6] = "", rooms[6] = "", users[6] = "", activity[2] = "";
         char mrcStTm[30] = "";
         FILE* mrcstats;
@@ -2813,8 +2767,11 @@ int main(int argc, char** argv)
                 strcpy_s(rooms, sizeof(rooms), stat[1]);
                 strcpy_s(users, sizeof(users), stat[2]);
                 strcpy_s(activity, sizeof(activity), stat[3]);
+                gBBSes = atoi(bbses);
+                gRooms = atoi(rooms);
+                gUsers = atoi(users);
+                gActivity = atoi(activity);
             }
-            act = atoi(activity);
             fclose(mrcstats);
             freeSplitResult(stat, statCount);
         }
@@ -2864,7 +2821,8 @@ int main(int argc, char** argv)
         od_set_cursor(21, 45);
         od_printf("`bright black`   Users``: `bright white`%s", users);
         od_set_cursor(22, 45);
-        od_printf("`bright black`Activity``: `bright white`%s", ACTIVITY[act]);
+        od_printf("`bright black`Activity``: `bright white`");
+        od_disp_emu(ACTIVITY[gActivity], TRUE);
         
         od_set_cursor(14, 29);
         od_printf("`white`Make a selection `bright black`(`bright blue`C`white`,`bright blue`S`white`,`bright blue`I`white`,`bright blue`Q`bright black`)");
