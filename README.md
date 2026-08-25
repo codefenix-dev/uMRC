@@ -8,11 +8,11 @@ uMRC is a full-featured, cross-platform [Multi-Relay Chat](https://status-na-mul
 
 <img width="638" height="474" alt="sschat" src="https://github.com/user-attachments/assets/723dc2fe-b379-4ea4-a846-8b5769c938b1" />
 
-It should be compatible with any DOOR32.SYS capable BBS such as EleBBS, WWIV, Synchronet, Mystic, and others. It runs on Windows 7 and later, with a special Windows XP build also available.
-
-Pre-compiled Linux binaries are also available, or may be compiled from source using the Install Instructions below.
+It should be compatible with any DOOR32.SYS capable BBS such as EleBBS, WWIV, Synchronet, Mystic, and others. It runs on Windows 7 and later.
 
 If you use NetFoss to start up your DOS-based BBS, then the NFU utility bundled with NetFoss should run the uMRC Client. As of this writing, Renegade and Oblivion/2 have been confirmed.
+
+Pre-compiled binaries are also available for Linux and macOS, or may be compiled from source using the Install Instructions below.
 
 
 ## 📋 Features:
@@ -150,7 +150,7 @@ basic instructions.
    umrc-client -D c:\path\to\CHAIN.TXT -SILENT -SOCKET <socket_handle>
    ```
    
-   The standard termsize of 80x24 gets used by default if no row and/or column 
+   The standard termsize of 80x23 gets used by default if no row and/or column 
    size information is given in the drop file, as well as in local mode.
 
 
@@ -188,24 +188,11 @@ Type `/meetups` in chat for a current list of meetups.
 
 
 
-## 🚩 Known Issues & Limitations:
-
-- The font size of the local window in Windows cannot be adjusted. This
-  is an internal limitation of the OpenDoors kit.
-
-- At the time of this writing, when using the `!ddial` command, the MRC
-  host returns extraneous packets missing the BODY field. uMRC treats
-  these as invalid, since they contain fewer than 6 tildes (~). The
-  Syncrhonet mrc-connector service logs similar warnings for `!ddial`.
-
-
-
 ## 💻 Technical Notes:
 
 uMRC is written in C, and was developed and compiled on Windows using
-Microsoft Visual Studio Community 2022. The Windows XP build was compiled using
-Visual Studio 2017 and the v141_xp platform toolkit in order to specifically 
-target Windows XP. The Linux binaries were compiled on Ubuntu 22.04 using gcc.
+Microsoft Visual Studio Community 2022. The 'Nix binaries are compiled 
+using gcc.
 
 uMRC makes extensive use of threading, both in umrc-bridge and umrc-client.
 Separate threads are used for establishing connections to the MRC host,
@@ -236,7 +223,7 @@ Thanks to **StackFault** at **The Bottomless Abyss BBS**, MRC HQ!
 
 ### 🌐 uMRC Test Sites:
 
-**StingRay** of A-**Net Online**
+**StingRay** of **A-Net Online**
 
 - https://a-net-online.lol/bbs/
 - telnet://a-net-online.lol

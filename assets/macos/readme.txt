@@ -222,9 +222,9 @@ connections from the same BBS.
    to pass the socket handle using the `-SOCKET` parameter. Check your BBS
    documentation for usage.
 
-   umrc-client -D c:\path\to\CHAIN.TXT -SILENT -SOCKET <socket_handle>
+   umrc-client -D c:\path\to\CHAIN.TXT -SOCKET <socket_handle>
    
-   The standard termsize of 80x24 gets used if no row and/or column size 
+   The standard termsize of 80x23 gets used if no row and/or column size 
    information is given in the drop file, as well as in local mode.
 
   At this point, you should be ready to launch the door and join chat.

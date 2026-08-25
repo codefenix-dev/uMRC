@@ -55,7 +55,7 @@ Files Included:
 - setup.exe:        Setup utility
 - umrc-bridge.exe:  MRC host connection program (multiplexer)
 - umrc-client.exe:  MRC Client door
-- ODoors62.dll:     OpenDoors door kit library
+- ODoors63.dll:     OpenDoors door kit library
 - ssl-60.dll:       LibreSSL (OpenSSL) SSL library
 - crypto-57.dll:    LibreSSL (OpenSSL) Cryptographic library
   [screens]:        Subdirectory containing ANSI & text files
@@ -196,8 +196,8 @@ connections from the same BBS.
    The -IP can only be used if the BBS is capable of knowing a user's IP
    and passing it to a door. Check your BBS documentation.
 
-   Optionally include the -SILENT option to prevent the local Windows GUI
-   from popping up while the door is running. This is highly recommended,
+   Optionally include the -SILENT option to prevent the local Windows Console
+   from showing while the door is running. This is highly recommended,
    since umrc-client takes a noticeable performance hit when outputting to
    both the BBS and the local Window, especially while paging through the chat
    scrollback.
@@ -220,7 +220,7 @@ connections from the same BBS.
 
    umrc-client -D c:\path\to\CHAIN.TXT -SILENT -SOCKET <socket_handle>
    
-   The standard termsize of 80x24 gets used if no row and/or column size 
+   The standard termsize of 80x23 gets used if no row and/or column size 
    information is given in the drop file, as well as in local mode.
 
   At this point, you should be ready to launch the door and join chat.
@@ -423,9 +423,6 @@ Type /meetups in chat for a current list of meetups.
 
 
 Known Issues & Limitations:
-
-The font size of the local window cannot be adjusted. This seems to be
-an internal limitation of the OpenDoors kit.
 
 At the time of this writing, when using the !ddial command, the MRC
 host returns extraneous packets missing the BODY field. uMRC treats

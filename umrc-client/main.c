@@ -365,11 +365,11 @@ int editDisplayName(char* quitToWhere) {
         dispEmuPipe(gDisplayChatterName, TRUE);
         od_printf("\r\n");
 
-        od_printf("\r\n `bright magenta`P`bright white`) `white`Edit prefix `bright black`:           ``");
+        od_printf("``\r\n `bright magenta`P`bright white`) `white`Edit prefix`bright black`:           ``");
         dispEmuPipe(prefixprev, TRUE);
-        od_printf("\r\n `bright magenta`C`bright white`) `white`Edit name color `bright black`:       ``");
+        od_printf("``\r\n `bright magenta`C`bright white`) `white`Edit name color`bright black`:       ``");
         dispEmuPipe(nameprev, TRUE);
-        od_printf("\r\n `bright magenta`S`bright white`) `white`Edit suffix `bright black`:           ``");
+        od_printf("``\r\n `bright magenta`S`bright white`) `white`Edit suffix`bright black`:           ``");
         dispEmuPipe(user.chatterNameSuffix, TRUE);
 
         od_printf("``\r\n\r\n");
@@ -380,7 +380,7 @@ int editDisplayName(char* quitToWhere) {
 
         switch (od_get_answer("PCSRQ")) {
         case 'P':
-            od_printf("\r\n``Type a single, symbol character to use as your prefix: ``\r\n > ");
+            od_printf("\r\n``Type a single, symbol character to use as your prefix (except `bright white`~``): ``\r\n > ");
             user.chatterNamePrefix = od_get_answer("!@#$%^&*()_+-=/*-+[]\\;',./{}|:<>?");
             od_printf("\r\n``Choose a `bright white`foreground color`` for this prefix: ``\r\n");
             user.chatterNamePrefixFgColor = colorPrompt(1, 15);
