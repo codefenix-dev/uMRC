@@ -45,7 +45,6 @@ static pthread_mutex_t gChattersLock = PTHREAD_MUTEX_INITIALIZER;
 #include "func.h"
 
 #define PROGRAM "umrc-client"
-#define DIVIDER "`bright blue`___________________________________________________________________________\r\n``"
 #define DEFAULT_ROOM "lobby"
 #define DEFAULT_JOIN_MSG "|07- |11%s |03has arrived."
 #define DEFAULT_EXIT_MSG "|07- |12%s |04has left chat."
@@ -57,10 +56,8 @@ bool gLatencyChanged = false;
 bool gUserCountChanged = false;
 bool gMentionCountChanged = false;
 bool gServerStatsChanged = false;
-
 bool gIsInChat = false;
-bool isChatPaused = false;
-
+bool gIsChatPaused = false;
 int gMentionCount = 0;
 int gChatterCount = 0;
 int gTwitCount = 0;
@@ -94,7 +91,6 @@ char gUserIP[30] = "";
 #define BUFFER_BG_DEFAULT_1 "black"
 #define BUFFER_FG_DEFAULT_2 "white"
 #define BUFFER_BG_DEFAULT_2 "black"
-
 char gTopicFg1[20] = TOPIC_FG_DEFAULT_1;
 char gTopicBg1[20] = TOPIC_BG_DEFAULT_1;
 char gTopicFg2[20] = TOPIC_FG_DEFAULT_2;
@@ -216,24 +212,29 @@ void doPause() {
     od_get_key(TRUE);
 }
 
+void printDivider() {	
+	od_printf("`bright blue`");
+	for (int i = 0; i < ((int)od_control.user_screenwidth) - 1; i++) {
+		od_putch('_');	
+	}
+	od_printf("\r\n``");	
+}
+
 /**
  * This is basically a re-implementation of od_input_str
  * which handles both backspace and DEL, and clearly shows 
  * where text input ends.
  */
 void getInputString(char* input, INT nMaxLength, unsigned char chMin, unsigned char chMax) {
-
     bool updateInput = false;
     char key = ' ';
     tODInputEvent InputEvent;
-
     for (int i = 0; i < nMaxLength; i++) {
         dispEmuPipe("|17 ", TRUE);
     }
     for (int i = 0; i < nMaxLength; i++) {
         od_putch('\b');
     }
-
     for (int i = 0; i < (int)strlen(input); i++) {
         od_putch(input[i]);
     }
@@ -241,7 +242,6 @@ void getInputString(char* input, INT nMaxLength, unsigned char chMin, unsigned c
     while (true) {
         Sleep(0);
         updateInput = false;
-
         if (od_get_input(&InputEvent, 1, GETIN_NORMAL) == FALSE) {
             od_sleep(0);
             continue;
@@ -281,7 +281,6 @@ void getInputString(char* input, INT nMaxLength, unsigned char chMin, unsigned c
                 }
             }
         }
-
         if (updateInput) {
             if (key == 8) {              // Type the backspace...
                 od_disp_str("\b \b");
@@ -328,7 +327,6 @@ void showPipeColors(int lo, int hi) {
 int colorPrompt(int lo, int hi) {
     bool validEntry = false;
     int pickedColor = -1;
-
     showPipeColors(lo, hi);
     while (!validEntry) {
         od_printf("``\r\n\r\nPick a color (%d-%d): ", lo, hi);        
@@ -344,11 +342,9 @@ int colorPrompt(int lo, int hi) {
  *  Lets a user customize their chatter display name.
  */
 int editDisplayName(char* quitToWhere) {
-
     bool doneEditing = false;
     int changeCount = 0;
     while (!doneEditing) {
-
         char prefixprev[10] = "";
         char nameprev[50] = "";
         _snprintf_s(prefixprev, sizeof(prefixprev), -1, "|%02d|%02d%c", user.chatterNamePrefixFgColor, user.chatterNamePrefixBgColor, user.chatterNamePrefix);
@@ -358,7 +354,7 @@ int editDisplayName(char* quitToWhere) {
         od_clr_scr();
 
         od_printf("`bright white`Display Name (aka Nick) Settings for `bright cyan`%s``\r\n", user.chatterName);
-        od_printf(DIVIDER);
+        printDivider();
         od_printf("``\r\n");
 
         od_printf("``Preview: ");
@@ -425,7 +421,6 @@ int getThemes(char*** themeList) {
 #if defined(WIN32) || defined(_MSC_VER) 
     WIN32_FIND_DATA fdFile;
     HANDLE hFind = NULL;
-
     if ((hFind = FindFirstFile("themes\\*.ans", &fdFile)) == INVALID_HANDLE_VALUE) {
         od_printf("Path not found: [%s]\r\n", "themes");
         doPause();
@@ -474,14 +469,12 @@ int getThemes(char*** themeList) {
 void pickTheme(char* pickedTheme) {
     bool validEntry = false;
     int pickedOption = -1;
-
     char** themeList;
     int count = getThemes(&themeList);
     if (count == 0) {
         return;
     }
     qsort(themeList, count, sizeof(char*), compareThemeNames);
-
     for (int i = 0; i < count; i++) {
         char line[100] = "";
         _snprintf_s(line, sizeof(line), -1, "%s", themeList[i]);
@@ -528,10 +521,8 @@ void loadTheme() {
         strcpy_s(gBufferBg1, sizeof(gBufferBg1), BUFFER_BG_DEFAULT_1);
         strcpy_s(gBufferFg2, sizeof(gBufferFg2), BUFFER_FG_DEFAULT_2);
         strcpy_s(gBufferBg2, sizeof(gBufferBg2), BUFFER_BG_DEFAULT_2);
-
         char line[400] = "";
         while (fgets(line, sizeof(line), extFile)) {
-
             if (lineCount == 0) {
                 // strip out the CRs and LFs... in case someone uses a file with just one or the other...
                 strcpy_s(gStatusThemeLine1, sizeof(gStatusThemeLine1), line);
@@ -544,7 +535,6 @@ void loadTheme() {
                 removeChar(gStatusThemeLine2, '\r');
             }
             else if (lineCount > 1) {
-
                 if (strlen(line) == 0) {
                     continue;
                 }
@@ -634,7 +624,7 @@ void loadTheme() {
  *  Updates the Room and Topic strings in the top line of the status bar
  */
 void updateRoomTopic() {
-    if (isChatPaused) {
+    if (gIsChatPaused) {
         return;
     }
     char displayableTopic[65] = "";
@@ -689,17 +679,13 @@ void updateBuffer(int typed) {
     od_set_cursor(od_control.user_screen_length - 1, 68);
     od_printf(
         "`%s %s`%03d`%s %s`/`%s %s`%03d``"
-
         , typed >= 135 ? "bright red" : (typed >= 120 ? "bright yellow" : gBufferFg1 )
-        , gBufferBg1
-        
+        , gBufferBg1        
         , typed
         , gBufferFg2
         , gBufferBg2
-
         , gBufferFg1
-        , gBufferBg1
-        
+        , gBufferBg1        
         , MSG_LEN - 1);
 }
 
@@ -715,11 +701,70 @@ void updateServerStats() {
     }
 }
 
+/**
+ * Writes str to the screen via od_disp_emu(), but limits the VISIBLE
+ * portion of the string to at most (user_screenwidth - 1) characters,
+ * without ever cutting an ANSI escape sequence in half. Escape sequences
+ * don't count toward the visible-character budget -- this is the ANSI
+ * equivalent of how strLenWithoutPipecodes()/pipeToAnsi() already treat
+ * |NN pipe codes elsewhere in this file, just operating on raw
+ * \x1b[...X CSI sequences instead of pipe placeholders.
+ *
+ * If truncation lands right at the start of an escape sequence, that
+ * sequence is still included in full (rather than dropped) -- this
+ * avoids leaving a color code half-applied right at the cut point.
+ */
+void dispEmuLimited(char* str, BOOL immediate) {
+    int maxVisible = od_control.user_screenwidth - 1;
+    if (maxVisible < 0) {
+        maxVisible = 0;
+    }
+
+    int visibleCount = 0;
+    int i = 0;
+    int len = (int)strlen(str);
+    int cutPoint = len; // no truncation needed, by default
+
+    while (i < len) {
+        if (str[i] == '\x1b' && i + 1 < len && str[i + 1] == '[') {
+            // Skip the whole CSI escape sequence -- doesn't count toward
+            // the visible budget, and must never be split partway through.
+            int j = i + 2;
+            while (j < len && !isalpha((unsigned char)str[j])) {
+                j++;
+            }
+            if (j < len) {
+                j++; // include the terminating letter itself
+            }
+            i = j;
+            continue;
+        }
+        if (visibleCount == maxVisible) {
+            cutPoint = i;
+            break;
+        }
+        visibleCount++;
+        i++;
+    }
+
+    if (cutPoint >= len) {
+        od_disp_emu(str, immediate);
+        return;
+    }
+
+    char truncated[PACKET_LEN] = "";
+    strncpy_s(truncated, sizeof(truncated), str, cutPoint);
+    od_disp_emu(truncated, immediate);
+}
+
 void drawStatusBar() {
-    char themeLines[1024] = "";
-    _snprintf_s(themeLines, sizeof(themeLines), -1, "%s\r\n%s", gStatusThemeLine1, gStatusThemeLine2);
+    //char themeLines[1024] = "";
+    //_snprintf_s(themeLines, sizeof(themeLines), -1, "%s\r\n%s", gStatusThemeLine1, gStatusThemeLine2);
     od_set_cursor(od_control.user_screen_length - 2, 1);
-    od_disp_emu(themeLines, TRUE);
+    //od_disp_emu(themeLines, TRUE);
+	dispEmuLimited(gStatusThemeLine1, TRUE);
+	od_set_cursor(od_control.user_screen_length - 1, 1);
+	dispEmuLimited(gStatusThemeLine2, TRUE);	
 
     // Line #1: Room & topic
     updateRoomTopic();
@@ -748,7 +793,6 @@ void enterChatterSettings(char* quitToWhere) {
 
     while (!exit) {
         od_clr_scr();
-
         drawStatusBar();
         od_set_cursor(od_control.user_screen_length - 2, 6);
 
@@ -760,10 +804,9 @@ void enterChatterSettings(char* quitToWhere) {
             gTopicFg1, gTopicBg1,
             "Theme Preview of", user.theme);
 
-
         od_set_cursor(1, 1);
         od_printf("`bright white`Chatter Settings``\r\n");
-        od_printf(DIVIDER);
+        printDivider();
         od_printf("``\r\n");
 
         od_printf(" `bright magenta`1`bright white`) `white`Display name:  ");
@@ -771,7 +814,6 @@ void enterChatterSettings(char* quitToWhere) {
         od_printf("``\r\n");
 
         od_printf(" `bright magenta`2`bright white`) `white`Default room:  `bright white`%s\r\n", user.defaultRoom);
-
         od_printf(" `bright magenta`3`bright white`) `white`Text color:    ");
         char sampletext[80] = "";
         _snprintf_s(sampletext, sizeof(sampletext), -1, "|%02dSample text using color #%d...", user.textColor, user.textColor);
@@ -789,7 +831,6 @@ void enterChatterSettings(char* quitToWhere) {
         od_printf("``\r\n");
 
         od_printf(" `bright magenta`7`bright white`) `white`Theme:         `bright white`%s\r\n", user.theme);
-
         od_printf("``\r\n");
         od_printf(" `bright green`Q`bright white`) `white`Quit to %s", quitToWhere);
         od_printf("``\r\n\r\n> ");
@@ -962,12 +1003,10 @@ void scrollToScrollbackSection(char** scrollLines, int start, int end, int heigh
         for (int ii = (int)strlen(scrollLines[i])-2; ii >= 5; ii--) {
             if (scrollLines[i][ii] == '|' && ii < ((int)strlen(scrollLines[i]) - 2)) { // check the next 2 characters for digits
                 if (isdigit(scrollLines[i][ii + 1]) && isdigit(scrollLines[i][ii + 2])) {
-
                     int pcci = 0;
                     char pcc[3] = "";
                     strncpy_s(pcc, sizeof(pcc), scrollLines[i] + ii + 1, 2);
                     pcci = atoi(pcc);
-
                     if (pcci > 0 && pcci <= 15 && fg == 7) {
                         fg = pcci;
                     }
@@ -998,6 +1037,8 @@ void scrollToScrollbackSection(char** scrollLines, int start, int end, int heigh
     }
 }
 
+// Refresh the scrollLines and re-display the latest lines when 
+// exiting scrollback, in case any were received while editing.
 void scrollToLatest() {
     int height = od_control.user_screen_length - 2;
     char* tail = lastNLines(gScrollBack, height + 1); // small margin for the scroll math
@@ -1022,13 +1063,11 @@ void scrollToLatest() {
  * 
  */
 void enterScrollBack(int initialScroll, int mode) {
-    isChatPaused = true; // pause the chat before doing anything else
-
+    gIsChatPaused = true; // pause the chat before doing anything else
     bool exitScrollback = false;
     int height = od_control.user_screen_length - 2;
     char** scrollLines;
     int scrollLineCount = split(mode==0?gScrollBack:gMentions, '\n', &scrollLines);
-
     int scrollMax = scrollLineCount - height;
     if (scrollMax < 0) {
         scrollMax = 0;
@@ -1152,7 +1191,7 @@ void enterScrollBack(int initialScroll, int mode) {
     // refresh the scrollLines and re-display the latest lines when exiting scrollback, in 
     // case any were received while scrolling.
     scrollToLatest();
-    isChatPaused = false;
+    gIsChatPaused = false;
     drawStatusBar();
     resetInputLine();
     od_printf(CHAT_CURSOR, CURSOR_COLORS[user.textColor]);
@@ -1291,15 +1330,10 @@ void displayMessage(char* msg, bool mention) {
     if (mention) {
         addToScrollBack(dispMsg, 1);
     }
-    if (!isChatPaused) {
-        //if (od_control.user_screenwidth <= 80 && od_control.user_screen_length <= 24) {
-            od_scroll(1, 1, od_control.user_screenwidth, od_control.user_screen_length - 3, countOfChars(dispMsg, '\n') + 1, 0);
-            od_set_cursor(od_control.user_screen_length - (2 + countOfChars(dispMsg, '\n') + 1), 1);
-            dispEmuPipe(dispMsg, TRUE);
-        //}
-        //else {
-        //    scrollToLatest();
-        //}
+    if (!gIsChatPaused) {
+		od_scroll(1, 1, od_control.user_screenwidth, od_control.user_screen_length - 3, countOfChars(dispMsg, '\n') + 1, 0);
+		od_set_cursor(od_control.user_screen_length - (2 + countOfChars(dispMsg, '\n') + 1), 1);
+		dispEmuPipe(dispMsg, TRUE);
     }
 }
 
@@ -1351,14 +1385,12 @@ bool checkTwit(char* twit) {
  *
  */
 void addTwit(char* twit) {
-
     char result[140] = "";
     if (checkTwit(twit)) {
         _snprintf_s(result, sizeof(result), -1, "|15* |14%s |07already in twit list.", twit);
         displayMessage(result, false);
         return;
     }
-
     FILE* tfile;
 #if defined(WIN32) || defined(_MSC_VER)  
     fopen_s(&tfile, gTwitFile, "a");
@@ -1419,7 +1451,7 @@ void removeTwit(char* twit) {
  *  gets stored directly to the scrollback.
  */
 void queueIncomingMessage(char* msg, bool mention) {
-    if (isChatPaused) {
+    if (gIsChatPaused) {
         // Just send it to the displayMessage function, since it has
         // built-in handling for adding wrapped messages to scrollback
         // and won't try to display it if chat is paused.        
@@ -1435,12 +1467,10 @@ void queueIncomingMessage(char* msg, bool mention) {
 }
 
 void listThemesInChat() {
-    displayMessage("|15* Pick a theme with |09/theme |10name", false);
-
     char** themeList;
     int count = getThemes(&themeList);
     qsort(themeList, count, sizeof(char*), compareThemeNames);
-
+    displayMessage("|15* Pick a theme with |09/theme |10name", false);
     for (int i = 0; i < count; i++) {
         char line[100] = "";
         _snprintf_s(line, sizeof(line), -1, "|08* - |07%s", themeList[i]);
@@ -1449,7 +1479,6 @@ void listThemesInChat() {
         displayMessage(line, false);
     }
     freeSplitResult(themeList, count);
-
     displayMessage("|08__", false);
 }
 
@@ -1507,12 +1536,10 @@ void processUserCommand(char* cmd, char* params) {
         removeChar(newRoom, '#'); // no #
         replaceChar(newRoom, ' ', '_'); // Single word
         stripPipeCodes(newRoom); // No pipe codes
-
         if (strlen(newRoom) == 0) {
             displayMessage("|15* |14No room specified|07.", false);
             return;
         }
-
         char newRoomCmd[80] = ""; // Needs to be long enough to hold the old room, new room, and NEWROOM command.
         _snprintf_s(newRoomCmd, sizeof(newRoomCmd), -1, "NEWROOM:%s:", gRoom); // include the OLD room as the first parameter...
         sendCmdPacket(&mrcSock, newRoomCmd, newRoom); // the NEW room will be included as the second parameter...
@@ -1577,27 +1604,23 @@ void processUserCommand(char* cmd, char* params) {
         }
     }
     else if (_stricmp(cmd, "nick") == 0) {
-        isChatPaused = true;
+        gIsChatPaused = true;
         od_disp_emu("\x1b[?25h", TRUE); // re-enable the blinking cursor..
         editDisplayName("chat");
         od_disp_emu("\x1b[?25l", TRUE); // disable the blinking cursor
-        // refresh the scrollLines and re-display the latest lines when exiting scrollback, in 
-        // case any were received while editing.
         scrollToLatest();
-        isChatPaused = false;
+        gIsChatPaused = false;
         drawStatusBar();
         resetInputLine();
         od_printf(CHAT_CURSOR, CURSOR_COLORS[user.textColor]);
     }
     else if (_stricmp(cmd, "set") == 0) {
-        isChatPaused = true;
+        gIsChatPaused = true;
         od_disp_emu("\x1b[?25h", TRUE); // re-enable the blinking cursor..
         enterChatterSettings("chat");
         od_disp_emu("\x1b[?25l", TRUE); // disable the blinking cursor
-        // refresh the scrollLines and re-display the latest lines when exiting scrollback, in 
-        // case any were received while editing.
         scrollToLatest();
-        isChatPaused = false;
+        gIsChatPaused = false;
         drawStatusBar();
         resetInputLine();
         od_printf(CHAT_CURSOR, CURSOR_COLORS[user.textColor]);
@@ -1654,7 +1677,7 @@ void processUserCommand(char* cmd, char* params) {
         }
     }
     else if (_stricmp(cmd, "cls") == 0) {
-        isChatPaused = true;
+        gIsChatPaused = true;
         // Insert a screen's worth of blank lines to the chat history, and then
         // scroll to the first blank line.
         // We'll add a line indicating that the screen was cleared, and when.
@@ -1662,10 +1685,8 @@ void processUserCommand(char* cmd, char* params) {
         for (int i = 0; i < od_control.user_screen_length - 3; i++) {
             addToScrollBack(" ", 0);
         }
-        // refresh the scrollLines and re-display the latest lines when exiting scrollback, in 
-        // case any were received while editing.
         scrollToLatest();
-        isChatPaused = false;
+        gIsChatPaused = false;
         drawStatusBar();
         resetInputLine();
         od_printf(CHAT_CURSOR, CURSOR_COLORS[user.textColor]);
@@ -1675,8 +1696,7 @@ void processUserCommand(char* cmd, char* params) {
     // If the server received an invalid command, it will let the user know.
     else {
         ustr(cmd);
-        sendCmdPacket(&mrcSock, cmd, params);
-        
+        sendCmdPacket(&mrcSock, cmd, params);        
         // request a new USERLIST when checking the current users
         if (_stricmp(cmd, "users") == 0 ||
             _stricmp(cmd, "whoon") == 0 ||
@@ -1687,19 +1707,16 @@ void processUserCommand(char* cmd, char* params) {
 }
 
 void processServerMessage(char* svrmsg, char* toUser) {
-
     if (svrmsg == NULL) { // don't process if there's nothing to process..
         return;
     }
     if (strlen(svrmsg) == 0) {
         return;
     }
-
     // SERVER commands have a colon after them, so we'll use
     // that to determine the start of the parameter list.
     int cmdsep = indexOfChar(svrmsg, ':');
     int argpos = cmdsep + 1;
-
     // Implemented SERVER commands - notes provided from the MRC developer wiki on how each is handled:
     //
     if (strncmp(svrmsg, "BANNER", cmdsep) == 0 || strncmp(svrmsg, "NOTIFY", cmdsep) == 0) {
@@ -1736,14 +1753,12 @@ void processServerMessage(char* svrmsg, char* toUser) {
         // The server will append a number to the original nick to resolve the conflict.
         strncpy_s(user.chatterName, sizeof(user.chatterName), (svrmsg + argpos), -1);
         _snprintf_s(gDisplayChatterName, sizeof(gDisplayChatterName), -1, "|%02d|%02d%c|%02d|%02d%s%s|16", user.chatterNamePrefixFgColor, user.chatterNamePrefixBgColor, user.chatterNamePrefix, user.chatterNameFgColor, user.chatterNameBgColor, user.chatterName, user.chatterNameSuffix);
-
         // inform the user of the change...
         char nicknotice[141] = "";
         _snprintf_s(nicknotice, sizeof(nicknotice), -1, "|15* |08(|14Notice|08) |07The MRC server has updated your name to |15%s|07.", user.chatterName);
         queueIncomingMessage(nicknotice, true);
         stripPipeCodes(nicknotice);
         writeToLog(nicknotice, PROGRAM, od_control.user_handle);
-
         // Inform the bridge of the username change, so it can continue to route messages
         sendCmdPacket(&mrcSock, "NICKCHANGED:", user.chatterName);
     }
@@ -1759,14 +1774,12 @@ void processServerMessage(char* svrmsg, char* toUser) {
     else if (strncmp(svrmsg, "USERLIST", cmdsep) == 0) {
         char** newChatters;
         int newCount = split((svrmsg + argpos), ',', &newChatters);
-
         EnterCriticalSection(&gChattersLock);
         char** oldChatters = gChattersInRoom;
         int oldCount = gChatterCount;
         gChattersInRoom = newChatters;
         gChatterCount = newCount;
         LeaveCriticalSection(&gChattersLock);
-
         freeSplitResult(oldChatters, oldCount);
         gUserCountChanged = true;
     }
@@ -1833,12 +1846,9 @@ void processCtcpCommand(char* body, char* toUser, char* fromUser) {
             cursor += 1;
         }
         char* cmdStart = cursor;
-
         char cmdStr[80] = "";
         char repStr[80] = "";
-
         strcpy_s(cmdStr, sizeof(cmdStr), cmdStart);
-
         if (_strnicmp(cmdStr, "VERSION", 7) == 0) {
             _snprintf_s(repStr, sizeof(repStr), -1, "VERSION %s(%c) v%s.%s %s [%s]", TITLE, tolower(PLATFORM[0]), PROTOCOL_VERSION, UMRC_VERSION, COMPILE_DATE, AUTHOR_INITIALS);
         }
@@ -1881,18 +1891,16 @@ void processPacket(char* packet) {
     char** field;
     int fieldCount = split(packet, '~', &field);
     if (fieldCount >= 7) {
-         fromUser = _strdup(field[0]);
-         fromSite = _strdup(field[1]);
-         fromRoom = _strdup(field[2]);
-         toUser   = _strdup(field[3]);
-         msgExt   = _strdup(field[4]);
-         toRoom   = _strdup(field[5]);
-         body     = _strdup(field[6]);
-
+        fromUser = _strdup(field[0]);
+        fromSite = _strdup(field[1]);
+        fromRoom = _strdup(field[2]);
+        toUser   = _strdup(field[3]);
+        msgExt   = _strdup(field[4]);
+        toRoom   = _strdup(field[5]);
+        body     = _strdup(field[6]);
+		
         if (strcmp(fromUser, "SERVER") == 0 && (strcmp(toRoom, gRoom) == 0 || strlen(toRoom) == 0)) {
-
             processServerMessage(body, toUser);
-
             // refresh the user list when the SERVER announces joins and exits
             if (strstr(body, "Joining") != NULL ||
                 strstr(body, "Leaving") != NULL ||
@@ -1900,7 +1908,6 @@ void processPacket(char* packet) {
                 strstr(body, "Rename") != NULL ||
                 strstr(body, "Linked") != NULL ||
                 strstr(body, "Unlink") != NULL) {
-
                 sendCmdPacket(&mrcSock, "USERLIST", "");
             }
 
@@ -1929,7 +1936,7 @@ void processPacket(char* packet) {
             (strlen(toRoom) == 0 && strlen(toUser) == 0)) {
 
             if (checkTwit(fromUser)) {
-            //   do nothing
+				//   do nothing
             }
 
             // Direct message (DirectMsg)
@@ -1976,16 +1983,13 @@ void* handleIncomingMessages(void* lpArg) {
     int iResult = 0;
     time_t lastIamHere;
     time(&lastIamHere);
-
     while (gIsInChat) {
-
         time_t curtime;
         time(&curtime);
-        if (curtime - lastIamHere >= 60) {
+        if (curtime - lastIamHere >= 59) {
             sendCmdPacket(&mrcSock, "IAMHERE:", curtime - gLastActTm > 600 ? "AWAY" : "ACTIVE");
             lastIamHere = curtime;
         }
-
         char inboundData[DATA_LEN] = "";
 
         // Reserve the last byte for a guaranteed NUL terminator -- recv() does
@@ -2059,19 +2063,14 @@ void* handleIncomingMessages(void* lpArg) {
  *  well as updating the screen.
  */
 void doChatRoutines(char* input) {
-
     bool masking = false;
     char key = ' ';
     tODInputEvent InputEvent;
-
     while (true) {
-
         // We can only update the screen from this thread, so we're going to 
         // check for any incoming messages and other changes, and display 
-        // them as needed. Then we'll handle user input
-        
+        // them as needed. Then we'll handle user input        
         Sleep(0);
-
         if (strlen(mq.message) > 0) {
             displayMessage(mq.message, mq.isMention);
             mq.message[0] = '\0';
@@ -2101,18 +2100,15 @@ void doChatRoutines(char* input) {
             od_sleep(0);
             continue;
         }
-
         if (!gIsInChat) { // check the connection status
             doPause();
             break;
         }
-
         key = ' ';
         bool updateInput = false;
         char pcol[4] = "";
         int endOfInput = 0;
         char tabResult[31] = "";
-
         if (InputEvent.EventType == EVENT_EXTENDED_KEY) {
             int overfill = 0;
             time(&gLastActTm);
@@ -2123,7 +2119,6 @@ void doChatRoutines(char* input) {
                 if (masking) {
                     break;
                 }
-
                 user.textColor = user.textColor - 1;
                 if (user.textColor < 1) {
                     user.textColor = 15;
@@ -2310,7 +2305,6 @@ void doChatRoutines(char* input) {
         } // Done capturing input...
 
         if (updateInput) { // Update the input display...
-
             int overfill = 0;
             if ((int)strlen(input) < (int)od_control.user_screenwidth - 3) {
                 endOfInput += ((int)strlen(input)) - ((int)strlen(tabResult));
@@ -2331,7 +2325,6 @@ void doChatRoutines(char* input) {
             }
             od_set_cursor(od_control.user_screen_length, endOfInput);
             dispEmuPipe(pcol, TRUE);
-
             if (key == 8) {              // Type the backspace...
                 if (strlen(input) > 0) {
                     dispEmuPipe("|08|16", TRUE);
@@ -2366,14 +2359,12 @@ void doChatRoutines(char* input) {
     }
 }
 
-bool enterChat() {
-        
+bool enterChat() {        
     if (strlen(user.theme) == 0) {
         strcpy_s(user.theme, sizeof(user.theme), "default.ans");
     }
     loadTheme();  
     loadTwits();
-
     od_disp_emu("\x1b[?25l", TRUE); // disable the blinking cursor.. don't need it since we're going to make our own..
     od_clr_scr();    
 
@@ -2382,12 +2373,10 @@ bool enterChat() {
     strcpy_s(sysopName, sizeof(sysopName), (_stricmp(od_control.sysop_name, "sysop")==0 || strlen(od_control.sysop_name)==0) ? cfg.sys : od_control.sysop_name);
     stripPipeCodes(sysopName);
     removeNonAlphanumeric(sysopName); // make sure the name only contains alphanumeric characters, and no silliness
-
     strcpy_s(gRoom, sizeof(gRoom), user.defaultRoom);
 
     gScrollBack = malloc(50);
     strcpy_s(gScrollBack, 50, "|15 * * * TOP OF SCROLLBACK * * * |07\n\n\n\n\n");
-
     gMentions = malloc(50);
     strcpy_s(gMentions, 50, ""); // |15 * * * TOP OF MENTIONS * * * |07\n
 
@@ -2451,7 +2440,6 @@ bool enterChat() {
         doPause();
         return false;
     }
-
     if (sendCmdPacket(&mrcSock, "IAMHERE", "")) {
         gIsInChat = true;
         od_sleep(20);
@@ -2502,7 +2490,6 @@ bool enterChat() {
 
     // Loop to get input from the user, and send it over the Bridge.
     while (gIsInChat) {
-
         char input[MSG_LEN] = "";
         updateBuffer(0);
         resetInputLine();
@@ -2569,9 +2556,7 @@ int main(int argc, char** argv)
 {
     bool exit = false;
     int userNumber = -1;
-
     od_control.od_default_personality = PER_OD_ONEROW;
-
     od_parse_cmd_line(argc, argv);
 
     for (int i = 0; i < argc; i++) {
@@ -2588,12 +2573,6 @@ int main(int argc, char** argv)
     strcpy_s(od_control.od_prog_copyright, sizeof(od_control.od_prog_copyright), YEAR_AND_AUTHOR);
 
 #if defined(WIN32) || defined(_MSC_VER)
-    // The icon file probably isn't even needed anymore now that we're
-    // compiling a Windows Console app...
-    //HICON hIcon = (HICON)LoadImage(NULL, "icon.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED);
-    //if (hIcon != NULL) {
-    //    od_control.od_app_icon = hIcon;
-    //}
     InitializeCriticalSection(&gChattersLock);
 #endif
 
@@ -2605,8 +2584,7 @@ int main(int argc, char** argv)
     }
 
     od_control.od_inactivity = 0;
-    od_control.od_maxtime = 0;
-    
+    od_control.od_maxtime = 0;    
     od_clr_scr();
 
     userNumber = od_control.user_num;
@@ -2674,7 +2652,7 @@ int main(int argc, char** argv)
         }
 
         od_printf("`bright white`Welcome to %s!``\r\n", TITLE);
-        od_printf(DIVIDER);
+        printDivider();
         od_printf("Looks like you're new here, %s.\r\n\r\n\r\n", user.chatterName);
         od_printf("``First things first...\r\n\r\nIs \"`bright white`%s``\" the name you want to use in chat? (Y/N) > ", user.chatterName);
         if (od_get_answer("YN") == 'N') {
@@ -2719,11 +2697,9 @@ int main(int argc, char** argv)
         _snprintf_s(user.exitMessage, sizeof(user.exitMessage), -1, DEFAULT_EXIT_MSG, user.chatterName);
 
         if (saveUser(&user, gUserDataFile) != -1) {
-
             od_printf("We've gone ahead set some default options for you. You can go ahead and\r\ncustomize them now.\r\n\r\n");
-            od_printf(DIVIDER);
+            printDivider();
             doPause();
-
             _snprintf_s(gDisplayChatterName, sizeof(gDisplayChatterName), -1, "|%02d|%02d%c|%02d|%02d%s%s", user.chatterNamePrefixFgColor, user.chatterNamePrefixBgColor, user.chatterNamePrefix, user.chatterNameFgColor, user.chatterNameBgColor, user.chatterName, user.chatterNameSuffix);
             enterChatterSettings("main menu");
         }
@@ -2759,7 +2735,6 @@ int main(int argc, char** argv)
         if (mrcstats != NULL) {
             char stats[30] = "";
             fgets(stats, 30, mrcstats);
-
             char** stat;
             int statCount = split(stats, ' ', &stat);
             if (statCount >= 3) {
@@ -2788,21 +2763,18 @@ int main(int argc, char** argv)
 
         od_set_cursor(3, 25);
         od_printf("`bright white`%s for %s ``v%s", "Universal Multi-Relay Chat", PLATFORM, UMRC_VERSION);
-
         od_set_cursor(5, 25);
         od_printf("`bright black`MRC Host: `magenta`%s", cfg.host);
         od_set_cursor(6, 25);
         od_printf("`bright black`Protocol Version: `magenta`%s", PROTOCOL_VERSION);
         od_set_cursor(6, 65);
         od_printf("%s", cfg.ssl ? "`green`SSL ENABLED``" : "");
-
         od_set_cursor(9, 25);
         od_printf("`bright white`(`bright magenta`C`bright white`) `white`Enter `bright white`c`white`hat!");
         od_set_cursor(10, 25);
         od_printf("`bright white`(`bright magenta`S`bright white`) `white`Chatter `bright white`s`white`ettings");
         od_set_cursor(11, 25);
         od_printf("`bright white`(`bright magenta`I`bright white`) `white`Read `bright white`I`white`nstructions");
-        
         od_set_cursor(13, 25);
         od_printf("`bright white`(`bright green`Q`bright white`) `bright white`Q`white`uit to `bright white`");
         dispEmuPipe(cfg.name, TRUE); // display the bbs name it all its pipe code colorful glory :P
@@ -2850,7 +2822,7 @@ int main(int argc, char** argv)
 
         case 'T':
             od_clr_scr();
-            od_printf(DIVIDER);
+            printDivider();
             od_printf("`` ChatterName:          `bright white`%s``", user.chatterName);
             od_printf("\r\n`` DisplayChatterName:   "); dispEmuPipe(gDisplayChatterName, true);
             od_printf("\r\n`` FromSite:             `bright white`%s``", gFromSite);
@@ -2869,9 +2841,8 @@ int main(int argc, char** argv)
             od_printf("\r\n`` od_maxtime:           `bright white`%d``", od_control.od_maxtime);
             od_printf("\r\n`` od_inactivity:        `bright white`%d``", od_control.od_inactivity);
             od_printf("\r\n`` od_force_local:       `bright white`%d``", od_control.od_force_local);
-
             od_printf("\r\n");
-            od_printf(DIVIDER);
+            printDivider();
             od_printf("This screen is for testing and troubleshooting purposes.\r\n");
             od_printf("Include this screen when posting a GitHub issue.\r\n");
 

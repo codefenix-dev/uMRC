@@ -4,14 +4,15 @@ v106 - TBA:
 
   - uMRC now uses the latest OpenDoors version 6.3, and runs as a standard
     Windows console application, doing away with the old local OpenDoors GUI.
-	A new ODoors63.dll library file will be included with Windows x86 and x64
-	releases.
+    A new ODoors63.dll library file will be included with Windows x86 and x64
+    releases.
   - Fix for termsizes beyond 80x25, such as 132x37. This is dependent on the
     drop file used though; CHAIN.TXT reports *both* the user's terminal rows
-	and columns, while others report only the rows, and others don't report 
-	either, in which case 80x24 is used as the default.
+    and columns, while others report only the rows, and others don't report 
+    either, in which case 80x24 is used as the default.
   - Improved message routing from umrc-bridge to local umrc-client instances.
   - Sort theme name listings on 'Nix systems.
+  - Fix for themes wider than the screen width, to prevent them from wrapping.
   - Fix for properly handling GOODBYE packets.
   - Fix for scrollback percentage indicator.
   - Fix for joining long room names FROM other long room names.
@@ -19,6 +20,12 @@ v106 - TBA:
     crashes and memory leaks (Claude AI assisted).
   - uMRC now builds for FreeBSD.
   - New theme: Violet.
+  - New WIDE themes for 132-column terminals: 
+    . default_w132.ans
+    . bitchx_w132.ans
+    . neon_w132.ans
+    . violet_w132.ans
+    
 
 
 v105 - July 14, 2026:

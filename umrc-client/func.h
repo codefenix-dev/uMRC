@@ -1,6 +1,4 @@
 #pragma once
-
-
 #include "../common/common.h"
 
 char* getTimestamp();

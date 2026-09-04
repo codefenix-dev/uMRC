@@ -22,7 +22,7 @@ mkdir -p bin/themes
 echo -n "Platform: "
 echo $plat-$arc
 
-echo -n "Building setup..."
+echo -n -e "Building \033[1msetup\033[0m..."
 cd setup
 gcc setup.c ../common/common.c -o setup
 if [ $? -eq 0 ]; then
@@ -36,7 +36,7 @@ cp setup ../bin
 
 cd ..
 
-echo -n "Building umrc-bridge..."
+echo -n -e "Building \033[1mumrc-bridge\033[0m..."
 cd umrc-bridge
 gcc bridge.c ../common/common.c -o umrc-bridge -lssl -lcrypto -pthread
 if [ $? -eq 0 ]; then
@@ -50,7 +50,7 @@ cp umrc-bridge ../bin
 
 cd ..
 
-echo -n "Building umrc-client..."
+echo -n -e "Building \033[1mumrc-client\033[0m..."
 cd umrc-client
 gcc main.c func.c ../common/common.c -o umrc-client -pthread -L ../lib/odoors/$plat-$arc -lODoors
 if [ $? -eq 0 ]; then

@@ -66,7 +66,6 @@ char* getCtcpDatetime() {
     return _strdup(dtStr);
 }
 
-
 /**
  *  Returns the length of a string without pipe color codes.
  */
@@ -94,7 +93,6 @@ int strLenWithoutPipecodes(char* str) {
 
 char* stristr(const char* haystack, const char* needle) {
     if (!*needle) return (char*)haystack;
-
     for (; *haystack; haystack++) {
         if (tolower((unsigned char)*haystack) == tolower((unsigned char)*needle)) {
             const char* h = haystack;

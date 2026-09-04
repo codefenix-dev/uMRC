@@ -164,13 +164,10 @@ int calculate_sha256_of_file(const char* filepath, char* output_hex_buf, size_t 
         _snprintf_s(output_hex_buf + (i * 2), output_hex_buf_size - (i * 2), -1, "%02x", hash[i]);
     }
     output_hex_buf[hash_len * 2] = '\0';
-
     EVP_MD_CTX_free(mdctx);
     fclose(file);
     return 0;
 }
-
-
 
 int64_t currentTimeMillis() {
 #if defined(WIN32) || defined(_MSC_VER)  
@@ -179,11 +176,11 @@ int64_t currentTimeMillis() {
     uint64_t ts = ((uint64_t)ft.dwHighDateTime << 32) | ft.dwLowDateTime;
     return (ts / 10000) - 11644473600000ULL;
 #else
-  struct timeval time;
-  gettimeofday(&time, NULL);
-  int64_t s1 = (int64_t)(time.tv_sec) * 1000;
-  int64_t s2 = (time.tv_usec / 1000);
-  return s1 + s2;
+    struct timeval time;
+    gettimeofday(&time, NULL);
+    int64_t s1 = (int64_t)(time.tv_sec) * 1000;
+    int64_t s2 = (time.tv_usec / 1000);
+    return s1 + s2;
 #endif
 }
 
@@ -399,7 +396,6 @@ bool sendClientPacket(SOCKET* sock, char* packet) {
     }
     iResult = send(*sock, packet, (int)strlen(packet), 0);
     Sleep(5);
-
     if (iResult == SOCKET_ERROR) {
         _snprintf_s(logstring, sizeof(logstring), -1, "sendClientPacket to client #%d failed with error: %d", (int)*sock, WSAGetLastError());
         printDateTimeStamp();
@@ -433,8 +429,7 @@ void sendToLocalClients(char* packet, char* toUser, char* fromUser) {
 DWORD WINAPI clientProcess(LPVOID lpArg) {
 #else
 void* clientProcess(void* lpArg) {
-#endif
-    
+#endif    
     bool cleanLogoff = false;
     SOCKET pSock;
     int pSlot;
@@ -466,12 +461,10 @@ void* clientProcess(void* lpArg) {
             if (strlen(thisUser) == 0) {
                 char** field;
                 int fieldCount = split(clientPacket, '~', &field);
-
                 if (fieldCount >= 7) {
                     strcpy_s(thisUser, sizeof(thisUser), field[0]);
 					strcpy_s(clients[pSlot].chatter, sizeof(clients[pSlot].chatter), thisUser);
                     printDateTimeStamp();
-
                     _snprintf_s(logstring, sizeof(logstring), -1, "%s entered chat (slot #%d occupied).", thisUser, pSlot);
                     puts(logstring);
                     if (gVerboseLogging) {
@@ -489,19 +482,16 @@ void* clientProcess(void* lpArg) {
                 cleanLogoff = true;
             }
             if (strstr(clientPacket, "~SERVER~~~NICKCHANGED:") != 0) {
-
                 // The client on this socket received a USERNICK packet, 
                 // which changed the chatter name, and it's informing the 
                 // bridge here that the name change occurred, so the bridge 
                 // needs to update so routing can continue.
                 char** field;
                 int fieldCount = split(clientPacket, '~', &field);
-
                 int cmdsep = indexOfChar(field[6], ':');
                 int argpos = cmdsep + 1;
                 strcpy_s(thisUser, sizeof(thisUser), field[6] + argpos);
                 strcpy_s(clients[pSlot].chatter, sizeof(clients[pSlot].chatter), thisUser);
-
                 _snprintf_s(logstring, sizeof(logstring), -1, "chatter name on slot #%d updated to %s.", pSlot, thisUser);
                 puts(logstring);
                 if (gVerboseLogging) {
@@ -513,7 +503,6 @@ void* clientProcess(void* lpArg) {
                 // to the bridge, don't send it up to the host.
                 continue;
             }
-
             sendHostPacket(clientPacket);
         }
     } while (iResult > 0);
@@ -524,10 +513,8 @@ void* clientProcess(void* lpArg) {
         _snprintf_s(disconnMsg, MSG_LEN, -1, "|08- %s was disconnected.", thisUser);
         sendMsgPacket(thisUser, gFromSite, "", "NOTME", "", "", disconnMsg);
     }
-
     clients[pSlot].sock = INVALID_SOCKET;
     strcpy_s(clients[pSlot].chatter, sizeof(clients[pSlot].chatter), "");
-
     printDateTimeStamp();
     _snprintf_s(logstring, sizeof(logstring), -1, "%s has left chat (slot #%d cleared).", thisUser, pSlot);
     puts(logstring);
@@ -544,7 +531,6 @@ DWORD WINAPI waitProcess(LPVOID lpArg) {
 #else
 void* waitProcess(void* lpArg) {
 #endif
-
     SOCKET listenSock = INVALID_SOCKET;
     struct addrinfo* liResult = NULL, * ptrLi = NULL, listener;
     char outboundPacket[PACKET_LEN] = "";
@@ -554,9 +540,7 @@ void* waitProcess(void* lpArg) {
 #else
     pthread_t hClient[MAX_CLIENTS];  
 #endif
-
     DWORD clientThreadId[MAX_CLIENTS];
-
     while (gConnectionIsDown) { // Waits for a successful connection before proceeding.    
         Sleep(0);
     }
@@ -573,12 +557,10 @@ void* waitProcess(void* lpArg) {
 #else
     memset(&listener, 0, sizeof listener);
 #endif
-
     listener.ai_family = AF_UNSPEC;
     listener.ai_socktype = SOCK_STREAM;
     listener.ai_protocol = IPPROTO_TCP;
-    listener.ai_flags = AI_PASSIVE;
-    
+    listener.ai_flags = AI_PASSIVE;    
     iResult = getaddrinfo("localhost", cfg.port, &listener, &liResult);
     if (iResult != 0) {
         printf("getaddrinfo (clients) failed with error: %d\n", iResult);
@@ -618,7 +600,6 @@ void* waitProcess(void* lpArg) {
 		return (void*)1;
 #endif        
     }
-
     freeaddrinfo(liResult);
 
     printDateTimeStamp();
@@ -626,18 +607,15 @@ void* waitProcess(void* lpArg) {
     printDateTimeStamp();
     puts("To exit any time, press CTRL+C.");
     while (listen(listenSock, SOMAXCONN) != SOCKET_ERROR) {
-
         // Accept a client socket, and run it in its own thread
         SOCKET newSock = INVALID_SOCKET;
         newSock = accept(listenSock, NULL, NULL);
-        if ((newSock != INVALID_SOCKET) && newSock != SOCKET_ERROR) {
-            
+        if ((newSock != INVALID_SOCKET) && newSock != SOCKET_ERROR) {            
             // Add the client in the first available empty slot.
             for (int i = 0; i < MAX_CLIENTS; i++) {
                 if (clients[i].sock == INVALID_SOCKET) {
                     clients[i].sock = newSock;
                     struct pClientProc *pC;
-
 #if defined(WIN32) || defined(_MSC_VER)    
                     pC = (struct pClientProc*)malloc(sizeof(struct pClientProc));
                     pC->pClientSlot = i; // TODO: "Dereferencing NULL pointer" warning
@@ -687,7 +665,6 @@ SSL* performSslHandshake(SOCKET* sock) {
         ERR_print_errors_fp(stderr);
         SSL_free(ssl);
         SSL_CTX_free(ctx);
-
         printDateTimeStamp();
         puts("SSL_connect failed.");
         writeToLog("SSL_connect failed", PROGRAM, "");
@@ -697,7 +674,6 @@ SSL* performSslHandshake(SOCKET* sock) {
 }
 
 void processPacket(char* packet) {
-
     char* fromUser = "", * fromSite = "", * fromRoom = "", * toUser = "", * msgExt = "", * toRoom = "", * body = "";
     char** field;
     int fieldCount = split(packet, '~', &field);
@@ -709,7 +685,6 @@ void processPacket(char* packet) {
         msgExt = _strdup(field[4]);
         toRoom = _strdup(field[5]);
         body = _strdup(field[6]);
-
         for (int iml = 0; iml < MAX_LATENCIES; iml++) {
             if (lt[iml].packetSum == -1 && lt[iml].packetLen == -1) {
                 break;
@@ -733,7 +708,6 @@ void processPacket(char* packet) {
         }
 
         if (strcmp(fromUser, "SERVER") == 0) {
-
             for (int ii = 0; packet[ii] != '\0'; ii++) { // replace control characters with underscores
                 if (packet[ii] > 6 && packet[ii] < 32 && packet[ii] != 10) { // all except for "card" characters and LF
                     if (gVerboseLogging) {
@@ -813,10 +787,8 @@ void processPacket(char* packet) {
         free(toRoom);
         free(body);
     }
-
     freeSplitResult(field, fieldCount);
 }
-
 
 void mrcHostProcess() {
 #if defined(WIN32) || defined(_MSC_VER)    
@@ -846,7 +818,6 @@ void mrcHostProcess() {
     mrcHost.ai_family = AF_UNSPEC;
     mrcHost.ai_socktype = SOCK_STREAM;
     mrcHost.ai_protocol = IPPROTO_TCP;
-
     printDateTimeStamp();
     printf("Connecting to %s:%s...", cfg.host, cfg.port);
     iResult = getaddrinfo(cfg.host, cfg.port, &mrcHost, &mhResult);
@@ -892,7 +863,6 @@ void mrcHostProcess() {
             OpenSSL_add_all_algorithms();
             SSL_load_error_strings();
             mrcHostSsl = performSslHandshake(&mrcHostSock);
-
             if (mrcHostSsl != NULL) {
                 usingSSL = true;
                 printPipeCodeString(OK);
@@ -908,7 +878,6 @@ void mrcHostProcess() {
         }
         break;
     }
-
     freeaddrinfo(mhResult);
 
     if (mrcHostSock == INVALID_SOCKET) {
@@ -919,12 +888,9 @@ void mrcHostProcess() {
 #endif
         return;
     }
-
     printDateTimeStamp();
-    printf("Sending handshake:\"%s\" ... ", handshake);
-    
+    printf("Sending handshake:\"%s\" ... ", handshake);    
     iResult = usingSSL ? SSL_write(mrcHostSsl, handshake, (int)strlen(handshake)) : send(mrcHostSock, handshake, (int)strlen(handshake), 0);
-    
     if (iResult == SOCKET_ERROR) {
         closesocket(mrcHostSock);
         _snprintf_s(logstring, sizeof(logstring), -1, "send failed with error: %d\r\n", usingSSL ? SSL_get_error(mrcHostSsl, iResult) : WSAGetLastError());
@@ -951,11 +917,9 @@ void mrcHostProcess() {
     //
     do {             
         Sleep(1);
-
         iResult = 0;
         char inboundData[DATA_LEN] = "";
-        size_t bytesread = 0;
-              
+        size_t bytesread = 0;              
         if (gConnectionIsDown) {
             break;
         }
@@ -1097,7 +1061,6 @@ int main(int argc, char** argv)
     int maxRetries = DEFAULT_MAX_RETRIES;
     int retryWaitSeconds = DEFAULT_RETRY_WAIT_SECONDS;
     char* clientport;
-
 #if defined(WIN32) || defined(_MSC_VER)
     HANDLE hClient;
     DWORD clientThreadId;
@@ -1115,13 +1078,10 @@ int main(int argc, char** argv)
         clients[i].sock = INVALID_SOCKET;
         strcpy_s(clients[i].chatter, sizeof(clients[i].chatter), "");
     }
-
+	
     initializeLt();
 
-
-
     // logo time...
-
     puts("\r\n\r\n|~|\\                           /|\\                           /|~|");
     puts("| |  |\\                     /|  |  |\\                     /|  | |");
     puts("| |  |  |\\               /|  |  |  |  |\\               /|  |  | |");
@@ -1133,7 +1093,6 @@ int main(int argc, char** argv)
     puts("+-+------------===================================------------+-+");
 
     for (int i = 0; i < argc; i++) {
-
         if (_strnicmp(argv[i], "-?", 2) == 0) {
             puts("\r\nuMRC-Bridge options:\r\n");
             puts("-V     Enable verbose logging. Display and log all packet strings.");
