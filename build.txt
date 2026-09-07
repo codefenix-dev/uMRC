@@ -150,7 +150,7 @@ Windows (x86 & x64):
   - [themes]
   - crypto-57.dll
   - ssl-60.dll
-  - ODoors62.dll
+  - ODoors63.dll
   - setup.exe
   - umrc-bridge.exe
   - umrc-client.exe

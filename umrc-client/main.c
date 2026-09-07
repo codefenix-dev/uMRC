@@ -1359,7 +1359,9 @@ void loadTwits() {
             }
         }
         fclose(tfile);
+        EnterCriticalSection(&gChattersLock);
         gTwitCount = split(tbuf, '\n', &gTwits);
+        LeaveCriticalSection(&gChattersLock);
     }
     free(tbuf);
 }
@@ -2397,7 +2399,7 @@ bool enterChat() {
     gScrollBack = malloc(50);
     strcpy_s(gScrollBack, 50, "|15 * * * TOP OF SCROLLBACK * * * |07\n\n\n\n\n");
     gMentions = malloc(50);
-    strcpy_s(gMentions, 50, ""); // |15 * * * TOP OF MENTIONS * * * |07\n
+    strcpy_s(gMentions, 50, "|15 * * * MENTIONS * * * |07\n");
 
     int iResult;
     struct addrinfo* mhResult = NULL, * ptrMh = NULL, mrcHost;
