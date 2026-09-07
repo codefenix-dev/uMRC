@@ -48,23 +48,25 @@ Features:
 - CTCP command support
 - Sysop-editable 2-line ANSI status bar themes
 - Twit filter
+- Support for termsizes beyond 80x25 (dropfile dependent)
 
 
 Files Included:
 
-- setup.exe:        Setup utility
-- umrc-bridge.exe:  MRC host connection program (multiplexer)
-- umrc-client.exe:  MRC Client door
-- ODoors63.dll:     OpenDoors door kit library
-- ssl-60.dll:       LibreSSL (OpenSSL) SSL library
-- crypto-57.dll:    LibreSSL (OpenSSL) Cryptographic library
-  [screens]:        Subdirectory containing ANSI & text files
-  - intro.ans:      Intro/main menu & status screen
-  - help.txt:       Help file showing basic chat commands
-  - helpctcp.txt:   Help file on CTCP command usage
-  - helptwit.txt:   Help file on twit filter management
-  [themes]:         Subdirectory containing ANSI files
-  - *.ans:          ANSI theme files
+- setup.exe:         Setup utility
+- umrc-bridge.exe:   MRC host connection program (multiplexer)
+- keepup-bridge.bat: Batch file to help keep umrc-bridge alive
+- umrc-client.exe:   MRC Client door
+- ODoors63.dll:      OpenDoors door kit library
+- ssl-60.dll:        LibreSSL (OpenSSL) SSL library
+- crypto-57.dll:     LibreSSL (OpenSSL) Cryptographic library
+  [screens]:         Subdirectory containing ANSI & text files
+  - intro.ans:       Intro/main menu & status screen
+  - help.txt:        Help file showing basic chat commands
+  - helpctcp.txt:    Help file on CTCP command usage
+  - helptwit.txt:    Help file on twit filter management
+  [themes]:          Subdirectory containing ANSI files
+  - *.ans:           ANSI theme files
 
 
 Install Instructions:
@@ -154,6 +156,10 @@ connections from the same BBS.
 
    The -W option can be used to specify the wait time between retries
    (e.g.: -W10 for 10 seconds). The default is 5 seconds.
+   
+   A batch file named keepup-bridge.bat is included, designed to 
+   continuously re-run umrc-bridge.exe in the rare event that it 
+   crashes while re-establishing a SSL connection to the host.
 
 4. Set up a menu item to launch a native door on your BBS.
 

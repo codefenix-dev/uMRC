@@ -50,6 +50,7 @@ Features:
 - CTCP command support
 - Sysop-editable 2-line ANSI status bar themes
 - Twit filter
+- Support for termsizes beyond 80x25 (dropfile dependent)
 
 
 Files Included:

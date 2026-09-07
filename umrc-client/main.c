@@ -758,10 +758,7 @@ void dispEmuLimited(char* str, BOOL immediate) {
 }
 
 void drawStatusBar() {
-    //char themeLines[1024] = "";
-    //_snprintf_s(themeLines, sizeof(themeLines), -1, "%s\r\n%s", gStatusThemeLine1, gStatusThemeLine2);
     od_set_cursor(od_control.user_screen_length - 2, 1);
-    //od_disp_emu(themeLines, TRUE);
 	dispEmuLimited(gStatusThemeLine1, TRUE);
 	od_set_cursor(od_control.user_screen_length - 1, 1);
 	dispEmuLimited(gStatusThemeLine2, TRUE);	
@@ -1088,7 +1085,7 @@ void enterScrollBack(int initialScroll, int mode) {
     od_clr_line();
     scrollToScrollbackSection(scrollLines, scrollPos, scrollLineCount, height);
     od_set_cursor(od_control.user_screen_length - 2, 1);
-    od_disp_emu(gStatusThemeLine1, TRUE);
+    //dispEmuLimited(gStatusThemeLine1, TRUE);
     od_clr_line();
     od_set_cursor(od_control.user_screen_length - 2, 2);
     od_printf("`%s %s`%12.12s`%s %s`:          `%s %s`\030`%s %s`/`%s %s`\031`%s %s`/`%s %s`PGUP`%s %s`/`%s %s`PGDN`%s %s`/`%s %s`HOME`%s %s`/`%s %s`END`%s %s`   `%s %s`ENTER`%s %s` to return to chat      ",
@@ -2062,7 +2059,7 @@ void* handleIncomingMessages(void* lpArg) {
  *  This function handles all chat I/O: getting input from the user as
  *  well as updating the screen.
  */
-void doChatRoutines(char* input) {
+void doChatRoutines(char* input, char* previousInput) {
     bool masking = false;
     char key = ' ';
     tODInputEvent InputEvent;
@@ -2235,7 +2232,29 @@ void doChatRoutines(char* input) {
                 gMentionCount = 0;
                 updateMentions();
                 break;
+
+            case OD_KEY_F3:
+                strcpy_s(input, MSG_LEN, previousInput);
+                if (strlen(input) > 0) {
+                    // Scroll the input string display if it's longer than the terminal width
+                    if ((int)strlen(input) >= (int)od_control.user_screenwidth - 3) {
+                        overfill = ((int)strlen(input)) - ((int)od_control.user_screenwidth - 4);
+                    }
+                    od_set_cursor(od_control.user_screen_length, 1);
+                    _snprintf_s(pcol, sizeof(pcol), -1, "|%02d", user.textColor);
+                    dispEmuPipe(pcol, TRUE);
+                    if (overfill > 0) {
+                        od_disp_str(input + overfill - 1);
+                    }
+                    else {
+                        od_disp_str(input);
+                    }
+                    od_printf(CHAT_CURSOR, CURSOR_COLORS[user.textColor]);
+                    updateBuffer((int)strlen(input));
+                }
+                break;
             }
+
         }
         else if (InputEvent.EventType == EVENT_CHARACTER) {
             key = InputEvent.chKeyPress;
@@ -2488,6 +2507,7 @@ bool enterChat() {
     sendCmdPacket(&mrcSock, "NEWROOM::", gRoom);
     od_sleep(20);
 
+    char previousInput[MSG_LEN] = "";
     // Loop to get input from the user, and send it over the Bridge.
     while (gIsInChat) {
         char input[MSG_LEN] = "";
@@ -2495,7 +2515,8 @@ bool enterChat() {
         resetInputLine();
         od_printf(CHAT_CURSOR, CURSOR_COLORS[user.textColor]);
 
-        doChatRoutines(input); // capture user input and keep chat display updated
+        doChatRoutines(input, previousInput); // capture user input and keep chat display updated
+        strcpy_s(previousInput, sizeof(previousInput), input); // store it to be recalled if needed
 
         if (strlen(input) == 0) { // do nothing on blank entry
             continue;

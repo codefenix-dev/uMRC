@@ -15,6 +15,5 @@
  |15/|11?             |08:|07 Show list of |15SERVER commands
  |15/|11quit |08or |07/|11q|07    |08: |07Exit chat to main menu
 |09+------{ |07See also|08: |15/|11help |15twit, |15/|11help |15ctcp |09}--------------------+
-|15Hotkeys: |11TAB|08:|07 Auto-complete username
-         |11LEFT|08/|11RIGHT|08:|07 Change text color 
-         |11ESC|08/|11END|08:|07 Clear input line
+|15Hotkeys: |11TAB|08:|07 Auto-complete username  |11LEFT|08/|11RIGHT|08:|07 Change text color 
+          |11F3|08:|07 Recall previous input      |11ESC|08/|11END|08:|07 Clear input line
