@@ -2236,6 +2236,12 @@ void doChatRoutines(char* input, char* previousInput) {
                 break;
 
             case OD_KEY_F3:
+                if (strlen(previousInput) <= 0) {
+                    break;
+                }
+                if (strlen(input) > 0) {
+                    resetInputLine();
+                }
                 strcpy_s(input, MSG_LEN, previousInput);
                 if (strlen(input) > 0) {
                     // Scroll the input string display if it's longer than the terminal width
