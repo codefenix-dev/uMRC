@@ -1359,9 +1359,12 @@ void loadTwits() {
             }
         }
         fclose(tfile);
+        char** oldTwits = gTwits;
+        int oldTwitCount = gTwitCount;
         EnterCriticalSection(&gChattersLock);
         gTwitCount = split(tbuf, '\n', &gTwits);
         LeaveCriticalSection(&gChattersLock);
+        freeSplitResult(oldTwits, oldTwitCount);
     }
     free(tbuf);
 }
@@ -1670,7 +1673,10 @@ void processUserCommand(char* cmd, char* params) {
             listThemesInChat();
         }
         else {
-            _snprintf_s(user.theme, sizeof(user.theme), -1, "%s.ans", params);
+            char safeThemeName[130] = "";
+            strcpy_s(safeThemeName, sizeof(safeThemeName), params);
+            cleanUpFilename(safeThemeName);   // strips /, \, and other path-unsafe characters
+            _snprintf_s(user.theme, sizeof(user.theme), -1, "%s.ans", safeThemeName);     
             loadTheme();
             drawStatusBar();
         }

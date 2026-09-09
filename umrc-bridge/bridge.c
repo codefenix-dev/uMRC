@@ -82,8 +82,8 @@ struct pClientProc {
 struct settings cfg;
 
 bool usingSSL = false;
-SSL* mrcHostSsl;
-SSL_CTX* ctx;
+SSL* mrcHostSsl = NULL;
+SSL_CTX* ctx = NULL;
 
 // latency tracking
 #define MAX_LATENCIES 50
@@ -649,18 +649,25 @@ SSL* performSslHandshake(SOCKET* sock) {
         puts("!ssl...");
         writeToLog("!ssl...", PROGRAM, "");
         SSL_CTX_free(ctx);
+        ctx = NULL;
         return NULL;
     }
 
-    SSL_set_fd(ssl, (int)*sock); 
+    if (SSL_set_fd(ssl, (int)*sock) != 1) {
+        SSL_free(ssl);
+        SSL_CTX_free(ctx);
+        ctx = NULL;
+        return NULL;
+    }
     if (SSL_connect(ssl) <= 0) {
         // Handle error
         ERR_print_errors_fp(stderr);
-        SSL_free(ssl);
-        SSL_CTX_free(ctx);
         printDateTimeStamp();
         puts("SSL_connect failed.");
         writeToLog("SSL_connect failed", PROGRAM, "");
+        SSL_free(ssl);
+        SSL_CTX_free(ctx);
+        ctx = NULL;
         return NULL;
     }
     return ssl;
@@ -794,6 +801,9 @@ void mrcHostProcess() {
     _snprintf_s(handshake, 256, -1, "%s~%s/%s.%s/%s.%s", cfg.name, cfg.soft, PLATFORM, ARC, PROTOCOL_VERSION, UMRC_VERSION);
     printDateTimeStamp();
     puts("Starting up...");
+    usingSSL = false;
+    mrcHostSsl = NULL;
+    ctx = NULL;
 
 #if defined(WIN32) || defined(_MSC_VER)    
     iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -1042,10 +1052,16 @@ void mrcHostProcess() {
     WSACleanup();
 #endif
     if (usingSSL) {
-        EVP_cleanup();
-        SSL_shutdown(mrcHostSsl);
-        SSL_free(mrcHostSsl);
-        SSL_CTX_free(ctx);
+        if (mrcHostSsl != NULL) {
+            SSL_shutdown(mrcHostSsl);
+            SSL_free(mrcHostSsl);
+            mrcHostSsl = NULL;
+        }
+        if (ctx != NULL) {
+            SSL_CTX_free(ctx);
+            ctx = NULL;
+        }
+        usingSSL = false;
     }
 }
 

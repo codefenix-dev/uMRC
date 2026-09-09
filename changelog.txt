@@ -2,13 +2,14 @@ Change Log:
 
 v106 - TBA:
 
-  - uMRC now uses the latest OpenDoors version 6.3, and runs as a standard
-    Windows console application, doing away with the old local OpenDoors GUI.
-    A new ODoors63.dll library file will be included with Windows x86 and x64
-    releases.  
+  - uMRC now uses the latest OpenDoors version 6.3. The Windows x86 and x64
+    builds now run as as a standard Windows console application, doing away 
+	with the old local OpenDoors GUI. A new ODoors63.dll library file will 
+	be included with Windows x86 and x64 releases.  
   - uMRC now builds for FreeBSD.
   - Improved message routing from umrc-bridge to local umrc-client instances.
   - Added F3 hotkey to recall previous input.
+  - Fix for crashes while re-establishing dropped SSL connections.
   - Fix for termsizes beyond 80x25, such as 132x37. This is dependent on the
     drop file used though; CHAIN.TXT reports *both* the user's terminal rows
     and columns, while others report only the rows, and others don't report 
