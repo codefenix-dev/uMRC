@@ -16,7 +16,7 @@
 
 #include "../common/common.h"
 
-#define DEFAULT_HOST "mrc.bottomlessabyss.net"
+//#define DEFAULT_HOST "mrc.bottomlessabyss.net"
 #define DEFAULT_PORT "5000"
 #define DEFAULT_SSL_PORT "5001"
 #define NOT_LISTED "Something Else..."
@@ -36,13 +36,13 @@ const char* BBS_TYPES[BBS_TYPE_COUNT] = {
 	NOT_LISTED
 };
 
-/*#define MRC_HOST_COUNT 4
+#define MRC_HOST_COUNT 4
 const char* MRC_HOSTS[MRC_HOST_COUNT] = {
 	"na-multi.relaychat.net",
 	"au-multi.relaychat.net",
 	"eu-multi.relaychat.net",
 	NOT_LISTED
-};*/
+};
 
 
 char* textPrompt(char* promptText, int maxLen, int displayableLen, char* defaultValue, bool convertPipeCodes) {
@@ -173,8 +173,8 @@ void enterInfo(struct settings info, bool enter_new) {
 		
 	clearScreen(); 
 
-	strcpy_s(info.host, sizeof(info.host), textPrompt("|07Enter the |15MRC host address|08:|07", 70, 0, enter_new ? DEFAULT_HOST : info.host, false));
-	//strcpy_s(info.host, sizeof(info.host), listPrompt("|07Select the |15MRC host address|08:|07", MRC_HOSTS, MRC_HOST_COUNT, "|07Enter the |15MRC host address|08:|07", 70 , enter_new ? "" : info.host));
+	//strcpy_s(info.host, sizeof(info.host), textPrompt("|07Enter the |15MRC host address|08:|07", 70, 0, enter_new ? DEFAULT_HOST : info.host, false));
+	strcpy_s(info.host, sizeof(info.host), listPrompt("|07Select the |15MRC host address|08:|07", MRC_HOSTS, MRC_HOST_COUNT, "|07Enter the |15MRC host address|08:|07", 70 , enter_new ? "" : info.host));
 	lstr(info.host);
 	puts("");
 	info.ssl = charPrompt("|07Use |15SSL|08 (|15Y|07/|15N|08)|07:", "YN", (enter_new ? 'Y' : (info.ssl ? 'Y' : 'N'))) == 'Y';

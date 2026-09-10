@@ -1500,6 +1500,10 @@ void displayFileInChat(char* filename) {
         displayMessage("|08__", false);
         fclose(extFile);
     }
+    else {
+        displayMessage("|15* |14Help topic not found", false);
+        displayMessage("|08__", false);
+    }
 }
 
 void displayFile(char* filename, bool autopause) {
@@ -1649,6 +1653,7 @@ void processUserCommand(char* cmd, char* params) {
         }
     }
     else if (_stricmp(cmd, "help") == 0) {
+        cleanUpFilename(params);
         char helpfile[30] = "";
         _snprintf_s(helpfile, sizeof(helpfile), -1, "screens%chelp%s.txt", PATH_SEP, strlen(params) > 0 ? params : "");
         displayFileInChat(helpfile);
