@@ -19,10 +19,11 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <sys/timeb.h>
-
+#include <wincrypt.h>
 #pragma comment (lib, "Ws2_32.lib")
 #pragma comment (lib, "Mswsock.lib")
 #pragma comment (lib, "AdvApi32.lib")
+#pragma comment (lib, "Crypt32.lib")
 
 #if defined(__x86_64__) || defined(_M_X64)
 #pragma comment(lib, "../lib/x64/ssl.lib") 
@@ -49,6 +50,7 @@ typedef uint32_t  DWORD;
 #include "../common/common.h"
 #include "openssl/ssl.h"
 #include "openssl/err.h"
+#include "openssl/x509v3.h"
 
 #define PROGRAM "umrc-bridge"
 #define OK "|10OK|07\r\n"
@@ -82,6 +84,7 @@ struct pClientProc {
 struct settings cfg;
 
 bool usingSSL = false;
+bool skipSSLcertCheck = false;
 SSL* mrcHostSsl = NULL;
 SSL_CTX* ctx = NULL;
 
@@ -161,6 +164,26 @@ int calculate_sha256_of_file(const char* filepath, char* output_hex_buf, size_t 
     fclose(file);
     return 0;
 }
+
+#if defined(WIN32) || defined(_MSC_VER)
+void load_windows_system_certs(SSL_CTX* ssl_ctx) {
+    HCERTSTORE hStore = CertOpenSystemStoreA((HCRYPTPROV)NULL, "ROOT");
+    if (!hStore) return;
+
+    X509_STORE* ossl_store = SSL_CTX_get_cert_store(ssl_ctx);
+    PCCERT_CONTEXT pContext = NULL;
+
+    while ((pContext = CertEnumCertificatesInStore(hStore, pContext)) != NULL) {
+        const unsigned char* cert_bytes = pContext->pbCertEncoded;
+        X509* x509 = d2i_X509(NULL, &cert_bytes, pContext->cbCertEncoded);
+        if (x509) {
+            X509_STORE_add_cert(ossl_store, x509);
+            X509_free(x509);
+        }
+    }
+    CertCloseStore(hStore, 0);
+}
+#endif
 
 int64_t currentTimeMillis() {
 #if defined(WIN32) || defined(_MSC_VER)  
@@ -635,16 +658,29 @@ void* waitProcess(void* lpArg) {
 SSL* performSslHandshake(SOCKET* sock) {
     ctx = SSL_CTX_new(TLS_client_method());
     if (!ctx) {
-        // Handle error
         printDateTimeStamp();
         puts("!ctx...");
         writeToLog("!ctx...", PROGRAM, "");
         return NULL;
     }
 
+    if (!skipSSLcertCheck) {
+        // 1. Configure OpenSSL to require strict peer validation
+        SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, NULL);
+#if defined(WIN32) || defined(_MSC_VER)
+        // Dynamically pull certificates directly out of the active Windows OS store
+        load_windows_system_certs(ctx);
+#else
+        // Fall back to standard Linux directory pathways if compiled for Linux
+        if (SSL_CTX_set_default_verify_paths(ctx) != 1) {
+            printDateTimeStamp();
+            puts("Warning: Failed to load default verify paths.");
+        }
+#endif
+    }
+
     SSL* ssl = SSL_new(ctx);
     if (!ssl) {
-        // Handle error
         printDateTimeStamp();
         puts("!ssl...");
         writeToLog("!ssl...", PROGRAM, "");
@@ -653,17 +689,35 @@ SSL* performSslHandshake(SOCKET* sock) {
         return NULL;
     }
 
+    if (!skipSSLcertCheck) {
+        // 3. Enable automatic hostname verification against the configured host string
+        // This blocks an attacker who presents a valid certificate for a completely different website.
+        X509_VERIFY_PARAM* param = SSL_get0_param(ssl);
+        X509_VERIFY_PARAM_set_hostflags(param, X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS);
+        if (X509_VERIFY_PARAM_set1_host(param, cfg.host, 0) != 1) {
+            printDateTimeStamp();
+            puts("Failed to set verification hostname.");
+            SSL_free(ssl);
+            SSL_CTX_free(ctx);
+            ctx = NULL;
+            return NULL;
+        }
+    }
+
     if (SSL_set_fd(ssl, (int)*sock) != 1) {
         SSL_free(ssl);
         SSL_CTX_free(ctx);
+        printDateTimeStamp();
+        puts("SSL_set_fd failed.");
+        writeToLog("SSL_set_fd failed", PROGRAM, "");
         ctx = NULL;
         return NULL;
     }
+
     if (SSL_connect(ssl) <= 0) {
-        // Handle error
         ERR_print_errors_fp(stderr);
         printDateTimeStamp();
-        puts("SSL_connect failed.");
+        puts("SSL_connect failed (Verification or handshake failure).");
         writeToLog("SSL_connect failed", PROGRAM, "");
         SSL_free(ssl);
         SSL_CTX_free(ctx);
@@ -672,6 +726,7 @@ SSL* performSslHandshake(SOCKET* sock) {
     }
     return ssl;
 }
+
 
 void processPacket(char* packet) {
     char* fromUser = "", * fromSite = "", * fromRoom = "", * toUser = "", * msgExt = "", * toRoom = "", * body = "";
@@ -860,6 +915,10 @@ void mrcHostProcess() {
         }
 
         if (cfg.ssl) {
+            if (skipSSLcertCheck) {
+                printDateTimeStamp();
+                printPipeCodeString("|12Skipping SSL cert check|07\r\n");
+            }
             printDateTimeStamp();
             printf("SSL...");
             SSL_library_init();
@@ -1107,6 +1166,7 @@ int main(int argc, char** argv)
             puts("-V     Enable verbose logging. Display and log all packet strings.");
             puts("-R[n]  Maximum connection retry attempts. Default=Infinite.");
             puts("-W[n]  Number of seconds before retrying. Default=5.");
+            puts("-S     Skip SSL cert check.");
             return 0;
         }
         else if (_stricmp(argv[i], "-V") == 0) {
@@ -1125,6 +1185,9 @@ int main(int argc, char** argv)
             }
             printDateTimeStamp();
             printf("Retry wait seconds: %d\r\n", retryWaitSeconds);
+        }
+        else if (_strnicmp(argv[i], "-S", 2) == 0) {
+            skipSSLcertCheck = true;
         }
     }
     
