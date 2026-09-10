@@ -108,18 +108,6 @@ char* stristr(const char* haystack, const char* needle) {
 }
 
 /**
- * Gets a substring from a string. Result stored in: ss
- */
-void getSubStr(char* s, char* ss, int pos, int len) {
-    int i = 0;
-    s += pos; // Move pointer to starting position
-    while (len--) {
-        *ss++ = *s++;
-    }
-    *ss = '\0'; // Null terminate
-}
-
-/**
  * Removes characters from a string that aren't digits or letters
  */
 void removeNonAlphanumeric(char* str) {

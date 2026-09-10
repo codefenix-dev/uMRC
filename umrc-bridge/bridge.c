@@ -15,7 +15,6 @@
 
 #if defined(WIN32) || defined(_MSC_VER)
 #define WIN32_LEAN_AND_MEAN
-
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <sys/timeb.h>
@@ -24,7 +23,6 @@
 #pragma comment (lib, "Mswsock.lib")
 #pragma comment (lib, "AdvApi32.lib")
 #pragma comment (lib, "Crypt32.lib")
-
 #if defined(__x86_64__) || defined(_M_X64)
 #pragma comment(lib, "../lib/x64/ssl.lib") 
 #pragma comment(lib, "../lib/x64/crypto.lib")
@@ -32,19 +30,16 @@
 #pragma comment(lib, "../lib/x86/ssl.lib") 
 #pragma comment(lib, "../lib/x86/crypto.lib")
 #endif
-
 #else
-
 #include <pthread.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
 #include <arpa/inet.h>
-#include <sys/time.h>
-    
+#include <sys/time.h>    
 typedef uint32_t  DWORD;
-
 #endif
+
 #include <time.h>
 
 #include "../common/common.h"

@@ -180,7 +180,7 @@ void enterInfo(struct settings info, bool enter_new) {
 	info.ssl = charPrompt("|07Use |15SSL|08 (|15Y|07/|15N|08)|07:", "YN", (enter_new ? 'Y' : (info.ssl ? 'Y' : 'N'))) == 'Y';
 
 	puts(""); 
-	strcpy_s(info.port, sizeof(info.port), textPrompt("|07Enter the |15MRC host port number|08:|07", 6, 0, enter_new ? (info.ssl ? DEFAULT_SSL_PORT : DEFAULT_PORT) : info.port, false));
+	strcpy_s(info.port, sizeof(info.port), textPrompt("|07Enter the |15MRC host port number|08:|07", 6, 0, (info.ssl ? DEFAULT_SSL_PORT : DEFAULT_PORT), false));
 
 	// BBS info
 	clearScreen(); 

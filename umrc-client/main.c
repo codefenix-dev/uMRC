@@ -1570,7 +1570,7 @@ void processUserCommand(char* cmd, char* params) {
         char msg[PACKET_LEN] = "";
         int nextspcidx = indexOfChar(params, ' ') + 1;
         if (nextspcidx > 0) {
-            getSubStr(params, to, 0, nextspcidx-1);
+            strncpy_s(to, sizeof(to), params, nextspcidx - 1);
             _snprintf_s(msg, PACKET_LEN, -1, "|15* |08(|15%s|08/|14DirectMsg|08) |07%s", user.chatterName, params + nextspcidx);
             sendMsgPacket(&mrcSock, to, "", "", msg);
             _snprintf_s(msg, PACKET_LEN, -1, "|15* |08(|14DirectMsg|08->|15%s|08) |07%s", to, params + nextspcidx);
@@ -1600,7 +1600,7 @@ void processUserCommand(char* cmd, char* params) {
         char ctcp_data[50] = "";
         int nextspcidx = indexOfChar(params, ' ');
         if (nextspcidx > 0) {
-            getSubStr(params, target, 0, nextspcidx);
+            strncpy_s(target, sizeof(target), params, nextspcidx);
             _snprintf_s(ctcp_data, sizeof(ctcp_data), -1, "%s %s", target, params + nextspcidx + 1);
             sendCtcpPacket(&mrcSock, (strcmp(target, "*") == 0 || target[0] == '#') ? "" : target, "[CTCP]", ctcp_data);
         }
@@ -1631,7 +1631,7 @@ void processUserCommand(char* cmd, char* params) {
         char action[10] = "";
         int nextspcidx = indexOfChar(params, ' ') + 1;
         if (nextspcidx > 0) {
-            getSubStr(params, action, 0, nextspcidx - 1);
+            strncpy_s(action, sizeof(action), params, nextspcidx - 1);
             if (_stricmp(action, "add") == 0 && _stricmp(params + 4, user.chatterName) != 0) {
                 addTwit(params + 4);                
             } else if (_stricmp(action, "del") == 0) {
@@ -2542,8 +2542,8 @@ bool enterChat() {
             int spcidx = indexOfChar(input, ' ');
 
             if (spcidx > 0) {
-                getSubStr(input, cmd, 1, spcidx - 1);
-                getSubStr(input, params, spcidx+1, (int)strlen(input));
+                strncpy_s(cmd, sizeof(cmd), input + 1, spcidx - 1);
+                strncpy_s(params, sizeof(params), input + spcidx + 1, strlen(input));
             }
             else {
                 strncpy_s(cmd, sizeof(cmd), input + 1, 14);
