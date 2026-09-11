@@ -18,7 +18,6 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <sys/timeb.h>
-#include <wincrypt.h>
 #pragma comment (lib, "Ws2_32.lib")
 #pragma comment (lib, "Mswsock.lib")
 #pragma comment (lib, "AdvApi32.lib")
@@ -161,6 +160,7 @@ int calculate_sha256_of_file(const char* filepath, char* output_hex_buf, size_t 
 }
 
 #if defined(WIN32) || defined(_MSC_VER)
+#include <wincrypt.h>
 void load_windows_system_certs(SSL_CTX* ssl_ctx) {
     HCERTSTORE hStore = CertOpenSystemStoreA((HCRYPTPROV)NULL, "ROOT");
     if (!hStore) return;
@@ -794,7 +794,7 @@ void processPacket(char* packet) {
                 char epochTime[20] = "";
                 _snprintf_s(epochTime, sizeof(epochTime), -1, "%lld", currentTimeMillis());
                 sendCmdPacket(gProcessID, epochTime, "IMALIVE:%s", cfg.name);
-                sendCmdPacket("", "", "STATS", ""); // As long as we're letting the server know IMALIVE, might as well request stats.             
+                sendCmdPacket("", "", "STATS", ""); // As long as we're letting the server know IMALIVE, might as well request stats.
             }
             else if (strncmp(body, "STATS:", 6) == 0) {
                 char stats[30] = "";

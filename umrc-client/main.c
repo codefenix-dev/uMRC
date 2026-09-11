@@ -759,8 +759,10 @@ void dispEmuLimited(char* str, BOOL immediate) {
 
 void drawStatusBar() {
     od_set_cursor(od_control.user_screen_length - 2, 1);
+    od_clr_line();
 	dispEmuLimited(gStatusThemeLine1, TRUE);
 	od_set_cursor(od_control.user_screen_length - 1, 1);
+    od_clr_line();
 	dispEmuLimited(gStatusThemeLine2, TRUE);	
 
     // Line #1: Room & topic
@@ -1049,6 +1051,16 @@ void scrollToLatest() {
     freeSplitResult(scrollLines, scrollLineCount);
 }
 
+void print_centered(const char* str, int total_width) {
+    int len = strlen(str);
+    if (len >= total_width) {
+        printf("%s\n", str);
+        return;
+    }
+    int padding = (total_width - len) / 2;
+    od_printf("%*s%s%*s``", padding, "", str, padding-2, "");
+}
+
 /**
  *
  * initialScroll:
@@ -1080,15 +1092,14 @@ void enterScrollBack(int initialScroll, int mode) {
         od_clr_line();
     }
     
-    od_set_cursor(od_control.user_screen_length, 1);
+    od_set_cursor(od_control.user_screen_length, 1); // input line
     od_printf("``");
     od_clr_line();
     scrollToScrollbackSection(scrollLines, scrollPos, scrollLineCount, height);
-    od_set_cursor(od_control.user_screen_length - 2, 1);
-    //dispEmuLimited(gStatusThemeLine1, TRUE);
+    od_set_cursor(od_control.user_screen_length - 2, 1); // status line #1
+    od_printf("`%s %s`", gTopicFg1, gTopicBg1);
     od_clr_line();
-    od_set_cursor(od_control.user_screen_length - 2, 2);
-    od_printf("`%s %s`%12.12s`%s %s`:          `%s %s`\030`%s %s`/`%s %s`\031`%s %s`/`%s %s`PGUP`%s %s`/`%s %s`PGDN`%s %s`/`%s %s`HOME`%s %s`/`%s %s`END`%s %s`   `%s %s`ENTER`%s %s` to return to chat      ",
+    od_printf("` %s %s`%12.12s`%s %s`:          `%s %s`\030`%s %s`/`%s %s`\031`%s %s`/`%s %s`PGUP`%s %s`/`%s %s`PGDN`%s %s`/`%s %s`HOME`%s %s`/`%s %s`END`%s %s`   `%s %s`ENTER`%s %s` to return to chat      ",
         gTopicFg1, gTopicBg1,
         mode == 0 ? "Scrollback" : "Mentions",
         gTopicFg2, gTopicBg2,
@@ -1108,10 +1119,11 @@ void enterScrollBack(int initialScroll, int mode) {
         gTopicFg2, gTopicBg2
     );
 
-    od_set_cursor(od_control.user_screen_length - 1, 2);
+    od_set_cursor(od_control.user_screen_length - 1, 1); // status line #2
+    od_clr_line();
+    od_printf("`flashing %s %s`", gTopicFg1, gTopicBg1);
+    print_centered("* * * CHAT PAUSED * * *", ((int)od_control.user_screenwidth-1));
     od_printf("``");
-    od_printf("`flashing %s %s`%s``", gTopicFg1, gTopicBg1,
-        "                           * * * CHAT PAUSED * * *                           ");
 
     tODInputEvent InputEvent;
 
@@ -2414,7 +2426,7 @@ bool enterChat() {
     strcpy_s(gRoom, sizeof(gRoom), user.defaultRoom);
 
     gScrollBack = malloc(50);
-    strcpy_s(gScrollBack, 50, "|15 * * * TOP OF SCROLLBACK * * * |07\n\n\n\n\n");
+    strcpy_s(gScrollBack, 50, "|15 * * * TOP OF SCROLLBACK * * * |07\n\n\n\n\n\n\n\n\n");
     gMentions = malloc(50);
     strcpy_s(gMentions, 50, "|15 * * * MENTIONS * * * |07\n");
 
