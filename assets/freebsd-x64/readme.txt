@@ -86,8 +86,10 @@ connections from the same BBS.
    For the first 3 prompts, you can simply press enter to accept the
    default values:
 
-    a. The MRC host address defaults to mrc.bottomlessabyss.net. If in
-       the future the MRC host address changes, it can be updated here.
+    a. The MRC host address defaults to na-multi.relaychat.net, or you 
+       can select one of the other federated servers for your region.
+       If in the future the MRC host address changes, it can be entered 
+       here.
 
     b. SSL is recommended for secure connections to the MRC host and
        should be left enabled, but can optionally be disabled if needed.
@@ -141,6 +143,11 @@ connections from the same BBS.
    between the host and your BBS. It must run continuously in order for
    umrc-client to work, so it's recommended to have this program
    launch on system startup.
+   
+   When SSL is enabled, umrc-bridge will validate the MRC host's SSL cert
+   against the host name. If this validation check fails, the connection
+   attempt fails. This validation check can be skipped by specifying -S
+   on the command line.
 
    When umrc-bridge starts up, it should say "Ready for clients" if
    successful.
@@ -452,7 +459,9 @@ handling user input while displaying incoming messages to the output window.
 Secure SSL sockets are implemented using LibreSSL, a variant of OpenSSL. SSL
 is used only from the umrc-bridge to the MRC host, while local umrc-client
 connections to the umrc-bridge are made using standard TCP/IP sockets, using
-the same port number as selected in the Setup program.
+the same port number as selected in the Setup program. The MRC host's SSL 
+cert is validated against the host name URL, but this validation step can be 
+skipped by specifying -S on the command line when starting umrc-bridge.
 
 You should NOT have ports 5000/5001 open on your firewall/router, since
 umrc-client makes OUTBOUND requests to the MRC host on ports 5000/5001.

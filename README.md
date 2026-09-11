@@ -68,8 +68,10 @@ basic instructions.
    For the first 3 prompts, you can simply press enter to accept the
    default values:
 
-    a. The **MRC host** address defaults to **mrc.bottomlessabyss.net**. If in
-       the future the MRC host address changes, it can be updated here.
+    a. The **MRC host** address defaults to **na-multi.relaychat.net**, or you 
+       can select one of the other federated servers for your region.
+       If in the future the MRC host address changes, it can be entered 
+       here.
 
     b. **SSL** is recommended for secure connections to the MRC host and
        should be left enabled, but can optionally be disabled if needed.
@@ -202,9 +204,9 @@ handling user input while displaying incoming messages to the output window.
 Secure SSL sockets are implemented using [LibreSSL](https://www.libressl.org), a variant of OpenSSL. SSL
 is used only from the umrc-bridge to the MRC host, while local umrc-client
 connections to the umrc-bridge are made using standard TCP/IP sockets, using
-the same port number as selected in the Setup program. It's worth noting that
-a much older version of LibreSSL (2.5.5 from 2017) was used for the Windows XP
-build.
+the same port number as selected in the Setup program.  The MRC host's SSL 
+cert is validated against the host name URL, but this validation step can be 
+skipped by specifying -S on the command line when starting umrc-bridge.
 
 You should NOT have ports 5000/5001 open on your firewall/router, since
 umrc-client makes OUTBOUND requests to the MRC host on ports 5000/5001.
