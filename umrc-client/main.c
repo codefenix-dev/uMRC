@@ -679,14 +679,14 @@ void updateBuffer(int typed) {
     od_set_cursor(od_control.user_screen_length - 1, 68);
     od_printf(
         "`%s %s`%03d`%s %s`/`%s %s`%03d``"
-        , typed >= 135 ? "bright red" : (typed >= 120 ? "bright yellow" : gBufferFg1 )
+        , typed >= (MSG_LEN-6) ? "bright red" : (typed >= (MSG_LEN-21) ? "bright yellow" : gBufferFg1)
         , gBufferBg1        
         , typed
         , gBufferFg2
         , gBufferBg2
-        , gBufferFg1
+        , typed < MSG_LEN ? gBufferFg1 : "bright yellow"
         , gBufferBg1        
-        , MSG_LEN - 1);
+        , (typed < MSG_LEN ? MSG_LEN : MSG_LEN_EXT) - 1);
 }
 
 void updateServerStats() {
@@ -1052,13 +1052,13 @@ void scrollToLatest() {
 }
 
 void print_centered(const char* str, int total_width) {
-    int len = strlen(str);
+    int len = (int)strlen(str);
     if (len >= total_width) {
         printf("%s\n", str);
         return;
     }
     int padding = (total_width - len) / 2;
-    od_printf("%*s%s%*s``", padding, "", str, padding-2, "");
+    od_printf("%*s%s%*s``", padding, "", str, padding, "");
 }
 
 /**
@@ -2265,7 +2265,7 @@ void doChatRoutines(char* input, char* previousInput) {
                 if (strlen(input) > 0) {
                     resetInputLine();
                 }
-                strcpy_s(input, MSG_LEN, previousInput);
+                strcpy_s(input, MSG_LEN_EXT, previousInput);
                 if (strlen(input) > 0) {
                     // Scroll the input string display if it's longer than the terminal width
                     if ((int)strlen(input) >= (int)od_control.user_screenwidth - 3) {
@@ -2299,10 +2299,10 @@ void doChatRoutines(char* input, char* previousInput) {
                 break;
             }
             else if (key >= 32 && key <= 125) { // allowed characters
-                if (strlen(input) <= MSG_LEN) {
-                    char tmpipt[MSG_LEN] = "";
-                    _snprintf_s(tmpipt, MSG_LEN, -1, "%s%c", input, key);
-                    strcpy_s(input, MSG_LEN, tmpipt);
+                if (strlen(input) <= MSG_LEN_EXT) {
+                    char tmpipt[MSG_LEN_EXT] = "";
+                    _snprintf_s(tmpipt, MSG_LEN_EXT, -1, "%s%c", input, key);
+                    strcpy_s(input, MSG_LEN_EXT, tmpipt);
                 }
             }
             else if (key == 8) { // backspace
@@ -2312,7 +2312,7 @@ void doChatRoutines(char* input, char* previousInput) {
                 }
             }
             else if (key == 27) { // ESC
-                strcpy_s(input, MSG_LEN, "");
+                strcpy_s(input, MSG_LEN_EXT, "");
                 resetInputLine();
                 masking = false;
                 od_printf(CHAT_CURSOR, CURSOR_COLORS[user.textColor]);
@@ -2339,7 +2339,7 @@ void doChatRoutines(char* input, char* previousInput) {
                     if (_strnicmp(tabSearch, gChattersInRoom[i], strlen(tabSearch)) == 0 && _stricmp(gChattersInRoom[i], user.chatterName) != 0) {
                         strcpy_s(tabResult, sizeof(tabResult), gChattersInRoom[i]);
                         input[strlen(input) - strlen(tabSearch)] = '\0';
-                        strcat_s(input, MSG_LEN, tabResult);
+                        strcat_s(input, MSG_LEN_EXT, tabResult);
                         endOfInput = endOfInput + 1;
                         break;
                     }
@@ -2356,13 +2356,13 @@ void doChatRoutines(char* input, char* previousInput) {
 
         if (updateInput) { // Update the input display...
             int overfill = 0;
-            if ((int)strlen(input) < (int)od_control.user_screenwidth - 3) {
+            if ((int)strlen(input) < ((int)od_control.user_screenwidth) - 3) {
                 endOfInput += ((int)strlen(input)) - ((int)strlen(tabResult));
             }
             else {
                 // determine whether the input string is longer than the terminal width,
                 // so it can be displaying appropriately below
-                overfill = ((int)strlen(input)) - ((int)od_control.user_screenwidth - 4);
+                overfill = ((int)strlen(input)) - (((int)od_control.user_screenwidth) - 4);
                 endOfInput = ((int)od_control.user_screenwidth) - 1 + (key == 8 ? -1 : -2) - (((int)strlen(tabResult)) > 0 ? ((int)strlen(tabResult))-1: 0);
             }
             _snprintf_s(pcol, sizeof(pcol), -1, "|%02d", user.textColor);
@@ -2538,10 +2538,10 @@ bool enterChat() {
     sendCmdPacket(&mrcSock, "NEWROOM::", gRoom);
     od_sleep(20);
 
-    char previousInput[MSG_LEN] = "";
+    char previousInput[MSG_LEN_EXT] = "";
     // Loop to get input from the user, and send it over the Bridge.
     while (gIsInChat) {
-        char input[MSG_LEN] = "";
+        char input[MSG_LEN_EXT] = "";
         updateBuffer(0);
         resetInputLine();
         od_printf(CHAT_CURSOR, CURSOR_COLORS[user.textColor]);
@@ -2569,8 +2569,20 @@ bool enterChat() {
         }
         else {
             char msg[PACKET_LEN] = "";
-            _snprintf_s(msg, PACKET_LEN, -1, "%s |%02d%s", gDisplayChatterName, user.textColor, input);
-            sendMsgPacket(&mrcSock, "", "", gRoom, msg);
+            if (strlen(input) < MSG_LEN) {
+                _snprintf_s(msg, PACKET_LEN, -1, "%s |%02d%s", gDisplayChatterName, user.textColor, input);
+                sendMsgPacket(&mrcSock, "", "", gRoom, msg);
+            }
+            else {
+                char inputPart[MSG_LEN] = "";
+                strncpy_s(inputPart, sizeof(inputPart), input, MSG_LEN-1);
+                _snprintf_s(msg, PACKET_LEN, -1, "%s |%02d%s", gDisplayChatterName, user.textColor, inputPart);
+                sendMsgPacket(&mrcSock, "", "", gRoom, msg);
+                Sleep(500);
+                strncpy_s(inputPart, sizeof(inputPart), input + MSG_LEN-1, MSG_LEN-1);
+                _snprintf_s(msg, PACKET_LEN, -1, "%s |%02d%s", gDisplayChatterName, user.textColor, inputPart);
+                sendMsgPacket(&mrcSock, "", "", gRoom, msg);
+            }
         }
     }
     displayMessage("Exiting...", false);

@@ -6,6 +6,10 @@ v106 - TBA:
     builds now run as as a standard Windows console application, doing away 
     with the old local OpenDoors GUI. A new ODoors63.dll library file will 
     be included with Windows x86 and x64 releases.  
+  - "Extended" maximum input of 280 characters implemented, up to two 140-
+    character messages. In other words, if the user types more than 140 
+    characters, the message is split into two separate messages and sent 
+	500ms apart.
   - uMRC now builds for FreeBSD.
   - Improved message routing from umrc-bridge to local umrc-client instances.
   - Added F3 hotkey to recall previous input.

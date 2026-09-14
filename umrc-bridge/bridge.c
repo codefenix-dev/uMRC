@@ -159,27 +159,6 @@ int calculate_sha256_of_file(const char* filepath, char* output_hex_buf, size_t 
     return 0;
 }
 
-#if defined(WIN32) || defined(_MSC_VER)
-#include <wincrypt.h>
-void load_windows_system_certs(SSL_CTX* ssl_ctx) {
-    HCERTSTORE hStore = CertOpenSystemStoreA((HCRYPTPROV)NULL, "ROOT");
-    if (!hStore) return;
-
-    X509_STORE* ossl_store = SSL_CTX_get_cert_store(ssl_ctx);
-    PCCERT_CONTEXT pContext = NULL;
-
-    while ((pContext = CertEnumCertificatesInStore(hStore, pContext)) != NULL) {
-        const unsigned char* cert_bytes = pContext->pbCertEncoded;
-        X509* x509 = d2i_X509(NULL, &cert_bytes, pContext->cbCertEncoded);
-        if (x509) {
-            X509_STORE_add_cert(ossl_store, x509);
-            X509_free(x509);
-        }
-    }
-    CertCloseStore(hStore, 0);
-}
-#endif
-
 int64_t currentTimeMillis() {
 #if defined(WIN32) || defined(_MSC_VER)  
     FILETIME ft;
@@ -621,25 +600,43 @@ void* waitProcess(void* lpArg) {
         // Accept a client socket, and run it in its own thread
         SOCKET newSock = INVALID_SOCKET;
         newSock = accept(listenSock, NULL, NULL);
-        if ((newSock != INVALID_SOCKET) && newSock != SOCKET_ERROR) {            
-            // Add the client in the first available empty slot.
+        if ((newSock != INVALID_SOCKET) && newSock != SOCKET_ERROR) {
+            bool placed = false;
             for (int i = 0; i < MAX_CLIENTS; i++) {
                 if (clients[i].sock == INVALID_SOCKET) {
                     clients[i].sock = newSock;
-                    struct pClientProc *pC;
-#if defined(WIN32) || defined(_MSC_VER)    
+                    struct pClientProc* pC;
+#if defined(WIN32) || defined(_MSC_VER)
                     pC = (struct pClientProc*)malloc(sizeof(struct pClientProc));
-                    pC->pClientSlot = i; // TODO: "Dereferencing NULL pointer" warning
-                    pC->pSock = newSock;
-                    hClient[i] = CreateThread(NULL, 0, clientProcess, pC, 0, &clientThreadId[i]);
 #else
-                    pC = malloc(sizeof *pC);
+                    pC = malloc(sizeof * pC);
+#endif
+                    if (pC == NULL) {
+                        // allocation failed -- release the slot we just claimed
+                        // and treat this exactly like "no slot available"
+                        clients[i].sock = INVALID_SOCKET;
+                        break;
+                    }
                     pC->pClientSlot = i;
                     pC->pSock = newSock;
+#if defined(WIN32) || defined(_MSC_VER)
+                    hClient[i] = CreateThread(NULL, 0, clientProcess, pC, 0, &clientThreadId[i]);
+#else
                     pthread_create(&hClient[i], NULL, clientProcess, (void*)pC);
-#endif   
+#endif
+                    placed = true;
                     break;
                 }
+            }
+            if (!placed) {
+#if defined(WIN32) || defined(_MSC_VER)
+                closesocket(newSock);
+#else
+                close(newSock);
+#endif
+                printDateTimeStamp();
+                puts("Client rejected: MAX_CLIENTS limit reached.");
+                writeToLog("Client rejected: MAX_CLIENTS limit reached.", PROGRAM, "");
             }
         }
     }
@@ -649,6 +646,31 @@ void* waitProcess(void* lpArg) {
 	return (void*)0;
 #endif   
 }
+
+#if defined(WIN32) || defined(_MSC_VER)
+#include <wincrypt.h>
+void load_windows_system_certs(SSL_CTX* ssl_ctx) {
+    HCERTSTORE hStore = CertOpenSystemStoreA((HCRYPTPROV)NULL, "ROOT");
+    if (!hStore) {
+        printDateTimeStamp();
+        puts("Warning: CertOpenSystemStoreA failed.");
+        return;
+    }
+
+    X509_STORE* ossl_store = SSL_CTX_get_cert_store(ssl_ctx);
+    PCCERT_CONTEXT pContext = NULL;
+
+    while ((pContext = CertEnumCertificatesInStore(hStore, pContext)) != NULL) {
+        const unsigned char* cert_bytes = pContext->pbCertEncoded;
+        X509* x509 = d2i_X509(NULL, &cert_bytes, pContext->cbCertEncoded);
+        if (x509) {
+            X509_STORE_add_cert(ossl_store, x509);
+            X509_free(x509);
+        }
+    }
+    CertCloseStore(hStore, 0);
+}
+#endif
 
 SSL* performSslHandshake(SOCKET* sock) {
     ctx = SSL_CTX_new(TLS_client_method());
