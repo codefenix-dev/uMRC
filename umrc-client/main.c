@@ -2344,13 +2344,12 @@ void doChatRoutines(char* input, char* previousInput) {
                 resetInputLine();
                 masking = false;
                 od_printf(CHAT_CURSOR, CURSOR_COLORS[user.textColor]);
-                break;
+                continue;
             }
             else if (key == 9) {   // TAB - chatter name completion
                 if (strlen(input) == 0) {
                     continue; // do nothing if there's no input
                 }
-
                 int indexOfTabSearch = -1;
                 char tabSearch[140] = "";
                 // capture the typed portion after the last space or the beginning of the string,
@@ -2361,7 +2360,6 @@ void doChatRoutines(char* input, char* previousInput) {
                     }
                 }
                 strcpy_s(tabSearch, sizeof(tabSearch), input + indexOfTabSearch);
-
 				EnterCriticalSection(&gChattersLock);
                 for (int i = 0; i < gChatterCount; i++) {
                     if (_strnicmp(tabSearch, gChattersInRoom[i], strlen(tabSearch)) == 0 && _stricmp(gChattersInRoom[i], user.chatterName) != 0) {
