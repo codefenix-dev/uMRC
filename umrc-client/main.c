@@ -679,12 +679,12 @@ void updateBuffer(int typed) {
     od_set_cursor(od_control.user_screen_length - 1, 68);
     od_printf(
         "`%s %s`%03d`%s %s`/`%s %s`%03d``"
-        , typed >= (MSG_LEN-6) ? "bright red" : (typed >= (MSG_LEN-21) ? "bright yellow" : gBufferFg1)
+        , typed > MSG_LEN ? "bright yellow" : (typed >= (MSG_LEN - 6) ? "bright red" : (typed >= (MSG_LEN - 21) ? "bright yellow" : gBufferFg1))
         , gBufferBg1        
         , typed
         , gBufferFg2
         , gBufferBg2
-        , typed < MSG_LEN ? gBufferFg1 : "bright yellow"
+        , typed < MSG_LEN ? gBufferFg1 : "bright red"
         , gBufferBg1        
         , (typed < MSG_LEN ? MSG_LEN : MSG_LEN_EXT) - 1);
 }
