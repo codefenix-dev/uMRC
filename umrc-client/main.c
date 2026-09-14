@@ -2298,6 +2298,34 @@ void doChatRoutines(char* input, char* previousInput) {
                 masking = false;
                 break;
             }
+            else if (key == 18) { // CTRL+R ... do the same thing as F3 above
+                int overfill = 0;
+                if (strlen(previousInput) <= 0) {
+                    break;
+                }
+                if (strlen(input) > 0) {
+                    resetInputLine();
+                }
+                strcpy_s(input, MSG_LEN_EXT, previousInput);
+                if (strlen(input) > 0) {
+                    // Scroll the input string display if it's longer than the terminal width
+                    if ((int)strlen(input) >= (int)od_control.user_screenwidth - 3) {
+                        overfill = ((int)strlen(input)) - ((int)od_control.user_screenwidth - 4);
+                    }
+                    od_set_cursor(od_control.user_screen_length, 1);
+                    _snprintf_s(pcol, sizeof(pcol), -1, "|%02d", user.textColor);
+                    dispEmuPipe(pcol, TRUE);
+                    if (overfill > 0) {
+                        od_disp_str(input + overfill - 1);
+                    }
+                    else {
+                        od_disp_str(input);
+                    }
+                    od_printf(CHAT_CURSOR, CURSOR_COLORS[user.textColor]);
+                    updateBuffer((int)strlen(input));
+                }
+                continue;
+            }
             else if (key >= 32 && key <= 125) { // allowed characters
                 if (strlen(input) <= MSG_LEN_EXT) {
                     char tmpipt[MSG_LEN_EXT] = "";
@@ -2426,9 +2454,9 @@ bool enterChat() {
     strcpy_s(gRoom, sizeof(gRoom), user.defaultRoom);
 
     gScrollBack = malloc(50);
-    strcpy_s(gScrollBack, 50, "|15 * * * TOP OF SCROLLBACK * * * |07\n\n\n\n\n\n\n\n\n");
+    strcpy_s(gScrollBack, 50, "|15 * * * TOP OF SCROLLBACK * * *|07");
     gMentions = malloc(50);
-    strcpy_s(gMentions, 50, "|15 * * * MENTIONS * * * |07\n");
+    strcpy_s(gMentions, 50, "|15 * * * MENTIONS * * *|07\n");
 
     int iResult;
     struct addrinfo* mhResult = NULL, * ptrMh = NULL, mrcHost;
@@ -2509,6 +2537,10 @@ bool enterChat() {
 #endif
     time(&gLastActTm);
 
+    for (int i = 0; i < ((int)od_control.user_screen_length) - 3; i++) {
+        addToScrollBack(" ", 0); // add a screen's worth of lines to the top
+    }
+
     // Send some initial packets to the server...
     //
     sendCmdPacket(&mrcSock, "motd", "");
@@ -2578,7 +2610,7 @@ bool enterChat() {
                 strncpy_s(inputPart, sizeof(inputPart), input, MSG_LEN-1);
                 _snprintf_s(msg, PACKET_LEN, -1, "%s |%02d%s", gDisplayChatterName, user.textColor, inputPart);
                 sendMsgPacket(&mrcSock, "", "", gRoom, msg);
-                Sleep(500);
+                od_sleep(750);
                 strncpy_s(inputPart, sizeof(inputPart), input + MSG_LEN-1, MSG_LEN-1);
                 _snprintf_s(msg, PACKET_LEN, -1, "%s |%02d%s", gDisplayChatterName, user.textColor, inputPart);
                 sendMsgPacket(&mrcSock, "", "", gRoom, msg);
