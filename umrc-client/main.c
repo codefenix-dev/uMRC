@@ -982,6 +982,61 @@ bool sendMsgPacket(SOCKET* sock, char* toUser, char* msgExt, char* toRoom, char*
     return (iResult != SOCKET_ERROR);
 }
 
+/**
+ * Sends a chat message, splitting it across as many packets as needed so
+ * no single packet's body exceeds the protocol's MessageBody limit
+ * (MSG_LEN-1 characters). prefix (decorative pipe codes / "* (DirectMsg)"
+ * framing, etc.) is re-prepended to every chunk, not just the first.
+ * Chunks break on a space where possible, so a word is never split across
+ * two packets -- only a single word too long to fit in one packet at all
+ * gets hard-cut, the same fallback the screen word-wrap uses.
+ */
+void sendChatMessage(char* toUser, char* msgExt, char* toRoom, const char* prefix, char* bodyText) {
+    size_t prefixLen = strlen(prefix);
+    size_t maxBodyPerChunk = (prefixLen < MSG_LEN - 1) ? (MSG_LEN - 1 - prefixLen) : 0;
+    if (maxBodyPerChunk == 0) {
+        return; // prefix alone already fills a packet -- nothing sane to send
+    }
+
+    size_t total = strlen(bodyText);
+    size_t offset = 0;
+    do {
+        size_t remaining = total - offset;
+        size_t take = (remaining < maxBodyPerChunk) ? remaining : maxBodyPerChunk;
+
+        if (take == remaining) {
+            // Last chunk -- everything left fits, nothing to search for.
+        }
+        else {
+            // Look for the last space within the window so we break between
+            // words rather than mid-word. Scan backward from the end of the
+            // window we'd otherwise hard-cut at.
+            size_t breakAt = take;
+            while (breakAt > 0 && bodyText[offset + breakAt - 1] != ' ') {
+                breakAt--;
+            }
+            if (breakAt > 0) {
+                take = breakAt - 1; // exclude the space itself from this chunk
+            }
+            // else: no space anywhere in the window -- a single word longer
+            // than a whole packet's worth of body. Fall through and hard-cut
+            // at maxBodyPerChunk; there's no boundary to break on.
+        }
+
+        char bodyPart[MSG_LEN] = "";
+        char chunk[MSG_LEN] = "";
+        strncpy_s(bodyPart, sizeof(bodyPart), bodyText + offset, take);
+        _snprintf_s(chunk, sizeof(chunk), -1, "%s%s", prefix, bodyPart);
+        sendMsgPacket(&mrcSock, toUser, msgExt, toRoom, chunk);
+
+        offset += take;
+        while (offset < total && bodyText[offset] == ' ') {
+            offset++; // skip the space(s) we broke on, so the next chunk doesn't start with one
+        }
+        if (offset < total) od_sleep(750);
+    } while (offset < total);
+}
+
 void resetInputLine() {
     updateBuffer(0);
     od_set_cursor(od_control.user_screen_length, 1);
@@ -1543,6 +1598,7 @@ void displayFile(char* filename, bool autopause) {
 }
 
 void processUserCommand(char* cmd, char* params) {
+    char prefix[80] = "";
     if (_stricmp(cmd, "quit") == 0 || _stricmp(cmd, "q") == 0) {
         sendMsgPacket(&mrcSock, "NOTME", "", "", user.exitMessage);
         sendMsgPacket(&mrcSock, "SERVER", "", "", "LOGOFF");
@@ -1577,9 +1633,8 @@ void processUserCommand(char* cmd, char* params) {
         sendCmdPacket(&mrcSock, "list", "");
     }
     else if (_stricmp(cmd, "me") == 0) {
-        char action[MSG_LEN] = "";
-        _snprintf_s(action, MSG_LEN, -1, "|15* |13%s %s", user.chatterName, params);
-        sendMsgPacket(&mrcSock, "", "", gRoom, action);
+        _snprintf_s(prefix, sizeof(prefix), -1, "|15* |13%s ", user.chatterName);
+        sendChatMessage("", "", gRoom, prefix, params);
     }
     else if (_stricmp(cmd, "t") == 0 || _stricmp(cmd, "msg") == 0) {
         char to[36] = "";
@@ -1587,23 +1642,22 @@ void processUserCommand(char* cmd, char* params) {
         int nextspcidx = indexOfChar(params, ' ') + 1;
         if (nextspcidx > 0) {
             strncpy_s(to, sizeof(to), params, nextspcidx - 1);
-            _snprintf_s(msg, PACKET_LEN, -1, "|15* |08(|15%s|08/|14DirectMsg|08) |07%s", user.chatterName, params + nextspcidx);
-            sendMsgPacket(&mrcSock, to, "", "", msg);
+            _snprintf_s(prefix, sizeof(prefix), -1, "|15* |08(|15%s|08/|14DirectMsg|08) |07", user.chatterName);
+            sendChatMessage(to, "", "", prefix, params + nextspcidx);
             _snprintf_s(msg, PACKET_LEN, -1, "|15* |08(|14DirectMsg|08->|15%s|08) |07%s", to, params + nextspcidx);
             displayMessage(msg, false);
         }
     }
     else if (_stricmp(cmd, "r") == 0) {
         char rep[PACKET_LEN] = "";
-        _snprintf_s(rep, PACKET_LEN, -1, "|15* |08(|15%s|08/|14DirectMsg|08) |07%s", user.chatterName, params);
-        sendMsgPacket(&mrcSock, gLastDirectMsgFrom, "", "", rep);
+        _snprintf_s(prefix, sizeof(prefix), -1, "|15* |08(|15%s|08/|14DirectMsg|08) |07", user.chatterName);
+        sendChatMessage(gLastDirectMsgFrom, "", "", prefix, params);
         _snprintf_s(rep, PACKET_LEN, -1, "|15* |08(|14DirectMsg|08->|15%s|08) |07%s", gLastDirectMsgFrom, params);
         displayMessage(rep, false);
     }
     else if (_stricmp(cmd, "b") == 0) {
-        char bcast[PACKET_LEN] = "";
-        _snprintf_s(bcast, PACKET_LEN, -1, "|15* |08(|15%s|08/|14Broadcast|08) |07%s", user.chatterName, params);
-        sendMsgPacket(&mrcSock, "", "", "", bcast);
+        _snprintf_s(prefix, sizeof(prefix), -1, "|15* |08(|15%s|08/|14Broadcast|08) |07", user.chatterName);
+        sendChatMessage("", "", "", prefix, params);
     }
     else if (_stricmp(cmd, "sound") == 0) {
         user.chatSounds = !user.chatSounds;
@@ -2585,7 +2639,7 @@ bool enterChat() {
 
         if (input[0] == '/') {
             char cmd[15] = "";
-            char params[130] = "";
+            char params[MSG_LEN_EXT] = "";
             int spcidx = indexOfChar(input, ' ');
 
             if (spcidx > 0) {
@@ -2598,21 +2652,9 @@ bool enterChat() {
             processUserCommand(cmd, params);
         }
         else {
-            char msg[PACKET_LEN] = "";
-            if (strlen(input) < MSG_LEN) {
-                _snprintf_s(msg, PACKET_LEN, -1, "%s |%02d%s", gDisplayChatterName, user.textColor, input);
-                sendMsgPacket(&mrcSock, "", "", gRoom, msg);
-            }
-            else {
-                char inputPart[MSG_LEN] = "";
-                strncpy_s(inputPart, sizeof(inputPart), input, MSG_LEN-1);
-                _snprintf_s(msg, PACKET_LEN, -1, "%s |%02d%s", gDisplayChatterName, user.textColor, inputPart);
-                sendMsgPacket(&mrcSock, "", "", gRoom, msg);
-                od_sleep(750);
-                strncpy_s(inputPart, sizeof(inputPart), input + MSG_LEN-1, MSG_LEN-1);
-                _snprintf_s(msg, PACKET_LEN, -1, "%s |%02d%s", gDisplayChatterName, user.textColor, inputPart);
-                sendMsgPacket(&mrcSock, "", "", gRoom, msg);
-            }
+            char prefix[80] = "";
+            _snprintf_s(prefix, sizeof(prefix), -1, "%s |%02d", gDisplayChatterName, user.textColor);
+            sendChatMessage("", "", gRoom, prefix, input);
         }
     }
     displayMessage("Exiting...", false);

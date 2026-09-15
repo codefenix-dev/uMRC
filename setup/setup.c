@@ -174,7 +174,7 @@ void enterInfo(struct settings info, bool enter_new) {
 	clearScreen(); 
 
 	//strcpy_s(info.host, sizeof(info.host), textPrompt("|07Enter the |15MRC host address|08:|07", 70, 0, enter_new ? DEFAULT_HOST : info.host, false));
-	strcpy_s(info.host, sizeof(info.host), listPrompt("|07Select the |15MRC host address|08:|07", MRC_HOSTS, MRC_HOST_COUNT, "|07Enter the |15MRC host address|08:|07", 70 , enter_new ? "" : info.host));
+	strcpy_s(info.host, sizeof(info.host), listPrompt("|07Select the |15MRC host address|08:|07", MRC_HOSTS, MRC_HOST_COUNT, "|07Enter the |15MRC host address|08:|07", 70 , enter_new ? (char*)MRC_HOSTS[0] : info.host));
 	lstr(info.host);
 	puts("");
 	info.ssl = charPrompt("|07Use |15SSL|08 (|15Y|07/|15N|08)|07:", "YN", (enter_new ? 'Y' : (info.ssl ? 'Y' : 'N'))) == 'Y';

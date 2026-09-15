@@ -65,6 +65,9 @@ cp umrc-client ../bin
 cd ..
 
 echo "Copying assets..."
+cp changelog.txt ./bin/
+cp LICENSE ./bin/
+cp README.md ./bin/
 cp -r ./assets/$assetpath/* ./bin/
 cp -r ./assets/screens/* ./bin/screens/
 cp -r ./assets/themes/* ./bin/themes/

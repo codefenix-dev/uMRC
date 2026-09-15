@@ -25,7 +25,7 @@ Pre-compiled binaries are also available for Linux and macOS, or may be compiled
 - Built-in chat and mention history scrollback
 - [Pipe code color](https://wiki.mysticbbs.com/doku.php?id=displaycodes#color_codes_pipe_colors) support
 - [CTCP command](https://en.wikipedia.org/wiki/Client-to-client_protocol) support
-- Sysop-editable ANSI status bar themes
+- Editable themes
 - Twit filter
 - Support for termsizes beyond 80x25 (dropfile dependent)
 

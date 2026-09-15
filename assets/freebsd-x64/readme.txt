@@ -45,7 +45,7 @@ Features:
 - Built-in chat and mention history scrollback
 - Pipe code color support
 - CTCP command support
-- Sysop-editable 2-line ANSI status bar themes
+- Editable themes
 - Twit filter
 - Support for termsizes beyond 80x25 (dropfile dependent)
 
