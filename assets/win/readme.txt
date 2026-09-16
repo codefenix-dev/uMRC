@@ -55,7 +55,6 @@ Files Included:
 
 - setup.exe:         Setup utility
 - umrc-bridge.exe:   MRC host connection program (multiplexer)
-- keepup-bridge.bat: Batch file to help keep umrc-bridge alive
 - umrc-client.exe:   MRC Client door
 - ODoors63.dll:      OpenDoors door kit library
 - ssl-60.dll:        LibreSSL (OpenSSL) SSL library

@@ -1926,7 +1926,7 @@ void processCtcpCommand(char* body, char* toUser, char* fromUser) {
         char repStr[80] = "";
         strcpy_s(cmdStr, sizeof(cmdStr), cmdStart);
         if (_strnicmp(cmdStr, "VERSION", 7) == 0) {
-            _snprintf_s(repStr, sizeof(repStr), -1, "VERSION %s(%c) v%s.%s %s [%s]", TITLE, tolower(PLATFORM[0]), PROTOCOL_VERSION, UMRC_VERSION, COMPILE_DATE, AUTHOR_INITIALS);
+            _snprintf_s(repStr, sizeof(repStr), -1, "VERSION %s(%c) v%s.%s %s [%s]", TITLE, tolower(PLATFORM[0]), PROTOCOL_VERSION, UMRC_VERSION, LAST_CODE_CHANGE, AUTHOR_INITIALS);
         }
         else if (_strnicmp(cmdStr, "TIME", 4) == 0) {
             _snprintf_s(repStr, sizeof(repStr), -1, "TIME %s ", getCtcpDatetime());
@@ -2972,11 +2972,11 @@ int main(int argc, char** argv)
             od_printf("\r\n`` user_screen_length:   `bright white`%d``", od_control.user_screen_length);
             od_printf("\r\n`` user_screenwidth:     `bright white`%d``", od_control.user_screenwidth);
             od_printf("\r\n`` sysop_name:           `bright white`%s``", od_control.sysop_name);
-            od_printf("\r\n`` sysop_name (cleansed):`bright white`%s``", od_control.sysop_name);
+            od_printf("\r\n`` sysop_name (cfg.sys): `bright white`%s``", cfg.sys);
             od_printf("\r\n`` system_name:          `bright white`%s``", od_control.system_name);
-            od_printf("\r\n`` od_maxtime:           `bright white`%d``", od_control.od_maxtime);
-            od_printf("\r\n`` od_inactivity:        `bright white`%d``", od_control.od_inactivity);
             od_printf("\r\n`` od_force_local:       `bright white`%d``", od_control.od_force_local);
+            od_printf("\r\n`` last code change:     `bright white`%s``", LAST_CODE_CHANGE);
+            od_printf("\r\n`` compiled date/time:   `bright white`%s %s``", __DATE__, __TIME__);
             od_printf("\r\n");
             printDivider();
             od_printf("This screen is for testing and troubleshooting purposes.\r\n");

@@ -20,8 +20,9 @@
 #define DEFAULT_PORT "5000"
 #define DEFAULT_SSL_PORT "5001"
 #define NOT_LISTED "Something Else..."
-#define BBS_TYPE_COUNT 12
+#define BBS_TYPE_COUNT 13
 const char* BBS_TYPES[BBS_TYPE_COUNT] = {
+	"ANetBBS",
 	"EleBBS",
 	"Major BBS",
 	"MBSE",
@@ -231,7 +232,7 @@ int main()
 		clearScreen();
 		
 		char dispStr[140] = "";
-		_snprintf_s(dispStr, sizeof(dispStr), -1, "|13 uMRC %s for %s Setup|07\r\n", UMRC_VERSION, PLATFORM);
+		_snprintf_s(dispStr, sizeof(dispStr), -1, "|13 uMRC %s for %s Setup|07 - |08Compiled: %s %s|07\r\n", UMRC_VERSION, PLATFORM, __DATE__, __TIME__);
 		printPipeCodeString(dispStr);
 		printPipeCodeString("|01 ==========================================================================|07\r\n");
 		puts("");
