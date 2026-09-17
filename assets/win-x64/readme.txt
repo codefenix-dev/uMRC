@@ -9,7 +9,7 @@
 ▄▀  ██▄▀██ ▀ ▄█▀   Multi-Relay Chat
 ▀ ▐█▄▀██ ▀ ▄█▀       Client Door
 ▐█▄▀██▄▀ ▄█▀ .│┌────────────────────┐
- ▀███▀ ▄█▀ .││|│ ■ Linux x86_64     │
+ ▀███▀ ▄█▀ .││|│ ■ Windows 64-bit   │
 █▄ ▀ ▄█▀ .││|│││ ■ DOOR32.SYS       │
  ▀█▄█▀ .││|│││││ ■ SSL capable      │
  └ ▀ ──┴─┴─┴─┴─┴────────────────────
@@ -29,8 +29,11 @@ other words, as long as your BBS is capable of running DOOR32.SYS doors, then
 you and your users can participate in MRC.
 
 It should be compatible with any DOOR32.SYS capable BBS such as EleBBS, WWIV,
-Synchronet, Mystic, and possibly others. Linux builds have been tested on
-several distros, including Ubuntu, Fedora, openSUSE and others.
+Synchronet, Mystic, and possibly others. It runs on Windows 7 and later.
+
+If you use NetFoss to start up your DOS-based BBS, then the NFU utility
+bundled with NetFoss should run the uMRC Client. As of this writing, Renegade
+and Oblivion/2 have been confirmed.
 
 
 Features:
@@ -51,16 +54,23 @@ Features:
 
 Files Included:
 
-- setup:            Setup utility
-- umrc-bridge:      MRC host connection program (multiplexer)
-- umrc-client:      MRC Client door
-  [screens]:        Subdirectory containing ANSI & text files
-  - intro.ans:      Intro/main menu & status screen
-  - help.txt:       Help file showing basic chat commands
-  - helpctcp.txt:   Help file on CTCP command usage
-  - helptwit.txt:   Help file on twit filter management
-  [themes]:         Subdirectory containing ANSI files
-  - *.ans:          ANSI theme files
+- setup.exe:         Setup utility
+- umrc-bridge.exe:   MRC host connection program (multiplexer)
+- umrc-client.exe:   MRC Client door
+- ODoors63.dll:      OpenDoors door kit library (64-bit version *)
+- ssl-60.dll:        LibreSSL (OpenSSL) SSL library
+- crypto-57.dll:     LibreSSL (OpenSSL) Cryptographic library
+  [screens]:         Subdirectory containing ANSI & text files
+  - intro.ans:       Intro/main menu & status screen
+  - help.txt:        Help file showing basic chat commands
+  - helpctcp.txt:    Help file on CTCP command usage
+  - helptwit.txt:    Help file on twit filter management
+  [themes]:          Subdirectory containing ANSI files
+  - *.ans:           ANSI theme files
+  
+* Note the ODoors63.dll libray included in this build is 64-bit.
+  It is NOT interchangeable with any other ODoors*.dll file 
+  included with other doors.
 
 
 Install Instructions:
@@ -72,15 +82,10 @@ connections from the same BBS.
 1. Extract all files to their own directory, keeping the structure
    the same as shown above in the list of files included.
 
-   Example:  /doors/umrc
-
-   If the pre-built binaries don't run on your system for some reason,
-   try compiling from source using the latest code from the GitHub
-   project page. Instructions are provided in the build.txt file at:
-   https://github.com/codefenix-dev/uMRC
+   Example:  c:\doors\umrc
 
 
-2. Run setup, and press 1 to begin.
+2. Run setup.exe, and press 1 to begin.
 
    For the first 3 prompts, you can simply press enter to accept the
    default values:
@@ -89,7 +94,7 @@ connections from the same BBS.
        can select one of the other federated servers for your region.
        If in the future the MRC host address changes, it can be entered 
        here.
-	   
+
     b. SSL is recommended for secure connections to the MRC host and
        should be left enabled, but can optionally be disabled if needed.
 
@@ -137,10 +142,10 @@ connections from the same BBS.
    with the option to re-enter everything, or quit. Your settings will
    be saved to a file called mrc.cfg.
 
-3. Run umrc-bridge. This program is responsible for maintaining a
+3. Run umrc-bridge.exe. This program is responsible for maintaining a
    connection to the MRC host and passing chat traffic back and forth
    between the host and your BBS. It must run continuously in order for
-   umrc-client to work, so it's recommended to have this program
+   umrc-client.exe to work, so it's recommended to have this program
    launch on system startup.
    
    When SSL is enabled, umrc-bridge will validate the MRC host's SSL cert
@@ -171,14 +176,7 @@ connections from the same BBS.
 
    The basic DOOR32.SYS command line syntax is:
 
-     ./umrc-client -D /path/to/DOOR32.SYS
-
-   It has been observed that using the DOOR32.SYS drop file type with this
-   door can lead to user-input issues on Mystic under Linux. If DOOR32.SYS
-   does not work properly with your BBS type, then use DOOR.SYS instead.
-
-   Also refer to your BBS software documentation on whether the ./ prefix
-   needs to be included.
+     umrc-client -D c:\path\to\DOOR32.SYS
 
    If you get an error saying, "Invalid config. Run setup", it means you either
    did not run Setup, or you're not launching umrc-client from its own
@@ -186,10 +184,11 @@ connections from the same BBS.
    file or bash script to launch the door. Something like the below ought
    to do the trick:
 
-     #bash
-     # call this file "launch.sh" and pass the node number (%N) to it
-     cd /path_to/umrc
-     ./umrc-client -D /path_to/temp$1/door.sys
+
+     :: call this file "launch.bat" and pass the node number (%N) to it
+     C:
+     cd \path_to\umrc
+     umrc-client -D c:\path_to\node%1\door32.sys
 
 
    umrc-client takes an OPTIONAL -IP parameter, so that sysops may include the
@@ -201,19 +200,26 @@ connections from the same BBS.
 
 	   On Synchronet, %i specifies the user's IP:
 
-		 ./umrc-client -D /path_to/DOOR32.SYS -IP%i
+		 umrc-client -D c:\path\to\DOOR32.SYS -IP%i
 
 	   On Mystic, %4 specifies the user's IP:
 
-		 ./umrc-client -D /path_to/DOOR32.SYS -IP%4
+		 umrc-client -D c:\path\to\DOOR32.SYS -IP%4
 
-   The -IP should only be used if the BBS is capable of knowing a user's IP
-   and passing it to the door. Check your BBS documentation.
+   The -IP can only be used if the BBS is capable of knowing a user's IP
+   and passing it to a door. Check your BBS documentation.
 
+   Optionally include the -SILENT option to prevent the local Windows Console
+   from showing while the door is running. This is highly recommended,
+   since umrc-client takes a noticeable performance hit when outputting to
+   both the BBS and the local Window, especially while paging through the chat
+   scrollback.
+
+     umrc-client -D c:\path\to\DOOR32.SYS -SILENT
 
    To run the client locally from the command line, use the -L option:
 
-     ./umrc-client -L
+     umrc-client -L
 
    NOTE: It will only run as user number 1 (Sysop) in local mode.
 
@@ -225,7 +231,7 @@ connections from the same BBS.
    to pass the socket handle using the `-SOCKET` parameter. Check your BBS
    documentation for usage.
 
-   ./umrc-client -D /path_to/CHAIN.TXT -SOCKET <socket_handle>
+   umrc-client -D c:\path\to\CHAIN.TXT -SILENT -SOCKET <socket_handle>
    
    The standard termsize of 80x23 gets used if no row and/or column size 
    information is given in the drop file, as well as in local mode.
@@ -283,6 +289,7 @@ Theme:
    are used as the first and second line of the status bar.
    
    See the section About Themes for more information.
+   
 
 The user presses the Q key to save their options and quit to the
 main menu.
@@ -326,7 +333,7 @@ for others to read.
 Basic room stats are shown near the bottom of the screen above the user's
 text input, showing the current room, topic, user count, number of times
 the user was mentioned, latency, and input buffer (max input: 140, with 
-extended input up to 280 characters split in multiple messages). These stats 
+extended input up to 280 characters split in multiple messages). These stats
 update continuously throughout chat.
 
 The door should let the user remain in chat up to the number of minutes
@@ -398,7 +405,6 @@ colors:
 	brown               	bright yellow  
 	grey                	bright white 
 
-
 The following are recognized as valid background color strings:
 
 	black  
@@ -447,9 +453,8 @@ future changes to the MRC protocol, but that's about it.
 
 Technical Notes:
 
-uMRC is written in C, and was developed and compiled on Windows using
-Microsoft Visual Studio Community 2022. The Linux binaries were compiled on
-Ubuntu 22.04 using gcc.
+uMRC is written in C, and was developed and compiled using Microsoft Visual
+Studio Community 2022.
 
 uMRC makes extensive use of threading, both in umrc-bridge and umrc-client.
 Separate threads are used for establishing connections to the MRC host,

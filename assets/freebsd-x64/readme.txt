@@ -47,6 +47,7 @@ Features:
 - CTCP command support
 - Editable themes
 - Twit filter
+- Extended chat input beyond standard 140 characters
 - Support for termsizes beyond 80x25 (dropfile dependent)
 
 
@@ -226,7 +227,7 @@ connections from the same BBS.
    to pass the socket handle using the `-SOCKET` parameter. Check your BBS
    documentation for usage.
 
-   umrc-client -D c:\path\to\CHAIN.TXT -SOCKET <socket_handle>
+   ./umrc-client -D /path_to/CHAIN.TXT -SOCKET <socket_handle>
    
    The standard termsize of 80x23 gets used if no row and/or column size 
    information is given in the drop file, as well as in local mode.
@@ -326,8 +327,9 @@ for others to read.
 
 Basic room stats are shown near the bottom of the screen above the user's
 text input, showing the current room, topic, user count, number of times
-the user was mentioned, latency, and input buffer (max input: 140). These
-stats update continuously throughout chat.
+the user was mentioned, latency, and input buffer (max input: 140, with 
+extended input up to 280 characters split in multiple messages). These stats 
+update continuously throughout chat.
 
 The door should let the user remain in chat up to the number of minutes
 allowed by the BBS, and should not have an issue with any time spent
@@ -435,7 +437,7 @@ Known Issues & Limitations:
 At the time of this writing, when using the !ddial command, the MRC
 host returns extraneous packets missing the BODY field. uMRC treats
 these as invalid, since they contain fewer than 6 tildes (~). The
-Syncrhonet mrc-connector service logs similar warnings for !ddial.
+Synchronet mrc-connector service logs similar warnings for !ddial.
 
 
 Future Plans:
@@ -464,7 +466,7 @@ cert is validated against the host name URL, but this validation step can be
 skipped by specifying -S on the command line when starting umrc-bridge.
 
 You should NOT have ports 5000/5001 open on your firewall/router, since
-umrc-client makes OUTBOUND requests to the MRC host on ports 5000/5001.
+umrc-bridge makes OUTBOUND requests to the MRC host on ports 5000/5001.
 If you leave these ports open on your end, then you may occasionally see
 umrc-bridge log odd messages, caused by outside HTTP requests to your system.
 
