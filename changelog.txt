@@ -1,18 +1,18 @@
 Change Log:
 
-v106 - TBA:
+v106 - September 17, 2026:
 
   - uMRC now uses the latest OpenDoors version 6.3. The Windows x86 and x64
     builds now run as as a standard Windows console application, doing away 
     with the old local OpenDoors GUI. A new ODoors63.dll library file will 
     be included with Windows x86 and x64 releases.  
-  - "Extended" maximum input of 280 characters implemented, up to two 140-
-    character messages. In other words, if the user types more than 140 
-    characters, the message is split into two separate messages and sent 
-	500ms apart.
+  - "Extended" maximum input of 280 characters implemented, If the user types 
+    more than 140 characters, the message is split into smaller, separate 
+    messages and sent 750ms apart.
   - uMRC now builds for FreeBSD.
   - Improved message routing from umrc-bridge to local umrc-client instances.
-  - Added F3 hotkey to recall previous input.
+  - Added F3 hotkey to recall previous input, with CTRL+R as an alternate key 
+    combo.
   - Setup utility now shows a list of preferred federated MRC hostnames for 
     selection, rather than defaulting to the old bottomlessabyss URL. Free-text
     input is still allowed if needed.

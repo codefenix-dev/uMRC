@@ -27,6 +27,8 @@ Pre-compiled binaries are also available for Linux and macOS, or may be compiled
 - [CTCP command](https://en.wikipedia.org/wiki/Client-to-client_protocol) support
 - Editable themes
 - Twit filter
+- Local BBS-less mode
+- Extended chat input beyond standard 140 characters
 - Support for termsizes beyond 80x25 (dropfile dependent)
 
 
