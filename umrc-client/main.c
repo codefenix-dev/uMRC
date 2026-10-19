@@ -242,7 +242,7 @@ void getInputString(char* input, INT nMaxLength, unsigned char chMin, unsigned c
     while (true) {
         Sleep(0);
         updateInput = false;
-        if (od_get_input(&InputEvent, 1, GETIN_NORMAL) == FALSE) {
+        if (od_get_input(&InputEvent, 25, GETIN_NORMAL) == FALSE) {
             od_sleep(0);
             continue;
         }
@@ -2168,7 +2168,7 @@ void doChatRoutines(char* input, char* previousInput) {
             updateServerStats();
             gServerStatsChanged = false;
         }
-        if (od_get_input(&InputEvent, 1, GETIN_NORMAL) == FALSE) {    
+        if (od_get_input(&InputEvent, 25, GETIN_NORMAL) == FALSE) {    
             od_sleep(0);
             continue;
         }

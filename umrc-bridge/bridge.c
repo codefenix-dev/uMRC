@@ -532,7 +532,7 @@ void* waitProcess(void* lpArg) {
 #endif
     DWORD clientThreadId[MAX_CLIENTS];
     while (gConnectionIsDown) { // Waits for a successful connection before proceeding.    
-        Sleep(0);
+        Sleep(100);
     }
 
 #if defined(WIN32) || defined(_MSC_VER)    
