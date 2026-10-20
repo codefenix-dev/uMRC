@@ -1501,7 +1501,7 @@ void removeTwit(char* twit) {
 
 /**
  *  This function takes an incoming message string,
- *  and temporarily stores it to the "message courier"
+ *  and temporarily stores it to the "messageQueue"
  *  struct. If it's already holding a message, it waits
  *  until it's NULL.
  *

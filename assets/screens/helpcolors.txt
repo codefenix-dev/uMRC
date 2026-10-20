@@ -1,0 +1,21 @@
+|07|09__[ |15How to use pipe colors|07: |09]_________________________________
+
+|07 Change the color of your text by using the |15PIPE |08(|07||08) |07character
+|07 and |152 DIGITS |08(e.g.: |15||1501|08)|07. You |15must |07use 2; 1 alone won't work.
+
+|07 Supported pipe color codes|08:
+
+  |15||0101 |08... |01dark blue text            |15||0909 |08... |09bright blue text
+  |15||0202 |08... |02dark green text           |15||1010 |08... |10bright green text
+  |15||0303 |08... |03dark cyan text            |15||1111 |08... |11bright cyan text
+  |15||0404 |08... |04dark red text             |15||1212 |08... |12bright red text
+  |15||0505 |08... |05dark magenta text         |15||1313 |08... |13bright magenta text
+  |15||0606 |08... |06brown (dark yellow) text  |15||1414 |08... |14yellow text
+  |15||0707 |08... |07gray text                 |15||1515 |08... |15white text
+  |15||0808 |08... |08dark gray (bright black)
+
+  |15||16|0716 |08... |16|07black background          |15||20|0020 |08... |20|00red background     |07|16
+  |15||17|0017 |08... |17|00blue background  |07|16         |15||21|0021 |08... |21|00magenta background |07|16
+  |15||18|0018 |08... |18|00green background |07|16         |15||22|0022 |08... |22|00brown background   |07|16
+  |15||19|0019 |08... |19|00cyan background  |07|16         |15||23|0023 |08... |23|00gray background    |07|16
+

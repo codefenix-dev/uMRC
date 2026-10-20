@@ -1,6 +1,6 @@
 Change Log:
 
-v107 - TBA:
+v107 - October 18, 2026:
 
   - Repeated TAB keystrokes now alphabetically cycle through all usernames 
     matching the keys typed since the beginning of the line or the last empty 
