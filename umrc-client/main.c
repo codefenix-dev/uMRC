@@ -2048,6 +2048,7 @@ DWORD WINAPI handleIncomingMessages(LPVOID lpArg) {
 void* handleIncomingMessages(void* lpArg) {
 #endif
     int iResult = 0;
+    char pending[DATA_LEN] = ""; // start of a packet cut off by the last recv
     time_t lastIamHere;
     time(&lastIamHere);
     while (gIsInChat) {
@@ -2079,6 +2080,19 @@ void* handleIncomingMessages(void* lpArg) {
         if (iResult > 0) {
             inboundData[iResult] = '\0';
         }
+        // A recv can end in the middle of a packet. Keep that part for the next
+        // read and only split complete lines.
+        char work[DATA_LEN * 2] = "";
+        if (iResult > 0) {
+            _snprintf_s(work, sizeof(work), -1, "%s%s", pending, inboundData);
+            pending[0] = '\0';
+            char* lastNewline = strrchr(work, '\n');
+            char* rest = lastNewline == NULL ? work : lastNewline + 1;
+            if (strlen(rest) < sizeof(pending)) {
+                strcpy_s(pending, sizeof(pending), rest);
+            }
+            *rest = '\0';
+        }
 
         if (!gIsInChat) { // user left chat.. none of the below needs to be executed
             break;
@@ -2087,7 +2101,7 @@ void* handleIncomingMessages(void* lpArg) {
         if (iResult > 0) {
 
             char** packets;
-            int pktCount = split(inboundData, '\n', &packets);
+            int pktCount = split(work, '\n', &packets);
             for (int i = 0; i < pktCount; i++) {
 
                 // Check whether the incoming server command should
