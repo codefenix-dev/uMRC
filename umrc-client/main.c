@@ -242,7 +242,7 @@ void getInputString(char* input, INT nMaxLength, unsigned char chMin, unsigned c
     while (true) {
         Sleep(0);
         updateInput = false;
-        if (od_get_input(&InputEvent, 1, GETIN_NORMAL) == FALSE) {
+        if (od_get_input(&InputEvent, 25, GETIN_NORMAL) == FALSE) {
             od_sleep(0);
             continue;
         }
@@ -2048,6 +2048,7 @@ DWORD WINAPI handleIncomingMessages(LPVOID lpArg) {
 void* handleIncomingMessages(void* lpArg) {
 #endif
     int iResult = 0;
+    char pending[DATA_LEN] = ""; // start of a packet cut off by the last recv
     time_t lastIamHere;
     time(&lastIamHere);
     while (gIsInChat) {
@@ -2079,6 +2080,19 @@ void* handleIncomingMessages(void* lpArg) {
         if (iResult > 0) {
             inboundData[iResult] = '\0';
         }
+        // A recv can end in the middle of a packet. Keep that part for the next
+        // read and only split complete lines.
+        char work[DATA_LEN * 2] = "";
+        if (iResult > 0) {
+            _snprintf_s(work, sizeof(work), -1, "%s%s", pending, inboundData);
+            pending[0] = '\0';
+            char* lastNewline = strrchr(work, '\n');
+            char* rest = lastNewline == NULL ? work : lastNewline + 1;
+            if (strlen(rest) < sizeof(pending)) {
+                strcpy_s(pending, sizeof(pending), rest);
+            }
+            *rest = '\0';
+        }
 
         if (!gIsInChat) { // user left chat.. none of the below needs to be executed
             break;
@@ -2087,7 +2101,7 @@ void* handleIncomingMessages(void* lpArg) {
         if (iResult > 0) {
 
             char** packets;
-            int pktCount = split(inboundData, '\n', &packets);
+            int pktCount = split(work, '\n', &packets);
             for (int i = 0; i < pktCount; i++) {
 
                 // Check whether the incoming server command should
@@ -2142,11 +2156,12 @@ void doChatRoutines(char* input, char* previousInput) {
         // We can only update the screen from this thread, so we're going to 
         // check for any incoming messages and other changes, and display 
         // them as needed. Then we'll handle user input        
-        Sleep(0);
+        bool shown = false;
         if (strlen(mq.message) > 0) {
             displayMessage(mq.message, mq.isMention);
             mq.message[0] = '\0';
             mq.isMention = false;
+            shown = true;
         }
         if (gRoomTopicChanged) {
             drawStatusBar();
@@ -2168,8 +2183,9 @@ void doChatRoutines(char* input, char* previousInput) {
             updateServerStats();
             gServerStatsChanged = false;
         }
-        if (od_get_input(&InputEvent, 1, GETIN_NORMAL) == FALSE) {    
-            od_sleep(0);
+        // Right after a message, don't wait: more may be queued, and a burst
+        // like /bbses or !list would otherwise come out 25 ms per line.
+        if (od_get_input(&InputEvent, shown ? 0 : 25, GETIN_NORMAL) == FALSE) {
             continue;
         }
         if (!gIsInChat) { // check the connection status
