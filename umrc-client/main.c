@@ -2142,11 +2142,12 @@ void doChatRoutines(char* input, char* previousInput) {
         // We can only update the screen from this thread, so we're going to 
         // check for any incoming messages and other changes, and display 
         // them as needed. Then we'll handle user input        
-        Sleep(0);
+        bool shown = false;
         if (strlen(mq.message) > 0) {
             displayMessage(mq.message, mq.isMention);
             mq.message[0] = '\0';
             mq.isMention = false;
+            shown = true;
         }
         if (gRoomTopicChanged) {
             drawStatusBar();
@@ -2168,8 +2169,9 @@ void doChatRoutines(char* input, char* previousInput) {
             updateServerStats();
             gServerStatsChanged = false;
         }
-        if (od_get_input(&InputEvent, 25, GETIN_NORMAL) == FALSE) {    
-            od_sleep(0);
+        // Right after a message, don't wait: more may be queued, and a burst
+        // like /bbses or !list would otherwise come out 25 ms per line.
+        if (od_get_input(&InputEvent, shown ? 0 : 25, GETIN_NORMAL) == FALSE) {
             continue;
         }
         if (!gIsInChat) { // check the connection status
