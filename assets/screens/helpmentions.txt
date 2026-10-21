@@ -1,0 +1,17 @@
+|07|09__[ |15About Mentions|07: |09]_________________________________________|07
+
+|07 Every time someone mentions you by name or sends you a direct
+ message in chat, the message is highlighted onscreen and stored
+ to a buffer, the mention counter goes up by 1, and the terminal
+ beeps (if sounds are on).
+
+|07 You can view the mention buffer by typing |15/|11mentions |07or by 
+ simply pressing the |15UP |07hotkey. This also resets the mention 
+ counter.
+
+|07 Chat is paused while viewing the buffer. Any messages received 
+ while viewing buffer get shown upon returning to chat. If chat 
+ sounds are turned on, you will still hear mention beeps while 
+ viewing the buffer.
+
+|07 The mention buffer persists until you exit chat. 

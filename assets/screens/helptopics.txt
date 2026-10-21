@@ -3,7 +3,9 @@
  |15/|11help |08..........|07 Basic local command list
  |15/|11help |15colors |08...|07 Pipe color code usage  
  |15/|11help |15ctcp |08.....|07 Client-to-client protocol usage
- |15/|11help |15topics |08...|07 This screen
+ |15/|11help |15mentions |08.|07 About mentions
+ |15/|11help |15scroll |08...|07 About scrollback
+ |15/|11help |15topics |08...|07 List of available topics (this list)
  |15/|11help |15twit |08.....|07 Twit list management
 
  |15/|11? |08.............|07 Show list of |15SERVER commands

@@ -1,0 +1,14 @@
+|07|09__[ |15About the Scrollback|07: |09]___________________________________|07
+
+|07 uMRC maintains its own scrollback buffer of all messages 
+ shown since entering chat.
+
+|07 You can view the scrollback buffer by typing |15/|11scroll |07or by
+ simply pressing the |15PGUP |07hotkey. 
+
+|07 Chat is paused while viewing the buffer. Any messages received 
+ while viewing buffer get shown upon returning to chat. If chat 
+ sounds are turned on, you will still hear mention beeps while 
+ viewing the buffer.
+ 
+|07 The scrollback buffer persists until you exit chat. 
