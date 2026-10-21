@@ -6,8 +6,10 @@
  Usage:
    |15/|11ctcp |15target |09command|07
 
- A |15target |07is a user or room name. |09* |07targets all.
+ A |15target |07is a user or room name. |15* |07targets all.
 
  Supported commands:
-|09   VERSION  TIME  PING  CLIENTINFO|07
-
+   |09VERSION |08......... |07Remote client info and version #
+   |09TIME |08............ |07Local time of remote client's BBS
+   |09PING |10<string> |08... |07Returns string received by the client
+   |09CLIENTINFO |08...... |07Remote client's supported CTCP commands

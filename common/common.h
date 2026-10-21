@@ -96,7 +96,7 @@ int _snprintf_s(char* buffer, size_t sizeOfBuffer, size_t count, const char* for
 #define UMRC_VERSION "107"
 #define YEAR_AND_AUTHOR "2026 Craig Hendricks (aka Codefenix)"
 #define AUTHOR_INITIALS "cf" // alias initials
-#define LAST_CODE_CHANGE "2026-10-12"
+#define LAST_CODE_CHANGE "2026-10-20"
 
 
 // These defaults should remain the same, and

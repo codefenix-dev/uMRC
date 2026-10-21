@@ -1,5 +1,12 @@
 Change Log:
 
+TBA:
+
+  - Several help screens added and updated, covering previously omitted topics
+    like pipe code colors, the scrollback and mention buffers, plus some 
+	elaboration on the twit list and CTCP commands.
+  
+
 v107 - October 18, 2026:
 
   - Repeated TAB keystrokes now alphabetically cycle through all usernames 
