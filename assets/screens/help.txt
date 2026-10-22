@@ -4,7 +4,7 @@
  |15/|11r             |08:|07 Reply to last direct message|08:|07 |15/|11r |09message
  |15/|11rooms |08or |15/|11list|08:|07 List available rooms
  |15/|11join |08or |15/|11j    |08:|07 Join a new room|08:|07              |15/|11j |15room_name
- |15/|11topic         |08:|07 Change room topic|08:|07            |15/|11topic|15 topic
+ |15/|11topic         |08:|07 Change room topic|08:|07            |15/|11topic|15 new topic
  |15/|11bbses         |08:|07 List connected BBSes; view info with |15/|11info |15#
  |15/|11me            |08:|07 Perform an action|08:|07            |15/|11me |15waves
  |15/|11motd          |08:|07 Display the Message of the Day

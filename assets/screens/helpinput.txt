@@ -1,0 +1,20 @@
+|07|09__[ |15Basic Chat Input Usage|07: |09]_________________________________|07
+
+|07 Anything you type starting with a |15/ |07is treated as a chat
+ command. If a command is not recognized locally by uMRC or by
+ the MRC server, it will tell you "|15(|14Notice|15) Unknown command|07".
+ 
+ Everything else you type will be sent to the chat room for
+ other chatters to see. You have |15140 |07characters to type. If you
+ go beyond 140, the message will be broken into separate messages
+ and sent 750 milliseconds apart. There is a firm limit of |15280
+ |07characters per input-line to prevent flooding the chat room.
+ 
+ |15Hotkeys:
+   |11TAB|08 .......... |07Auto-complete username. Press multiple times
+                  to cycle through available matches.
+   |11LEFT|08/|11RIGHT|08 ... |07Change text color.
+   |11F3|08/|11CTRL+R|08 .... |07Recall previous input.
+   |11ESC|08/|11END|08 ...... |07Clear input line.
+   |11UP|08 ........... |07View mentions.
+   |11PGUP|08 ......... |07View scrollback.

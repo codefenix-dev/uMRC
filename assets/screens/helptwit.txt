@@ -2,7 +2,8 @@
 
 |07 The |15twit list |07hides messages from problematic chatters.
 
-|07 This is a |15personal |07filter, rather than a server-wide ban.
+|07 This is a |15personal |07filter, rather than a server-wide ban. Twits
+ remain in the list until deleted or reset by the sysop.
 
 |07 Usage:
    |15/|11twit |07|15add |09nameoftwit |08:|15 |07Filters out nameoftwit's messages

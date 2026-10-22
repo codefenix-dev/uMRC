@@ -849,7 +849,9 @@ void enterChatterSettings(char* quitToWhere) {
             if (strlen(user.defaultRoom) == 0) {
                 strcpy_s(user.defaultRoom, sizeof(user.defaultRoom), DEFAULT_ROOM);
             }
-            stripPipeCodes(user.defaultRoom);
+            removeChar(user.defaultRoom, '#');       // no #
+            replaceChar(user.defaultRoom, ' ', '_'); // Single word
+            stripPipeCodes(user.defaultRoom);        // No pipe codes
             changesMade = true;
             break;
 
@@ -1597,9 +1599,9 @@ void processUserCommand(char* cmd, char* params) {
     else if (_stricmp(cmd, "join") == 0 || _stricmp(cmd, "j") == 0) {
         char newRoom[31] = "";
         strncpy_s(newRoom, sizeof(newRoom), params, -1); 
-        removeChar(newRoom, '#'); // no #
+        removeChar(newRoom, '#');       // no #
         replaceChar(newRoom, ' ', '_'); // Single word
-        stripPipeCodes(newRoom); // No pipe codes
+        stripPipeCodes(newRoom);        // No pipe codes
         if (strlen(newRoom) == 0) {
             displayMessage("|15* |14No room specified|07.", false);
             return;

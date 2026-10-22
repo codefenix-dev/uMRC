@@ -2,9 +2,10 @@ Change Log:
 
 TBA:
 
-  - Several help screens added and updated, covering previously omitted topics
+  - Fix for default room name having space or # characters.
+  - Several help screens added or updated, covering previously omitted topics
     like pipe code colors, the scrollback and mention buffers, plus some 
-	elaboration on the twit list and CTCP commands.
+    elaboration on the twit list and CTCP commands.
   
 
 v107 - October 18, 2026:

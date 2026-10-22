@@ -1,0 +1,15 @@
+|07|09__[ |15About Display Name/Nick Menu|07: |09]___________________________|07
+
+|07 You may view or edit your display name any time with the
+ |15/|11nick |07command. The name color, prefix, and suffix strings
+ are all independently modifiable, or all may be randomized
+ for you. A preview is shown so you can see how it will look
+ while in chat.
+
+|07 Chat is paused while in this menu. Any messages received
+ while in this menu get shown upon returning to chat, so you
+ won't miss anything. If |15/|11sound |07is turned on, you will still
+ hear mention beeps while in this menu.
+ 
+|07 Your configured display name persists across multiple chat
+ sessions until reset by the sysop.

@@ -4,11 +4,11 @@
  shown since entering chat.
 
 |07 You can view the scrollback buffer by typing |15/|11scroll |07or by
- simply pressing the |15PGUP |07hotkey. 
+ simply pressing the |15PGUP |07hotkey.
 
-|07 Chat is paused while viewing the buffer. Any messages received 
- while viewing buffer get shown upon returning to chat. If chat 
- sounds are turned on, you will still hear mention beeps while 
- viewing the buffer.
+|07 Chat is paused while viewing the buffer. Any messages received
+ while viewing the buffer get shown upon returning to chat, so
+ you won't miss anything. If |15/|11sound |07is turned on, you will still
+ hear mention beeps while viewing the buffer.
  
 |07 The scrollback buffer persists until you exit chat. 

@@ -1,0 +1,19 @@
+|07|09__[ |15About Chatter Settings|07: |09]_________________________________|07
+
+|07 You may view or edit your settings any time with the |15/|11set
+|07 command, letting you modify things like your displayed username
+ (aka nick), default room, default text color, chat sounds, join
+ message, exit message, and theme.
+ 
+ Some settings can be accessed more directly:
+   |15/|11nick |08.... |07Edit display name/nick
+   |15/|11sound |08... |07Toggle chat sounds
+   |15/|11theme |08... |07Change theme
+
+|07 Chat is paused while viewing settings. Any messages received
+ while in this menu get shown upon returning to chat, so you 
+ won't miss anything. If |15/|11sound |07is turned on, you will still
+ hear mention beeps while in this menu.
+ 
+|07 Settings persist across multiple chat sessions until reset by
+ the sysop. 
