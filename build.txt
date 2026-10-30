@@ -9,7 +9,7 @@ Linux (x64 and arm64):
 
      On Debian systems like Ubuntu, open a Terminal and run:
 
-	   sudo apt install gcc
+       sudo apt install gcc
 
 
   2. Next make sure LibreSSL is installed on your system:
@@ -83,14 +83,14 @@ FreeBSD (x64 and arm64):
 
      Open a Terminal and run:
 
-	   pkg install lang/gcc
+       pkg install lang/gcc
 
 
   2. Next make sure bash is installed on the system.
 
      In the Terminal, run:
 
-	   pkg install bash
+       pkg install bash
 
 
   3. Make the build.sh script executable:
@@ -132,23 +132,23 @@ Windows (x86 & x64):
   1. Install a standalone build of MinGW:
   
      https://winlibs.com
-	 
-	 Find the most recent POSIX ZIP option under Releases. There is both a 
-    Win32 and Win64 version available. Download both and extract their contents
-	 to any folders of your choosing.
-	 
+     
+     Find the most recent POSIX ZIP option under Releases. There is both a 
+     Win32 and Win64 version available. Download both and extract their contents
+     to any folders of your choosing.
+     
   
   2. Edit the build.bat file and change the path_to_x64_gcc and path_to_x86_gcc
      variables to match the actual paths where you extracted the ZIP file(s)
-	 
-	 
+     
+     
   3. Open a Command Prompt and go to the folder where you extracted the uMRC 
      project files and run build.bat (or just double click it). It will compile
-	 32-bit executables by default, or you can have it compile 64-bit 
-	 executables instead by running: build.bat x64
-	 
-	 build.bat will fail if you didn't specify your path variables properly in
-	 step #2.
+     32-bit executables by default, or you can have it compile 64-bit 
+     executables instead by running: build.bat x64
+     
+     build.bat will fail if you didn't specify your path variables properly in
+     step #2.
 
 
   When done, you will find the compiled EXEs, DLLs, and other necessary files
@@ -173,10 +173,10 @@ Windows (x86 & x64):
      https://visualstudio.microsoft.com/vs/community/
 
      uMRC was developed in Visual Studio Community 2022, but any version on or
-	 after 2017 will work fine. 
-	 
-	 Ensure you select the "Desktop Development with C++" option under 
-	 Workloads during install.	 
+     after 2017 will work fine. 
+     
+     Ensure you select the "Desktop Development with C++" option under 
+     Workloads during install.     
 
 
   2. After Visual Studio is installed, start it and select the option
@@ -214,6 +214,6 @@ Windows (x86 & x64):
 
   The only notable differences in the x64 executables are:
     - "Windows.x86_64" will be shown in your BBS's /info screen.
-	- umrc-bridge uses the 64-bit LibreSSL libraries.
+    - umrc-bridge uses the 64-bit LibreSSL libraries.
 
 

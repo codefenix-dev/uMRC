@@ -403,7 +403,6 @@ size_t saveUser(struct userdata* data, char* filename) {
     return flag;
 }
 
-
 #if defined(WIN32) || defined(_MSC_VER)
 /**
  *

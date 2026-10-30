@@ -1,5 +1,5 @@
  uMRC  ┌──── ▄█▀▀▀▀▀█▄ ───┬───┬───┬─┐
- v107┌──── ▄██ ▄███ ▀▀█▄ ·────────┐ ┤
+ v108┌──── ▄██ ▄███ ▀▀█▄ ·────────┐ ┤
    ┌──── ▄█▀▀ ▐█▀ ▀ █ ██  ▄ ▄ ▄ · │ │
  ┌──── ▄█▀ ▄██▄▀█▄▄██ ██  █████ · │ ┤
 ┌─── ▄█▀ ▐██▀▀█▌ ▀▀▀ ▄█▀  ▐▄█▄▌   │ │
@@ -63,8 +63,15 @@ Files Included:
   [screens]:        Subdirectory containing ANSI & text files
   - intro.ans:      Intro/main menu & status screen
   - help.txt:       Help file showing basic chat commands
-  - helpctcp.txt:   Help file on CTCP command usage
-  - helptwit.txt:   Help file on twit filter management
+  - helpcolors.txt:   Pipe color code usage
+  - helpctcp.txt:     Client-to-client protocol usage
+  - helpinput.txt:    Basic chat input usage
+  - helpmentions.txt: About mentions
+  - helpnick.txt:     Display Name/Nick settings menu
+  - helpscroll.txt:   About scrollback
+  - helpset.txt:      Chatter settings menu
+  - helptopics.txt:   List of available topics
+  - helptwit.txt:     Twit list management
   [themes]:         Subdirectory containing ANSI files
   - *.ans:          ANSI theme files
 

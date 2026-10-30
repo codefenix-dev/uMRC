@@ -1,5 +1,5 @@
  uMRC  ┌──── ▄█▀▀▀▀▀█▄ ───┬───┬───┬─┐
- v107┌──── ▄██ ▄███ ▀▀█▄ ·────────┐ ┤
+ v108┌──── ▄██ ▄███ ▀▀█▄ ·────────┐ ┤
    ┌──── ▄█▀▀ ▐█▀ ▀ █ ██  ▄ ▄ ▄ · │ │
  ┌──── ▄█▀ ▄██▄▀█▄▄██ ██  █████ · │ ┤
 ┌─── ▄█▀ ▐██▀▀█▌ ▀▀▀ ▄█▀  ▐▄█▄▌   │ │
@@ -55,19 +55,26 @@ Features:
 
 Files Included:
 
-- setup.exe:         Setup utility
-- umrc-bridge.exe:   MRC host connection program (multiplexer)
-- umrc-client.exe:   MRC Client door
-- ODoors63.dll:      OpenDoors door kit library (32-bit version)
-- ssl-60.dll:        LibreSSL (OpenSSL) SSL library
-- crypto-57.dll:     LibreSSL (OpenSSL) Cryptographic library
-  [screens]:         Subdirectory containing ANSI & text files
-  - intro.ans:       Intro/main menu & status screen
-  - help.txt:        Help file showing basic chat commands
-  - helpctcp.txt:    Help file on CTCP command usage
-  - helptwit.txt:    Help file on twit filter management
-  [themes]:          Subdirectory containing ANSI files
-  - *.ans:           ANSI theme files
+- setup.exe:          Setup utility
+- umrc-bridge.exe:    MRC host connection program (multiplexer)
+- umrc-client.exe:    MRC Client door
+- ODoors63.dll:       OpenDoors door kit library (32-bit version)
+- ssl-60.dll:         LibreSSL (OpenSSL) SSL library
+- crypto-57.dll:      LibreSSL (OpenSSL) Cryptographic library
+  [screens]:          Subdirectory containing ANSI & text files
+  - intro.ans:        Intro/main menu & status screen
+  - help.txt:         Help file showing basic chat commands
+  - helpcolors.txt:   Pipe color code usage
+  - helpctcp.txt:     Client-to-client protocol usage
+  - helpinput.txt:    Basic chat input usage
+  - helpmentions.txt: About mentions
+  - helpnick.txt:     Display Name/Nick settings menu
+  - helpscroll.txt:   About scrollback
+  - helpset.txt:      Chatter settings menu
+  - helptopics.txt:   List of available topics
+  - helptwit.txt:     Twit list management
+  [themes]:           Subdirectory containing ANSI files
+  - *.ans:            ANSI theme files
 
 
 Install Instructions:

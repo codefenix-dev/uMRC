@@ -34,16 +34,23 @@ Pre-compiled binaries are also available for Linux, FreeBSD, and macOS, or may b
 
 ## 📄 Common Files Included:
 
-- **setup**:            Setup utility
-- **umrc-bridge**:      MRC host connection program (multiplexer)
-- **umrc-client**:      MRC Client door
-- **\[screens\]**:      Subdirectory containing ANSI & text files
-  + **intro.ans**:      Intro/main menu & status screen
-  + **help.txt**:       Help file showing basic chat commands
-  + **helpctcp.txt**:   Help file on CTCP command usage
-  + **helptwit.txt**:   Help file on twit filter management
-- **\[themes\]**:       Subdirectory containing ANSI files
-  + **\*.ans**:         ANSI theme files
+- **setup**:              Setup utility
+- **umrc-bridge**:        MRC host connection program (multiplexer)
+- **umrc-client**:        MRC Client door
+- **\[screens\]**:        Subdirectory containing ANSI & text files
+  + **intro.ans**:        Intro/main menu & status screen
+  + **help.txt**:         Help file showing basic chat commands
+  + **helpcolors.txt**:   Pipe color code usage
+  + **helpctcp.txt**:     Client-to-client protocol usage
+  + **helpinput.txt**:    Basic chat input usage
+  + **helpmentions.txt**: About mentions
+  + **helpnick.txt**:     Display Name/Nick settings menu
+  + **helpscroll.txt**:   About scrollback
+  + **helpset.txt**:      Chatter settings menu
+  + **helptopics.txt**:   List of available topics
+  + **helptwit.txt**:     Twit list management
+- **\[themes\]**:         Subdirectory containing ANSI files
+  + **\*.ans**:           ANSI theme files
 
 Refer to the readme.txt file inside the archive for files specific to
 your platform.

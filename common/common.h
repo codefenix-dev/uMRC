@@ -93,10 +93,10 @@ int _snprintf_s(char* buffer, size_t sizeOfBuffer, size_t count, const char* for
 // significant modification is made to the code, 
 // keeping to 3 digits 
 // (e.g.: "101", "102", "103", etc...).
-#define UMRC_VERSION "107"
+#define UMRC_VERSION "108"
 #define YEAR_AND_AUTHOR "2026 Craig Hendricks (aka Codefenix)"
 #define AUTHOR_INITIALS "cf" // alias initials
-#define LAST_CODE_CHANGE "2026-10-22"
+#define LAST_CODE_CHANGE "2026-10-30"
 
 
 // These defaults should remain the same, and

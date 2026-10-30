@@ -1301,7 +1301,7 @@ void displayMessage(char* msg, bool mention) {
     char dispMsg[512] = ""; // This will be the final message after adding line wraps.
     char timeStamp[30] = ""; // This holds the message timestamp.
     char* tmpstmp = getTimestamp();
-    _snprintf_s(timeStamp, sizeof(timeStamp), -1, (mention ? "|00|23%s|26\x1b[5m\376\x1b[0m|07" : "|08%s|07 "), tmpstmp);
+    _snprintf_s(timeStamp, sizeof(timeStamp), -1, (mention ? "|00|23%s|26\x1b[5m\376\x1b[0m|07" : "|08|16%s|07 "), tmpstmp);
     free(tmpstmp);
     strcpy_s(copyMsg, sizeof(copyMsg), msg);
 

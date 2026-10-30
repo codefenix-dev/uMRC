@@ -342,8 +342,19 @@ bool sendHostPacket(char* packet) {
         _snprintf_s(logstring, sizeof(logstring), -1, "sendHostPacket \"%s\" to host", packet);
         removeChar(logstring, '\n');
         printDateTimeStamp();
-        puts(logstring);
-        writeToLog(logstring, PROGRAM, "");
+        if (strstr(packet, "~SERVER~~~IDENTIFY ") != 0 ||  // Don't log Trust commands
+            strstr(packet, "~SERVER~~~ROOMPASS ") != 0 ||
+            strstr(packet, "~SERVER~~~UPDATE ") != 0 ||
+            strstr(packet, "~SERVER~~~ROOMCONFIG ") != 0 ||
+            strstr(packet, "~SERVER~~~REGISTER ") != 0) {
+            puts("*** [ MRC Trust command packet hidden ] ***");
+            writeToLog("*** [ MRC Trust command packet hidden ] ***", PROGRAM, "");
+        }
+        else {
+            puts(logstring);
+            writeToLog(logstring, PROGRAM, "");
+        }
+
     }
     iResult = usingSSL ? SSL_write(mrcHostSsl, packet, (int)strlen(packet)) : send(mrcHostSock, packet, (int)strlen(packet), 0);
     Sleep(10);

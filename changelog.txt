@@ -1,11 +1,14 @@
 Change Log:
 
-TBA:
+v108 - TBA:
 
-  - Fix for default room name having space or # characters.
-  - Several help screens added or updated, covering previously omitted topics
-    like pipe code colors, the scrollback and mention buffers, plus some 
-    elaboration on the twit list and CTCP commands.
+  - Fix for high CPU utilization while users are idle in chat, with general
+    performance improvements (thanks to Snwblnd).
+  - Fix for default room name containing spaces or # characters.
+  - Online help system has been greatly expanded. Several help screens have 
+    been added or updated, covering previously omitted topics such as pipe 
+    code colors, the scrollback and mention buffers, plus some elaboration 
+    on the twit list, CTCP commands, and more.
   
 
 v107 - October 18, 2026:
