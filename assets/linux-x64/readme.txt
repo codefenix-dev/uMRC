@@ -227,7 +227,7 @@ connections from the same BBS.
 
    umrc-client honors the termsize reported by the drop file. Some drop files,
    like CHAIN.TXT report both the terminal's available columns and rows to the
-   door, allowing umrc-client to run at any termsize, suchg as 132x37.
+   door, allowing umrc-client to run at any termsize, such as 132x37.
    
    If you're using any drop file type other than DOOR32.SYS, you may also need
    to pass the socket handle using the `-SOCKET` parameter. Check your BBS
