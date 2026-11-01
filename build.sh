@@ -1,76 +1,81 @@
-#!/bin/bash
+#!/bin/sh
+
+CC="${CC:-cc}"
 
 plat="linux"
-if [[ "$(uname)" = "FreeBSD" ]]; then
-    plat="freebsd"
-fi
+case "$(uname -s)" in
+    FreeBSD)
+        plat="freebsd"
+        ;;
+    Darwin)
+        plat="macos"
+        ;;
+esac
+
 arc="x64"
-arch=$(uname -m)
-if [[ "$arch" == arm* ]] || [[ "$arch" == aarch64 ]]; then
-    arc="arm64"
-fi
-assetpath=$plat-$arc 
-if [[ $OSTYPE == darwin* ]]; then
-    plat="macos"
-    assetpath=$plat 
+case "$(uname -m)" in
+    arm*|aarch64)
+        arc="arm64"
+        ;;
+esac
+
+assetpath="${plat}-${arc}"
+if [ "$plat" = "macos" ]; then
+    assetpath="$plat"
 fi
 
 mkdir -p bin
 mkdir -p bin/screens
 mkdir -p bin/themes
 
-echo -n "Platform: "
-echo $plat-$arc
+printf 'Platform: %s\n' "${plat}-${arc}"
 
-echo -n -e "Building \033[1msetup\033[0m..."
-cd setup
-gcc setup.c ../common/common.c -o setup
-if [ $? -eq 0 ]; then
-    echo -e "\033[32;1mOK\033[0m"
+printf 'Building \033[1msetup\033[0m...'
+cd setup || exit 1
+if "$CC" setup.c ../common/common.c -o setup; then
+    printf '\033[32;1mOK\033[0m\n'
 else
-    echo -n "Result: "
-    echo $?
-    exit $?
+    status=$?
+    printf 'Result: %d\n' "$status"
+    exit "$status"
 fi
 cp setup ../bin
 
-cd ..
+cd .. || exit 1
 
-echo -n -e "Building \033[1mumrc-bridge\033[0m..."
-cd umrc-bridge
-gcc bridge.c ../common/common.c -o umrc-bridge -lssl -lcrypto -pthread
-if [ $? -eq 0 ]; then
-    echo -e "\033[32;1mOK\033[0m"
+printf 'Building \033[1mumrc-bridge\033[0m...'
+cd umrc-bridge || exit 1
+if "$CC" bridge.c ../common/common.c -o umrc-bridge -lssl -lcrypto -pthread; then
+    printf '\033[32;1mOK\033[0m\n'
 else
-    echo -n "Result: "
-    echo $?
-    exit $?
+    status=$?
+    printf 'Result: %d\n' "$status"
+    exit "$status"
 fi
 cp umrc-bridge ../bin
 
-cd ..
+cd .. || exit 1
 
-echo -n -e "Building \033[1mumrc-client\033[0m..."
-cd umrc-client
-gcc main.c func.c ../common/common.c -o umrc-client -pthread -L ../lib/odoors/$plat-$arc -lODoors
-if [ $? -eq 0 ]; then
-    echo -e "\033[32;1mOK\033[0m"
+printf 'Building \033[1mumrc-client\033[0m...'
+cd umrc-client || exit 1
+if "$CC" main.c func.c ../common/common.c -o umrc-client -pthread \
+    -L "../lib/odoors/${plat}-${arc}" -lODoors; then
+    printf '\033[32;1mOK\033[0m\n'
 else
-    echo -n "Result: "
-    echo $?
-    exit $?
+    status=$?
+    printf 'Result: %d\n' "$status"
+    exit "$status"
 fi
 cp umrc-client ../bin
 
-cd ..
+cd .. || exit 1
 
-echo "Copying assets..."
+printf 'Copying assets...\n'
 cp changelog.txt ./bin/
 cp LICENSE ./bin/
 cp README.md ./bin/
-cp -r ./assets/$assetpath/* ./bin/
-cp -r ./assets/screens/* ./bin/screens/
-cp -r ./assets/themes/* ./bin/themes/
+cp -R "./assets/${assetpath}/"* ./bin/
+cp -R ./assets/screens/* ./bin/screens/
+cp -R ./assets/themes/* ./bin/themes/
 
-echo -e "All jobs done. Check the \033[32;1mbin\033[0m subdirectory for the output files."
-
+printf 'All jobs done. Check the \033[32;1mbin\033[0m subdirectory for the output files.\n'
