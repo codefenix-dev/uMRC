@@ -3,34 +3,28 @@
 
 Linux (x64 and arm64):
 
-  Follow these steps to compile Linux x64 or arm64 binaries:
+  A C compiler and the OpenSSL development libraries are required.
 
-  1. First make sure gcc is installed on the system.
+  On Debian-based systems such as Debian and Ubuntu, install the required
+  development packages with:
 
-     On Debian systems like Ubuntu, open a Terminal and run:
+       sudo apt install build-essential libssl-dev
 
-       sudo apt install gcc
+  Other distributions may use different package names. Refer to your
+  distribution's documentation for installing a C compiler and the OpenSSL
+  development libraries.
 
-
-  2. Next make sure LibreSSL is installed on your system:
-
-       sudo apt install libssl-dev
-
-     (Refer to your distro's documentation on installing gcc and LibreSSL.)
-
-
-  3. Make the build.sh script executable:
+  1. Make the build script executable:
 
        chmod +x build.sh
 
-
-  4. Finally, run the build.sh script:
+  2. Run the build script:
 
        ./build.sh
 
 
-  When done, you will find the compiled binaries and other necessary files
-  in a subdirectory named "bin".
+  When done, the compiled binaries and assets will be available
+  in the "bin" subdirectory.
 
   [bin]:
   - [screens]
@@ -44,67 +38,28 @@ Linux (x64 and arm64):
 
 macOS (arm64):
 
-  The same build.sh script that compiles binaries for Linux also compiles
-  binaries for macOS for arm64.
+  The same build.sh script used on Linux also builds binaries for macOS
+  on arm64.
 
-  You will need to have LibreSSL installed. There are a couple different ways
-  to go about installing on macOS. Installing via Homebrew may be the simplest
-  method:
+  LibreSSL is required. There are a couple of different ways to install it
+  on macOS. Homebrew may be the simplest:
 
-    https://formulae.brew.sh/formula/libressl
+       https://formulae.brew.sh/formula/libressl
 
-  Alternatively, you may download the latest source from libressl.org and
-  follow the "Build steps using configure" directions included.
+  Alternatively, download the latest source from libressl.org and follow
+  the "Build steps using configure" directions included with the source.
 
-  When done, you should be able to run the build.sh script to make your own
-  macOS binaries.
-
-  1. First, make the build.sh script executable:
+  1. Make the build.sh script executable:
 
        chmod +x build.sh
 
-
-  2. Finally, run the build.sh script:
+  2. Run the build script:
 
        ./build.sh
 
 
-  You will find the compiled binaries and other necessary files in a
-  subdirectory named "bin", just as outlined above with Linux.
-
-
-
-
-FreeBSD (x64 and arm64):
-
-  Follow these steps to compile FreeBSD x64 or arm64 binaries:
-
-  1. First make sure gcc is installed on the system.
-
-     Open a Terminal and run:
-
-       pkg install lang/gcc
-
-
-  2. Next make sure bash is installed on the system.
-
-     In the Terminal, run:
-
-       pkg install bash
-
-
-  3. Make the build.sh script executable:
-
-       chmod +x build.sh
-
-
-  4. Finally, run the build.sh script:
-
-       bash build.sh
-
-
-  When done, you will find the compiled binaries and other necessary files
-  in a subdirectory named "bin".
+  When done, the compiled binaries and assets will be available
+  in the "bin" subdirectory.
 
   [bin]:
   - [screens]
@@ -112,10 +67,40 @@ FreeBSD (x64 and arm64):
   - setup
   - umrc-bridge
   - umrc-client
-  
-  FreeBSD is the only targeted BSD. The above steps may work for OpenBSD and
-  NetBSD as well, but they would need their own compiled OpenDoors library.
-  
+
+
+
+
+FreeBSD (x64 and arm64):
+
+  No additional shell or compiler packages are normally required.
+  FreeBSD includes /bin/sh and a system C compiler (cc, provided by Clang).
+
+  1. Make the build script executable:
+
+       chmod +x build.sh
+
+  2. Run the build script:
+
+       ./build.sh
+
+
+  When done, the compiled binaries and assets will be available
+  in the "bin" subdirectory.
+
+  [bin]:
+  - [screens]
+  - [themes]
+  - setup
+  - umrc-bridge
+  - umrc-client
+
+  FreeBSD is the only officially targeted BSD.
+
+  The POSIX build script may also work on OpenBSD and NetBSD, but those
+  platforms are not currently supported because they would require their own
+  compiled OpenDoors libraries and additional testing.
+
 
 
 
@@ -163,8 +148,8 @@ Windows (x86 & x64):
   - setup.exe
   - umrc-bridge.exe
   - umrc-client.exe
-  
-  
+
+
 
   Method #2 - Microsoft Visual Studio:
 
