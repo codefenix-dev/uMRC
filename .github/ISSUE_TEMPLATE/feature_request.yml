@@ -1,0 +1,43 @@
+name: 📋 Feature Request
+description: Suggest a new feature or enhancement for uMRC
+title: "[FEATURE] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > [!IMPORTANT]
+        > # 🛑 Read this first
+        > Be advised that not all feature requests will be feasible. Unless your feature request offers significant value-add and adheres to the current MRC protocol spec, it will most likely be marked as `won't fix` and closed.
+        > 
+        > If in doubt, use the [Discussion](https://github.com) area before submitting.
+
+  - type: checkboxes
+    id: protocol-check
+    attributes:
+      label: Feasibility Check
+      options:
+        - label: I have checked existing [Discussions](https://github.com) and understand that requests outside the MRC protocol spec may be closed.
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Is your feature request related to a problem?
+      description: A clear and concise description of what the problem or limitation is.
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Describe the solution you'd like
+      description: A clear and concise description of what you want to happen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Add any other context, protocol references, or screenshots about the feature request here.
