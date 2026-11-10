@@ -10,14 +10,14 @@ body:
         > # 🛑 Read this first
         > Be advised that not all feature requests will be feasible. Unless your feature request offers significant value-add and adheres to the current MRC protocol spec, it will most likely be marked as `won't fix` and closed.
         > 
-        > If in doubt, use the [Discussion](https://github.com) area before submitting.
+        > If in doubt, use the [Discussion](https://github.com/codefenix-dev/uMRC/discussions) area before submitting.
 
   - type: checkboxes
     id: protocol-check
     attributes:
       label: Feasibility Check
       options:
-        - label: I have checked existing [Discussions](https://github.com) and understand that requests outside the MRC protocol spec may be closed.
+        - label: I have checked existing [Discussions](https://github.com/codefenix-dev/uMRC/discussions) and understand that requests outside the MRC protocol spec may be closed.
           required: true
 
   - type: textarea
