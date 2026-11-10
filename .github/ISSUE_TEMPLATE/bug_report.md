@@ -1,3 +1,11 @@
+---
+name: 🪲 Bug Report
+about: Report a bug or unexpected behavior in uMRC
+title: '[BUG] '
+labels: bug
+assignees: ''
+---
+
 >  [!IMPORTANT]
 > # 🛑 Read this first
 > 
