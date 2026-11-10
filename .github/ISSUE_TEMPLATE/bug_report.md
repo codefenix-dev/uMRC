@@ -1,32 +1,38 @@
----
-name: Bug report
-about: Create a report to help us improve
-title: ''
-labels: ''
-assignees: ''
+>  [!IMPORTANT]
+> # 🛑 Read this first
+> 
+> **Before submitting an issue:**
+> - Ensure you are running the [latest version](https://github.com/codefenix-dev/uMRC/releases).
+> - Check the included readme and help files (e.g.: `/help`).
+> - Check the [changelog](https://github.com/codefenix-dev/uMRC/blob/main/changelog.txt) to see if your issue was already addressed.
 
----
 
-**Describe the bug**
-A clear and concise description of what the bug is.
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+## 🪲 For Bug Reports
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+**Describe the bug**:
+- A clear and concise description of what the bug is.
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+**To Reproduce**: 
+- Steps to reproduce the behavior:
 
-**Desktop (please complete the following information):**
+**Expected behavior**: 
+- A clear and concise description of what you expected to happen.
+
+**Screenshots**: 
+- If applicable, add screenshots to help explain your problem.
+
+**Desktop (please complete the following information):**: 
  - OS: [e.g. iOS]
- - Version [e.g. 22]
+ - Version [e.g. 108]
 
-
-**Additional context**
+**Additional context**:
 Add any other context about the problem here.
+
+
+
+## 📋 For Feature Requests
+
+Be advised that not all feature requests will be feasible. Unless your feature request offers significant value-add and adheres to the current MRC protocol spec, it will most likely be marked as `won't fix` and closed.
+
+If in doubt, use the [Discussion](https://github.com/codefenix-dev/uMRC/discussions) area before submitting.
