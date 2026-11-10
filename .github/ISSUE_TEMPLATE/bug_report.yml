@@ -15,11 +15,11 @@ body:
     attributes:
       label: Pre-submission Checklist
       options:
-        - label: I am running the [latest version of uMRC](https://github.com).
+        - label: I am running the [latest version of uMRC](https://github.com/codefenix-dev/uMRC/releases).
           required: true
         - label: I checked the included readme and help files (e.g., `/help`).
           required: true
-        - label: I checked the [changelog](https://github.com) to ensure this was not already addressed.
+        - label: I checked the [changelog](https://github.com/codefenix-dev/uMRC/blob/main/changelog.txt) to ensure this was not already addressed.
           required: true
 
   - type: textarea
