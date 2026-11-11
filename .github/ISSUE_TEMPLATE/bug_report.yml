@@ -67,7 +67,7 @@ body:
     attributes:
       label: uMRC Version
       description: Which version of uMRC are you running?
-      placeholder: e.g. 1.0.8
+      placeholder: e.g. 108
     validations:
       required: true
 
